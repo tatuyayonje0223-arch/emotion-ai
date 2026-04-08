@@ -81,7 +81,7 @@ class FearCircuitV2:
     def __init__(self, config: FearV2Config | None = None):
         self.cfg = config or FearV2Config()
         self._results: list[FearV2TrialResult] = []
-        self._cs_la_weights: list[float] = []  # 試行間の重み追跡
+        self._saved_weights: dict[str, np.ndarray] = {}  # [問題1] 試行間STDP重み保存
 
     def run_trial(
         self,
@@ -183,14 +183,14 @@ class FearCircuitV2:
             sign_val = -1.0 if inh else 1.0
 
             if stdp and not inh:
-                # STDP付きシナプス（CS→LA等の可塑的結合）
+                # [問題1修正] STDP付きシナプス — pre-before-post=LTP, post-before-pre=LTD
                 syn = Synapses(G, G, model="""
                     w : 1
                     dA_ltp/dt = -A_ltp / (20*ms) : 1 (event-driven)
                     dA_ltd/dt = -A_ltd / (20*ms) : 1 (event-driven)
                 """,
-                on_pre="v_post += w; A_ltp += 0.005",
-                on_post="A_ltd += -0.003",
+                on_pre="v_post += w; A_ltp += 0.005; w = clip(w + A_ltd, 0, 15)",
+                on_post="A_ltd -= 0.003; w = clip(w + A_ltp, 0, 15)",
                 name=f"s{cid}_{src_name[:4]}_{tgt_name[:4]}")
             else:
                 syn = Synapses(G, G, "w : 1", on_pre=f"v_post += {sign_val} * w",
@@ -247,9 +247,21 @@ class FearCircuitV2:
         # モニター（全ニューロンを1つのモニターで監視、後でインデックスで分離）
         spike_mon = SpikeMonitor(G, name="spike_mon")
 
+        # [問題1] 試行間STDP重み復元
+        for syn in synapses:
+            if syn.name in self._saved_weights and len(syn) > 0:
+                prev = self._saved_weights[syn.name]
+                if len(prev) == len(syn):
+                    syn.w = prev
+
         # ネットワーク構築・実行
         net = Network(G, spike_mon, *synapses)
         net.run(c.duration_ms * ms)
+
+        # [問題1] 試行後STDP重み保存
+        for syn in synapses:
+            if len(syn) > 0 and hasattr(syn, 'A_ltp'):
+                self._saved_weights[syn.name] = np.array(syn.w[:])
 
         # === 結果集計 ===
         dur_s = c.duration_ms / 1000.0

@@ -37,6 +37,11 @@ class Brian2Backend:
         self._stress_cfg = StressV2Config(duration_ms=200)
         self._interaction_count = 0
 
+        # [問題3修正] readout_v2 (PCA) を統合
+        from src.brian2_circuits.readout_v2 import SpikingReadout
+        self._readout_pca = SpikingReadout(n_components=3)
+        self._rate_history: list[tuple[list[float], str]] = []  # (rates, label) for PCA training
+
     def process(self, sensory: SensoryInput) -> Brian2Result:
         """SensoryInputを処理し、Brian2回路の結果を統合する。"""
         self._interaction_count += 1
@@ -104,7 +109,7 @@ class Brian2Backend:
         if stress_cortisol > 0.3 and reward_approach > 0:
             reward_approach *= (1.0 - stress_cortisol * 0.2)
 
-        # [H4修正] readout_v2 (PCA) を使用可能な場合に適用
+        # [問題3修正] readout_v2 (PCA) 学習データ蓄積
         import numpy as np
         rate_vector = np.array([
             activities.get("la_exc", 0), activities.get("ba_exc", 0),
@@ -113,8 +118,29 @@ class Brian2Backend:
             activities.get("nac_shell_d1", 0), activities.get("pvn", 0),
         ])
 
-        # readout統合（手動線形結合 + 回路間相互影響反映済み）
-        valence = (reward_approach * 0.5 - fear_freeze * 0.3 - stress_cortisol * 0.2)
+        # PCA学習データを蓄積
+        label = "threat" if sensory.threat_signal > 0.3 else ("reward" if sensory.reward_signal > 0.3 else "neutral")
+        self._rate_history.append((rate_vector.tolist(), label))
+
+        # PCAが適合済みならデータ駆動readoutを補助的に使用
+        pca_valence_mod = 0.0
+        if self._readout_pca.is_fitted:
+            pca_result = self._readout_pca.to_emotion_readout(rate_vector)
+            pca_valence_mod = pca_result.get("valence", 0) * 0.3  # PCA寄与30%
+
+        # 10サンプル以上溜まったらPCAを適合
+        if len(self._rate_history) >= 10 and not self._readout_pca.is_fitted:
+            from src.brian2_circuits.readout_v2 import ReadoutTrainingData
+            rates_matrix = np.array([r for r, _ in self._rate_history])
+            labels = [l for _, l in self._rate_history]
+            data = ReadoutTrainingData(
+                rates_matrix=rates_matrix, labels=labels,
+                population_names=["la", "ba", "cs", "cm", "bn", "vt", "na", "pv"],
+            )
+            self._readout_pca.fit(data)
+
+        # readout統合（手動線形結合 + PCA補助 + 回路間相互影響反映済み）
+        valence = (reward_approach * 0.5 - fear_freeze * 0.3 - stress_cortisol * 0.2 + pca_valence_mod)
         arousal = max(fear_freeze, reward_approach, stress_cortisol * 2) * 0.7 + 0.2
         threat = fear_freeze * 0.6 + fear_anxiety * 0.3 + stress_cortisol * 0.1
 

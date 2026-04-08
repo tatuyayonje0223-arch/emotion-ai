@@ -159,7 +159,8 @@ def create_brain():
     """EmotionBrain(正式最終システム)のセッションを作成する。"""
     from src.brian2_circuits.integrated_brain import EmotionBrain
     brain = EmotionBrain()
-    brain_id = f"brain-{len(_brains)}"
+    from uuid import uuid4
+    brain_id = f"brain-{uuid4().hex[:8]}"
     _brains[brain_id] = brain
     return {"brain_id": brain_id}
 

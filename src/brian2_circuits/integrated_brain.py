@@ -121,21 +121,23 @@ class EmotionBrain:
                 strength=min(1.0, strength),
             )
 
-        # 6. readout（神経修飾の影響を統合）
+        # 6. readout（神経修飾の影響を統合）[問題4修正: 影響を増幅]
         base = h_result.readout
-        ecb_extinction_mod = self._ecb.extinction_signal * 0.1
-        ach_memory_mod = self._ach.nbm_ach * 0.05
+        ecb_mod = self._ecb.extinction_signal * 0.3         # 消去→valence改善+脅威低下
+        ach_mod = self._ach.nbm_ach * 0.15                  # ACh→記憶強化
+        theta_mod = theta_coh * 0.1                          # シータ同期→覚醒変調
+        spine_mod = (self._structural.spine_density - 1.0) * 0.1  # スパイン→脅威感度
 
         readout = EmotionReadout(
-            valence=max(-1, min(1, base.valence + ecb_extinction_mod)),
-            arousal=base.arousal,
-            threat_load=max(0, min(1, base.threat_load - ecb_extinction_mod)),
+            valence=max(-1, min(1, base.valence + ecb_mod)),
+            arousal=max(0, min(1, base.arousal + theta_mod)),
+            threat_load=max(0, min(1, base.threat_load - ecb_mod + spine_mod)),
             reward_drive=base.reward_drive,
             social_warmth=base.social_warmth,
             cognitive_control=base.cognitive_control,
             body_distress=base.body_distress,
             energy=base.energy,
-            memory_encoding_boost=min(1, base.memory_encoding_boost + ach_memory_mod),
+            memory_encoding_boost=min(1, base.memory_encoding_boost + ach_mod),
         )
 
         # 7. 応答ポリシー
