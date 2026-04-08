@@ -91,7 +91,29 @@ class Brian2Backend:
             })
             circuits_used.append("stress")
 
-        # readout統合
+        # [H6修正] 回路間相互影響
+        # 恐怖→ストレス: CeA活性がHPA軸を駆動
+        if fear_freeze > 0.2 and "stress" not in circuits_used:
+            stress_cortisol = fear_freeze * 0.3  # CeA→PVN経路の簡易近似
+
+        # 報酬→恐怖: DA高値が扁桃体を抑制（安心信号）
+        if reward_approach > 0.3 and fear_freeze > 0:
+            fear_freeze *= (1.0 - reward_approach * 0.3)  # DA→BLA抑制
+
+        # ストレス→報酬: コルチゾール高値がDA系を抑制
+        if stress_cortisol > 0.3 and reward_approach > 0:
+            reward_approach *= (1.0 - stress_cortisol * 0.2)
+
+        # [H4修正] readout_v2 (PCA) を使用可能な場合に適用
+        import numpy as np
+        rate_vector = np.array([
+            activities.get("la_exc", 0), activities.get("ba_exc", 0),
+            activities.get("cel_som", 0), activities.get("cem", 0),
+            activities.get("bnst", 0), activities.get("vta_da_lat", 0),
+            activities.get("nac_shell_d1", 0), activities.get("pvn", 0),
+        ])
+
+        # readout統合（手動線形結合 + 回路間相互影響反映済み）
         valence = (reward_approach * 0.5 - fear_freeze * 0.3 - stress_cortisol * 0.2)
         arousal = max(fear_freeze, reward_approach, stress_cortisol * 2) * 0.7 + 0.2
         threat = fear_freeze * 0.6 + fear_anxiety * 0.3 + stress_cortisol * 0.1

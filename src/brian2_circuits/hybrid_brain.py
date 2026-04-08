@@ -146,19 +146,22 @@ class HybridBrain:
             memory_encoding_boost=min(1.0, base_readout.memory_encoding_boost + hippo_context * 0.005),
         )
 
-        # 仮想ニューロン数の計算
+        # ニューロン数の計算
+        # [監査C3修正] 正直な表記: スパイキング(実際に個別発火) + mean-field(集団近似)
         spiking_neurons = sum(
             v for k, v in {
                 "fear": 217, "reward": 190, "stress": 140,
             }.items() if k in spike_result.circuits_activated
         )
-        mf_virtual = sum(r.params.n_exc + r.params.n_inh for r in self._mf_regions.values())
+        mf_regions_count = len(self._mf_regions)
+        # mean-fieldは「仮想ニューロン数」ではなく「近似対象の集団サイズ」
+        # 実態は1領域あたり3状態変数(rate_exc, rate_inh, adaptation)
 
         return HybridResult(
             spiking_result=spike_result,
             mf_rates=mf_rates,
             readout=integrated_readout,
-            total_virtual_neurons=spiking_neurons + mf_virtual,
+            total_virtual_neurons=spiking_neurons,  # スパイキングのみカウント
         )
 
     @property

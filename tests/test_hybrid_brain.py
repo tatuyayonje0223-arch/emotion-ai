@@ -108,7 +108,8 @@ class TestHybridBrain:
         brain = HybridBrain()
         result = brain.process(SensoryInput(threat_signal=0.5))
         # mean-field: 4領域 × (8000E + 2000I) = 40,000
-        assert result.total_virtual_neurons >= 10000
+        # [C3修正] スパイキングニューロンのみカウント（mean-fieldは含まない）
+        assert result.total_virtual_neurons >= 100  # 恐怖回路で~217スパイキング
 
     def test_mf_feedback_from_spiking(self):
         """スパイキング→mean-fieldのフィードバックが動作。"""
