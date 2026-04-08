@@ -175,18 +175,28 @@ class FearCircuitV2:
             s, e = idx[name]
             _set_params(s, e, 0.02, 0.25, -65, 2, 0)
 
-        # === シナプス結合（全体NeuronGroupに対してインデックスベースで接続） ===
-        def _conn(src_name, tgt_name, p, w, inh=False, cid=0):
+        # === シナプス結合 ===
+        # [NH2修正] STDP付きシナプス関数を追加
+        def _conn(src_name, tgt_name, p, w, inh=False, cid=0, stdp=False):
             ss, se = idx[src_name]
             ts, te = idx[tgt_name]
-            n_src = se - ss
-            n_tgt = te - ts
             sign_val = -1.0 if inh else 1.0
-            syn = Synapses(G, G, "w : 1", on_pre=f"v_post += {sign_val} * w",
-                           name=f"s{cid}_{src_name[:4]}_{tgt_name[:4]}")
-            # インデックスベースの条件付き接続
-            conn_i = []
-            conn_j = []
+
+            if stdp and not inh:
+                # STDP付きシナプス（CS→LA等の可塑的結合）
+                syn = Synapses(G, G, model="""
+                    w : 1
+                    dA_ltp/dt = -A_ltp / (20*ms) : 1 (event-driven)
+                    dA_ltd/dt = -A_ltd / (20*ms) : 1 (event-driven)
+                """,
+                on_pre="v_post += w; A_ltp += 0.005",
+                on_post="A_ltd += -0.003",
+                name=f"s{cid}_{src_name[:4]}_{tgt_name[:4]}")
+            else:
+                syn = Synapses(G, G, "w : 1", on_pre=f"v_post += {sign_val} * w",
+                               name=f"s{cid}_{src_name[:4]}_{tgt_name[:4]}")
+
+            conn_i, conn_j = [], []
             for i in range(ss, se):
                 for j in range(ts, te):
                     if rng.random() < p:
@@ -194,7 +204,6 @@ class FearCircuitV2:
                         conn_j.append(j)
             if conn_i:
                 syn.connect(i=conn_i, j=conn_j)
-                # [監査P2] バランスネットワーク重みスケーリング: w / sqrt(N_pre * p)
                 n_inputs = max(1, (se - ss) * p)
                 w_scaled = w / np.sqrt(n_inputs)
                 syn.w = rng.uniform(0, w_scaled, len(syn))
@@ -208,11 +217,11 @@ class FearCircuitV2:
         # VIP脱抑制
         synapses.append(_conn("la_vip", "la_pv", 0.5, 5.0, inh=True, cid=cid)); cid += 1
 
-        # LA → BA
-        synapses.append(_conn("la_exc", "ba_exc", 0.3, 3.0, cid=cid)); cid += 1
+        # LA → BA [NH2: STDP付き — 恐怖条件付けの主要可塑的結合]
+        synapses.append(_conn("la_exc", "ba_exc", 0.3, 3.0, cid=cid, stdp=True)); cid += 1
 
-        # LA/BA → CeL_SOM+
-        synapses.append(_conn("la_exc", "cel_som", 0.3, 3.0, cid=cid)); cid += 1
+        # LA/BA → CeL_SOM+ [STDP付き — CS-US連合学習]
+        synapses.append(_conn("la_exc", "cel_som", 0.3, 3.0, cid=cid, stdp=True)); cid += 1
         synapses.append(_conn("ba_exc", "cel_som", 0.2, 2.0, cid=cid)); cid += 1
 
         # CeL相互抑制

@@ -19,7 +19,7 @@ Emotion-Capable Brain-Inspired AI — 情動神経回路の簡略モデル探索
 
 3つのアーキテクチャが並存するが、位置づけは以下の通り:
 - **EmotionBrain** (brian2_circuits/integrated_brain.py): 正式な最終システム。全新規開発はここに統合
-- **NeuroPipeline** (neurocircuit/neuro_pipeline.py): EmotionBrainへのエントリーポイント
+- **NeuroPipeline** (neurocircuit/neuro_pipeline.py): WilsonCowan/Brian2/Hybridバックエンド切替用。EmotionBrainは別系統
 - **EmotionPipeline** (pipeline.py): レガシー。API互換のために残すが新規開発しない
 - **numpy spiking** (circuits/ + spiking/): DEPRECATED。Brian2版に置換済み
 

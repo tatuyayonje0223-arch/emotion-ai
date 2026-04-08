@@ -148,6 +148,51 @@ def recent_audit(session_id: str, limit: int = 20):
     return {"session_id": session_id, "entries": buffer[-limit:]}
 
 
+# === EmotionBrain エンドポイント（正式システム） ===
+# [NC1修正] APIからEmotionBrainに直接アクセス可能にする
+
+_brains: dict[str, "EmotionBrain"] = {}
+
+
+@app.post("/brain/create")
+def create_brain():
+    """EmotionBrain(正式最終システム)のセッションを作成する。"""
+    from src.brian2_circuits.integrated_brain import EmotionBrain
+    brain = EmotionBrain()
+    brain_id = f"brain-{len(_brains)}"
+    _brains[brain_id] = brain
+    return {"brain_id": brain_id}
+
+
+@app.post("/brain/{brain_id}/process")
+def brain_process(brain_id: str, input_data: TextInput):
+    """EmotionBrainでテキストを処理する。"""
+    if brain_id not in _brains:
+        raise HTTPException(404, f"Brain '{brain_id}' not found")
+    result = _brains[brain_id].process(input_data.text)
+    return {
+        "brain_id": brain_id,
+        "step": result.step,
+        "blocked": result.blocked,
+        "readout": result.readout.model_dump(),
+        "policy": {"tone": result.policy.tone, "intervention": result.policy.intervention_level},
+        "neuromodulation": result.neuromodulation,
+        "theta_coherence": result.theta_coherence,
+        "memory_stats": result.memory_stats,
+        "virtual_neurons": result.virtual_neurons,
+        "region_activities": result.region_activities,
+    }
+
+
+@app.post("/brain/{brain_id}/sleep")
+def brain_sleep(brain_id: str, cycles: int = 1):
+    """EmotionBrainの睡眠リプレイを実行する。"""
+    if brain_id not in _brains:
+        raise HTTPException(404, f"Brain '{brain_id}' not found")
+    results = _brains[brain_id].sleep(n_cycles=cycles)
+    return {"brain_id": brain_id, "sleep_results": results}
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "0.2.0"}
+    return {"status": "ok", "version": "0.3.0"}
