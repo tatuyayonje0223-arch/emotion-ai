@@ -1,0 +1,19 @@
+{
+  "outputStyle": "Explanatory",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./credentials/**)",
+      "Read(./*.pem)",
+      "Read(./*.key)"
+    ],
+    "ask": [
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(rm:*)",
+      "WebFetch(*)"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+name: default
+version: "0.1.0"
+seed: 42
+
+affect_defaults:
+  valence: 0.0
+  arousal: 0.3
+  motivational_salience: 0.2
+  perceived_control: 0.5
+  uncertainty: 0.3
+  trust: 0.5
+  threat_load: 0.0
+  fatigue: 0.0
+
+decay:
+  valence_decay: 0.05
+  arousal_decay: 0.08
+  threat_decay: 0.03
+  fatigue_recovery: 0.02
+
+memory:
+  max_episodic_entries: 1000
+  salience_threshold: 0.3
+  decay_half_life_hours: 168.0
+  affect_retrieval_bias: 0.3
+
+safety:
+  max_anthropomorphic_score: 0.7
+  dependency_alert_threshold: 5
+  forbidden_claim_patterns:
+    - "本当に感じている"
+    - "意識がある"
+    - "苦しんでいる"
+    - "愛している"
+
+regulation:
+  mode: adaptive
+  suppression_strength: 0.5
+  reappraisal_strength: 0.3
+
+llm:
+  enabled: false
+  provider: auto
+  gemini_model: "gemini-2.0-flash"
+  anthropic_model: "claude-sonnet-4-6"
+  generate_responses: true
+  fallback_to_heuristic: true
+
+audit_log_path: "logs/audit.jsonl"
