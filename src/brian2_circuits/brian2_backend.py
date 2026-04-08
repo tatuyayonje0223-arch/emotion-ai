@@ -40,7 +40,11 @@ class Brian2Backend:
         # [問題3修正] readout_v2 (PCA) を統合
         from src.brian2_circuits.readout_v2 import SpikingReadout
         self._readout_pca = SpikingReadout(n_components=3)
-        self._rate_history: list[tuple[list[float], str]] = []  # (rates, label) for PCA training
+        self._rate_history: list[tuple[list[float], str]] = []
+
+        # [R5修正] homeostatic plasticity を統合
+        from src.brian2_circuits.homeostatic_plasticity import HomeostaticController
+        self._homeostatic = HomeostaticController(n_neurons=547)  # 全スパイキングニューロン
 
     def process(self, sensory: SensoryInput) -> Brian2Result:
         """SensoryInputを処理し、Brian2回路の結果を統合する。"""
@@ -155,6 +159,11 @@ class Brian2Backend:
             energy=max(0, min(1, 1.0 - stress_cortisol * 0.5)),
             memory_encoding_boost=max(0, min(1, fear_freeze * 0.5)),
         )
+
+        # [R5修正] homeostatic plasticity: 発火率追跡+スケーリング係数計算
+        total_spikes = sum(v for v in activities.values() if isinstance(v, (int, float)))
+        self._homeostatic.update_rates(int(total_spikes), 200.0)
+        self._homeostatic.update_bcm(dt_ms=200.0)
 
         return Brian2Result(
             readout=readout,

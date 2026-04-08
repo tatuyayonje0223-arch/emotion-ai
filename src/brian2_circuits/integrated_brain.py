@@ -50,7 +50,9 @@ class EmotionBrain:
     睡眠リプレイは明示的に呼び出す。
     """
 
-    def __init__(self):
+    def __init__(self, seed: int = 42):
+        import random as _random
+        self._rng = _random.Random(seed)  # [R5修正] 再現性のためシード固定
         self._hybrid = HybridBrain()
         self._ecb = EndocannabinoidState()
         self._ach = AcetylcholineState()
@@ -93,13 +95,11 @@ class EmotionBrain:
         )
 
         # シータ振動更新（脅威で同期↑、中立で位相ノイズ）
-        import random
         for _ in range(200):
             self._theta_bla.step(dt_ms=1.0)
             self._theta_hippo.step(dt_ms=1.0)
-            # 脅威がない時は位相ノイズ→脱同期
             if sensory.threat_signal < 0.2:
-                self._theta_hippo.phase += random.gauss(0, 0.05)
+                self._theta_hippo.phase += self._rng.gauss(0, 0.05)
         theta_coh = compute_theta_coherence(self._theta_bla, self._theta_hippo)
 
         # 構造的可塑性
