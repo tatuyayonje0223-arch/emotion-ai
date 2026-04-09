@@ -62,14 +62,14 @@ def analyze_reward_time_windows(cfg: RewardV2Config | None = None) -> TimeWindow
     cs_s = int(cfg.cs_onset_ms / cfg.dt_ms)
     cs_e = int((cfg.cs_onset_ms + cfg.cs_dur_ms) / cfg.dt_ms)
 
-    # VTA DA tonic入力
+    # [R7修正] VTA DA tonic入力（5Hz目標に低減）
     for da in ["vta_da_lat", "vta_da_med"]:
         s, e = idx[da]
-        drive[:, s:e] += 1.5
+        drive[:, s:e] += 0.8
 
-    # 報酬入力
+    # [R7修正] 報酬入力（burst 20-40Hz目標に低減）
     s, e = idx["vta_da_lat"]
-    drive[rew_s:rew_e, s:e] += cfg.reward_amp * 2.5
+    drive[rew_s:rew_e, s:e] += cfg.reward_amp * 0.8
 
     I_drive = TimedArray(drive, dt=cfg.dt_ms * ms)
 

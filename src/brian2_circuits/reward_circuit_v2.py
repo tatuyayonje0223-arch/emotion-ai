@@ -97,15 +97,15 @@ class RewardCircuitV2:
             s, e = idx["nac_co_d1"]
             drive[cs_s:cs_e, s:s + c.n_nac_core_d1 // 3] += c.cs_amp * 0.5
 
-        # [Step0] VTA DAにtonic入力を追加（Grace 1991: tonic 3-5Hz）
+        # [R7 C2修正] VTA DA tonic入力（Grace 1991: 3-5Hz目標）
         for da_name in ["vta_da_lat", "vta_da_med"]:
             s, e = idx[da_name]
-            drive[:, s:e] += 1.5  # tonic current for ~5Hz baseline
+            drive[:, s:e] += 0.8  # 低tonic（目標5Hz以下）
 
-        # 報酬入力（tonicの上にバーストを重畳）
+        # 報酬入力（burst 20-40Hz目標。175Hz→40Hz方向に低減）
         if reward:
             s, e = idx["vta_da_lat"]
-            drive[rew_s:rew_e, s:e] += c.reward_amp * 2.5  # burst用に増強
+            drive[rew_s:rew_e, s:e] += c.reward_amp * 0.8  # 2.5→0.8
             s, e = idx["nac_sh_d1"]
             drive[rew_s:rew_e, s:e] += c.reward_amp * 0.5
 
