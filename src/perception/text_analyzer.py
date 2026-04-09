@@ -7,26 +7,37 @@ import re
 from src.schemas.events import PerceptionSignal
 
 # 感情関連キーワード辞書（MVP: 拡張可能な最小構成）
+# 日英両対応の拡張辞書
 _POSITIVE_WORDS = {
     "嬉しい", "楽しい", "ありがとう", "素晴らしい", "最高", "好き", "幸せ",
     "感謝", "良い", "素敵", "安心", "期待", "希望", "成功", "達成",
+    "喜び", "笑顔", "感動", "満足", "快適", "穏やか", "優しい", "温かい",
     "happy", "great", "thanks", "love", "wonderful", "excellent", "joy",
+    "pleased", "grateful", "delighted", "cheerful", "satisfied",
 }
 
 _NEGATIVE_WORDS = {
     "悲しい", "辛い", "怒り", "不安", "心配", "嫌い", "最悪", "失敗",
     "恐怖", "怖い", "痛い", "苦しい", "困った", "ストレス", "疲れた",
+    "絶望", "孤独", "悔しい", "惨め", "憂鬱", "落ち込", "泣", "つらい",
+    "危険", "攻撃", "脅威", "崩壊", "死", "恐ろしい",  # 脅威=ネガティブ
     "sad", "angry", "fear", "hate", "terrible", "awful", "worried", "stressed",
+    "depressed", "anxious", "frustrated", "miserable", "lonely", "scared",
 }
 
 _HIGH_AROUSAL_WORDS = {
     "驚き", "びっくり", "緊急", "危険", "衝撃", "興奮", "パニック",
+    "大変", "激しい", "突然", "急", "慌", "叫", "震え",
     "shocked", "urgent", "danger", "excited", "panic", "amazing",
+    "alarm", "emergency", "sudden", "intense", "scream",
 }
 
 _THREAT_WORDS = {
     "脅威", "危険", "攻撃", "批判", "失う", "死", "終わり", "崩壊",
+    "殺", "暴力", "事故", "災害", "地震", "火事", "戦争", "逃げ",
+    "怒鳴", "殴", "刺", "銃", "爆発", "恐ろしい", "脅す",
     "threat", "danger", "attack", "lose", "death", "collapse", "destroy",
+    "kill", "violence", "accident", "disaster", "war", "bomb", "weapon",
 }
 
 

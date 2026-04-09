@@ -38,6 +38,44 @@ def run_data_driven_fear(
     return result
 
 
+def get_data_driven_weights() -> dict[str, float]:
+    """文献/Allen結合マトリクスから恐怖回路の重みパラメータを取得する。
+
+    FearCircuitV2のコンストラクタに渡せる形式で返す。
+    """
+    from src.data_driven.data_manager import get_or_build_matrix
+
+    matrix = get_or_build_matrix()
+    weights = {}
+
+    # LA→BA (Pitkänen2000)
+    p = matrix.get_projection("LA", "BLA")
+    if p:
+        weights["la_ba_weight"] = matrix.to_weight("LA", "BLA", scale=6.0)
+
+    # BLA→CeA (LeDoux2007)
+    p = matrix.get_projection("BLA", "CeA")
+    if p:
+        weights["bla_cea_weight"] = matrix.to_weight("BLA", "CeA", scale=6.0)
+
+    # BLA→BNST (Kim2013)
+    p = matrix.get_projection("BLA", "BNST")
+    if p:
+        weights["bla_bnst_weight"] = matrix.to_weight("BLA", "BNST", scale=6.0)
+
+    # PL→BLA (Vertes2004)
+    p = matrix.get_projection("PL", "BLA")
+    if p:
+        weights["pl_bla_weight"] = matrix.to_weight("PL", "BLA", scale=6.0)
+
+    # IL→CeA (Quirk2003)
+    p = matrix.get_projection("IL", "CeA")
+    if p:
+        weights["il_cea_weight"] = matrix.to_weight("IL", "CeA", scale=6.0)
+
+    return weights
+
+
 def compare_hand_vs_data_driven() -> dict:
     """手配線とデータ駆動の結果を比較する。"""
     from src.brian2_circuits.fear_circuit_v2 import FearCircuitV2, FearV2Config
