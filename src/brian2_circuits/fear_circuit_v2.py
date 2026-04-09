@@ -222,9 +222,9 @@ class FearCircuitV2:
         # LA → BA [NH2: STDP付き — 恐怖条件付けの主要可塑的結合]
         synapses.append(_conn("la_exc", "ba_exc", 0.3, 3.0, cid=cid, stdp=True)); cid += 1
 
-        # LA/BA → CeL_SOM+ [STDP付き — CS-US連合学習]
-        synapses.append(_conn("la_exc", "cel_som", 0.3, 3.0, cid=cid, stdp=True)); cid += 1
-        synapses.append(_conn("ba_exc", "cel_som", 0.2, 2.0, cid=cid)); cid += 1
+        # LA/BA → CeL_SOM+ [Step0較正: w=2.0でSOM+を15Hz方向に]
+        synapses.append(_conn("la_exc", "cel_som", 0.25, 2.0, cid=cid, stdp=True)); cid += 1
+        synapses.append(_conn("ba_exc", "cel_som", 0.15, 1.5, cid=cid)); cid += 1
 
         # CeL相互抑制 [Step0較正: SOM+→PKCd+を強化してPKCd+を抑制=脱抑制メカニズム]
         synapses.append(_conn("cel_som", "cel_pkcd", 0.7, 8.0, inh=True, cid=cid)); cid += 1
