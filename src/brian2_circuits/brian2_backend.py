@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 from pydantic import BaseModel, Field
 
 from src.brian2_circuits.fear_circuit_v2 import FearCircuitV2, FearV2Config
@@ -44,7 +45,8 @@ class Brian2Backend:
 
         # [R5修正] homeostatic plasticity を統合
         from src.brian2_circuits.homeostatic_plasticity import HomeostaticController
-        self._homeostatic = HomeostaticController(n_neurons=547)  # 全スパイキングニューロン
+        self._homeostatic = HomeostaticController(n_neurons=547)
+        self._fear_circuit_ref = None  # homeostatic→fear重みフィードバック用
 
     def process(self, sensory: SensoryInput) -> Brian2Result:
         """SensoryInputを処理し、Brian2回路の結果を統合する。"""
@@ -66,6 +68,7 @@ class Brian2Backend:
                    "sustained_threat_amp": self._fear_cfg.sustained_threat_amp * sensory.threat_signal},
             )
             circuit = FearCircuitV2(cfg)
+            self._fear_circuit_ref = circuit  # homeostatic feedbackのため参照保持
             us = sensory.pain_input > 0.3
             sustained = sensory.threat_signal > 0.3 and sensory.pain_input < 0.2
             result = circuit.run_trial(cs=True, us=us, sustained_threat=sustained, phase="process")
@@ -160,10 +163,16 @@ class Brian2Backend:
             memory_encoding_boost=max(0, min(1, fear_freeze * 0.5)),
         )
 
-        # [R5修正] homeostatic plasticity: 発火率追跡+スケーリング係数計算
+        # [R6修正] homeostatic plasticity: 発火率追跡+スケーリング→次試行の重みに反映
         total_spikes = sum(v for v in activities.values() if isinstance(v, (int, float)))
         self._homeostatic.update_rates(int(total_spikes), 200.0)
         self._homeostatic.update_bcm(dt_ms=200.0)
+
+        # スケーリング係数を恐怖回路の試行間重みに反映
+        scaling = float(self._homeostatic.get_scaling_factors().mean())
+        if hasattr(self, '_fear_circuit_ref') and self._fear_circuit_ref is not None:
+            for key, weights in self._fear_circuit_ref._saved_weights.items():
+                self._fear_circuit_ref._saved_weights[key] = np.clip(weights * scaling, 0, 15)
 
         return Brian2Result(
             readout=readout,
