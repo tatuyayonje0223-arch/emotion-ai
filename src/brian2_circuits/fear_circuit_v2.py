@@ -15,6 +15,7 @@ import numpy as np
 
 import brian2
 brian2.prefs.codegen.target = "numpy"
+from src.brian2_circuits.neuron_models import IZH_TIMED_EQS
 from brian2 import (
     NeuronGroup, Synapses, SpikeMonitor, Network,
     TimedArray, ms, second, defaultclock, start_scope,
@@ -48,14 +49,6 @@ class FearV2Config:
     us_dur_ms: float = 30.0
 
 
-IZH_EQS = """
-    dv/dt = (0.04*v**2 + 5*v + 140 - u + I_drive(t, i)) / ms : 1
-    du/dt = (a*(b*v - u)) / ms : 1
-    a : 1 (constant)
-    b : 1 (constant)
-    c : 1 (constant)
-    d : 1 (constant)
-"""
 
 
 @dataclass
@@ -142,7 +135,7 @@ class FearCircuitV2:
 
         # === ニューロン集団（単一NeuronGroup） ===
         G = NeuronGroup(
-            total_n, IZH_EQS,
+            total_n, IZH_TIMED_EQS,
             threshold="v >= 30", reset="v = c; u += d",
             method="euler", name="all_neurons",
         )

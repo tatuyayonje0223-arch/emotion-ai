@@ -13,16 +13,9 @@ import numpy as np
 
 import brian2
 brian2.prefs.codegen.target = "numpy"
+from src.brian2_circuits.neuron_models import IZH_TIMED_EQS
 from brian2 import NeuronGroup, Synapses, SpikeMonitor, Network, TimedArray, ms, start_scope, defaultclock
 
-IZH_EQS = """
-    dv/dt = (0.04*v**2 + 5*v + 140 - u + I_drive(t, i)) / ms : 1
-    du/dt = (a*(b*v - u)) / ms : 1
-    a : 1 (constant)
-    b : 1 (constant)
-    c : 1 (constant)
-    d : 1 (constant)
-"""
 
 
 @dataclass
@@ -108,7 +101,7 @@ class StressCircuitV2:
 
         I_drive = TimedArray(drive, dt=c.dt_ms * ms)
 
-        G = NeuronGroup(total_n, IZH_EQS, threshold="v >= 30", reset="v = c; u += d",
+        G = NeuronGroup(total_n, IZH_TIMED_EQS, threshold="v >= 30", reset="v = c; u += d",
                          method="euler", name="stress_neurons")
         G.v = -65 + rng.normal(0, 2, total_n)
         G.u = 0.2 * G.v[:]

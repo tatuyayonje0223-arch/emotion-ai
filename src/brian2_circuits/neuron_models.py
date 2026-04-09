@@ -23,6 +23,17 @@ import numpy as np
 
 # === Izhikevich方程式テンプレート ===
 
+# TimedArray駆動版（v2回路で使用）
+IZH_TIMED_EQS = """
+    dv/dt = (0.04*v**2 + 5*v + 140 - u + I_drive(t, i)) / ms : 1
+    du/dt = (a*(b*v - u)) / ms : 1
+    a : 1 (constant)
+    b : 1 (constant)
+    c : 1 (constant)
+    d : 1 (constant)
+"""
+
+# Synaptic入力版（neuron_models.pyのcreate_populationで使用）
 IZHIKEVICH_EQS = """
     dv/dt = (0.04*v**2 + 5*v + 140 - u + I_syn + I_ext + I_noise) / ms : 1
     du/dt = (a*(b*v - u)) / ms : 1
