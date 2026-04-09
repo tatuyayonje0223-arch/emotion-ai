@@ -131,6 +131,10 @@ class FearCircuitV2:
             bnst_s, bnst_e = idx["bnst"]
             drive[:, bnst_s:bnst_e] += c.sustained_threat_amp
 
+        # [Step0較正] CeL PKCd+の背景ノイズを低減（SOM+抑制下に置く）
+        pkcd_s, pkcd_e = idx["cel_pkcd"]
+        drive[:, pkcd_s:pkcd_e] *= 0.4  # 背景を40%に低減
+
         I_drive = TimedArray(drive, dt=c.dt_ms * ms)
 
         # === ニューロン集団（単一NeuronGroup） ===
@@ -197,8 +201,13 @@ class FearCircuitV2:
                         conn_j.append(j)
             if conn_i:
                 syn.connect(i=conn_i, j=conn_j)
-                n_inputs = max(1, (se - ss) * p)
-                w_scaled = w / np.sqrt(n_inputs)
+                n_src = se - ss
+                # 小集団(N<20)ではスケーリングなし（CeL等の抑制を保護）
+                if n_src >= 20:
+                    n_inputs = max(1, n_src * p)
+                    w_scaled = w / np.sqrt(n_inputs)
+                else:
+                    w_scaled = w
                 syn.w = rng.uniform(0, w_scaled, len(syn))
             return syn
 
@@ -217,8 +226,8 @@ class FearCircuitV2:
         synapses.append(_conn("la_exc", "cel_som", 0.3, 3.0, cid=cid, stdp=True)); cid += 1
         synapses.append(_conn("ba_exc", "cel_som", 0.2, 2.0, cid=cid)); cid += 1
 
-        # CeL相互抑制
-        synapses.append(_conn("cel_som", "cel_pkcd", 0.5, 5.0, inh=True, cid=cid)); cid += 1
+        # CeL相互抑制 [Step0較正: SOM+→PKCd+を強化してPKCd+を抑制=脱抑制メカニズム]
+        synapses.append(_conn("cel_som", "cel_pkcd", 0.7, 8.0, inh=True, cid=cid)); cid += 1
         synapses.append(_conn("cel_pkcd", "cel_som", 0.3, 3.0, inh=True, cid=cid)); cid += 1
 
         # PKCd → CeM トニック抑制
