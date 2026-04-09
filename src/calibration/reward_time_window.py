@@ -1,7 +1,11 @@
 """報酬回路のburst/tonic時間窓解析。
 
-[残課題] trial全体の平均発火率ではなく、報酬提示期間のみの発火率を計算する。
-これによりtonic(ベースライン期間) vs burst(報酬期間)の分離が可能になる。
+報酬提示期間のみの発火率を計算し、tonic vs burstを分離する。
+
+[R8 M2注意] この解析はスタンドアロンNeuronGroup（シナプスなし）で実行するため、
+RewardCircuitV2の実回路（GABA局所抑制等）とは数値が乖離する。
+実回路のtonic: ~7.7Hz、本解析のtonic: ~19Hz（GABA抑制なし分高い）。
+burst/tonic比の方向性は正しいが、絶対値の比較には注意。
 """
 
 from __future__ import annotations

@@ -94,8 +94,10 @@ class FearCircuitV2:
                    c.n_itc + c.n_pl + c.n_il + c.n_bnst)
 
         # === 入力スケジュールをTimedArrayで事前構築（ノイズ込み） ===
-        rng = np.random.default_rng(trial_num * 7 + 42)
-        drive = c.bg_noise + rng.normal(0, c.bg_noise * 0.3, (n_steps, total_n))
+        # [R8 M3修正] 接続用RNG(固定)とノイズ用RNG(試行依存)を分離
+        rng = np.random.default_rng(12345)  # 接続パターン用（全試行で同一トポロジー）
+        noise_rng = np.random.default_rng(trial_num * 7 + 42)
+        drive = c.bg_noise + noise_rng.normal(0, c.bg_noise * 0.3, (n_steps, total_n))
 
         # インデックス範囲
         idx = {}

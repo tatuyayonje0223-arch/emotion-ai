@@ -54,14 +54,13 @@ def run_extinction_benchmark(
 
     peak = max(cond_freezes) if cond_freezes else 0.0
 
-    # 消去フェーズ（CS単独 + IL消去学習）
+    # 消去フェーズ（CS単独）
+    # [R8 M1修正] 正直な記述: 消去はCS入力振幅の漸減で模倣。
+    # 真のSTDP消去学習は試行間シード不一致のため機能していない（M3参照）。
     ext_freezes = []
     cs_amp_peak = cfg.cs_amp * (1.0 + (n_conditioning - 1) * 0.3)
     for i in range(n_extinction):
-        # IL消去学習: IL入力が試行ごとに増加→ITC活性化→CeM抑制
-        il_boost = i * 2.0  # 試行ごとにIL入力+2.0
-        # CS応答の漸減（STDP+消去学習の効果）
-        cs_decay = max(0.2, 1.0 - i * 0.06)
+        cs_decay = max(0.2, 1.0 - i * 0.06)  # CS応答の漸減（入力操作）
         trial_cfg = FearV2Config(**{
             **cfg.__dict__,
             "cs_amp": cs_amp_peak * cs_decay,
