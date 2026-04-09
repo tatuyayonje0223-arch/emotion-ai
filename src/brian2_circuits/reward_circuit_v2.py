@@ -97,15 +97,15 @@ class RewardCircuitV2:
             s, e = idx["nac_co_d1"]
             drive[cs_s:cs_e, s:s + c.n_nac_core_d1 // 3] += c.cs_amp * 0.5
 
-        # [R7 C2修正] VTA DA tonic入力（Grace 1991: 3-5Hz目標）
+        # [DAチューニング] tonic_drive=3.8, burst_drive=10.0 (score=0.901)
         for da_name in ["vta_da_lat", "vta_da_med"]:
             s, e = idx[da_name]
-            drive[:, s:e] += 0.8  # 低tonic（目標5Hz以下）
+            drive[:, s:e] += 3.8  # tonic: 3.5Hz目標
 
-        # 報酬入力（burst 20-40Hz目標。175Hz→40Hz方向に低減）
+        # 報酬入力（burst 29.5Hz目標）
         if reward:
             s, e = idx["vta_da_lat"]
-            drive[rew_s:rew_e, s:e] += c.reward_amp * 0.8  # 2.5→0.8
+            drive[rew_s:rew_e, s:e] += 10.0  # burst_drive=10.0
             s, e = idx["nac_sh_d1"]
             drive[rew_s:rew_e, s:e] += c.reward_amp * 0.5
 
@@ -120,11 +120,10 @@ class RewardCircuitV2:
         G.v = -65 + rng.normal(0, 2, total_n)
         G.u = 0.2 * G.v[:]
 
-        # DA neurons [Step0較正: RS型、tonic背景入力で5Hz発火]
+        # DA neurons [DAチューニング: a=0.01,d=10 → tonic=3.5Hz,burst=29.5Hz,ratio=8.4x]
         for name in ["vta_da_lat", "vta_da_med"]:
             s, e = idx[name]
-            G.a[s:e] = 0.02; G.b[s:e] = 0.2; G.c[s:e] = -65; G.d[s:e] = 8
-            G.v[s:e] = -60 + rng.normal(0, 3, e - s)  # 閾値に近い初期電位
+            G.a[s:e] = 0.01; G.b[s:e] = 0.2; G.c[s:e] = -65; G.d[s:e] = 10
         # GABA (FS)
         s, e = idx["vta_gaba"]
         G.a[s:e] = 0.1; G.b[s:e] = 0.2; G.c[s:e] = -65; G.d[s:e] = 2

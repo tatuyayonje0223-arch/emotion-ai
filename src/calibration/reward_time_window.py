@@ -66,14 +66,12 @@ def analyze_reward_time_windows(cfg: RewardV2Config | None = None) -> TimeWindow
     cs_s = int(cfg.cs_onset_ms / cfg.dt_ms)
     cs_e = int((cfg.cs_onset_ms + cfg.cs_dur_ms) / cfg.dt_ms)
 
-    # [R7修正] VTA DA tonic入力（5Hz目標に低減）
+    # [DAチューニング] tonic_drive=3.8, burst_drive=10.0
     for da in ["vta_da_lat", "vta_da_med"]:
         s, e = idx[da]
-        drive[:, s:e] += 0.8
-
-    # [R7修正] 報酬入力（burst 20-40Hz目標に低減）
+        drive[:, s:e] += 3.8
     s, e = idx["vta_da_lat"]
-    drive[rew_s:rew_e, s:e] += cfg.reward_amp * 0.8
+    drive[rew_s:rew_e, s:e] += 10.0
 
     I_drive = TimedArray(drive, dt=cfg.dt_ms * ms)
 
@@ -83,7 +81,10 @@ def analyze_reward_time_windows(cfg: RewardV2Config | None = None) -> TimeWindow
     G.u = 0.2 * G.v[:]
     for name in idx:
         s, e = idx[name]
-        G.a[s:e] = 0.02; G.b[s:e] = 0.2; G.c[s:e] = -65; G.d[s:e] = 8
+        if name in ("vta_da_lat", "vta_da_med"):
+            G.a[s:e] = 0.01; G.b[s:e] = 0.2; G.c[s:e] = -65; G.d[s:e] = 10  # DA tuned
+        else:
+            G.a[s:e] = 0.02; G.b[s:e] = 0.2; G.c[s:e] = -65; G.d[s:e] = 8
 
     mon = SpikeMonitor(G, name="tw_mon")
     net = Network(G, mon)
