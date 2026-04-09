@@ -126,6 +126,9 @@ class FearCircuitV2:
             drive[us_start:us_end, la_s:la_e] += c.us_amp
             vip_s, vip_e = idx["la_vip"]
             drive[us_start:us_end, vip_s:vip_e] += 10.0  # VIP脱抑制ゲート
+            # US→CeL SOM+直接活性化（BLA経由の恐怖学習シグナル）
+            som_s, som_e = idx["cel_som"]
+            drive[us_start:us_end, som_s:som_e] += c.us_amp * 0.5
 
         if sustained_threat:
             bnst_s, bnst_e = idx["bnst"]
@@ -134,6 +137,9 @@ class FearCircuitV2:
         # [Step0較正] CeL PKCd+の背景ノイズを低減（SOM+抑制下に置く）
         pkcd_s, pkcd_e = idx["cel_pkcd"]
         drive[:, pkcd_s:pkcd_e] *= 0.4  # 背景を40%に低減
+        # CeMにtonic背景入力を追加（PKCd抑制と拮抗して脱抑制を可能にする）
+        cem_s, cem_e = idx["cem"]
+        drive[:, cem_s:cem_e] += 3.0
 
         I_drive = TimedArray(drive, dt=c.dt_ms * ms)
 
@@ -230,10 +236,12 @@ class FearCircuitV2:
         synapses.append(_conn("cel_som", "cel_pkcd", 0.7, 8.0, inh=True, cid=cid)); cid += 1
         synapses.append(_conn("cel_pkcd", "cel_som", 0.3, 3.0, inh=True, cid=cid)); cid += 1
 
-        # PKCd → CeM トニック抑制
-        synapses.append(_conn("cel_pkcd", "cem", 0.5, 6.0, inh=True, cid=cid)); cid += 1
-        # SOM+ → CeM 弱い直接興奮
-        synapses.append(_conn("cel_som", "cem", 0.2, 1.0, cid=cid)); cid += 1
+        # PKCd → CeM トニック抑制 [CeM脱抑制較正: 3.0に弱化]
+        synapses.append(_conn("cel_pkcd", "cem", 0.4, 3.0, inh=True, cid=cid)); cid += 1
+        # SOM+ → CeM 直接興奮 [CeM脱抑制較正: p=0.6, w=6.0に大幅強化]
+        synapses.append(_conn("cel_som", "cem", 0.6, 6.0, cid=cid)); cid += 1
+        # BA → CeM 直接経路 (Pitkänen 2000)
+        synapses.append(_conn("ba_exc", "cem", 0.2, 3.0, cid=cid)); cid += 1
 
         # PL → LA (恐怖発現促進)
         synapses.append(_conn("pl", "la_exc", 0.2, 2.0, cid=cid)); cid += 1
