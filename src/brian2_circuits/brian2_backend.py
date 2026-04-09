@@ -33,9 +33,13 @@ class Brian2Backend:
     """
 
     def __init__(self):
-        self._fear_cfg = FearV2Config(duration_ms=200, cs_dur_ms=100, us_onset_ms=130, us_dur_ms=20)
-        self._reward_cfg = RewardV2Config(duration_ms=200, cs_dur_ms=50, reward_dur_ms=25)
-        self._stress_cfg = StressV2Config(duration_ms=200)
+        # [SBI較正済みconfig] ABC rejection (n=50, score=0.928) 由来
+        from src.calibration.calibrated_configs import (
+            CALIBRATED_FEAR_CONFIG, CALIBRATED_REWARD_CONFIG, CALIBRATED_STRESS_CONFIG,
+        )
+        self._fear_cfg = CALIBRATED_FEAR_CONFIG
+        self._reward_cfg = CALIBRATED_REWARD_CONFIG
+        self._stress_cfg = CALIBRATED_STRESS_CONFIG
         self._interaction_count = 0
 
         # [問題3修正] readout_v2 (PCA) を統合
