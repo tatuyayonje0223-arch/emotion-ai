@@ -156,7 +156,8 @@ class StressCircuitV2:
         self.ne_level = max(0.0, min(1.0, self.ne_level))
 
         # 慢性GRダウンレギュレーション
-        if stressor and self.cortisol > 0.4:
+        # [較正] GR閾値0.4→0.16（急性コルチゾール0.173に合わせて反応可能に）
+        if stressor and self.cortisol > 0.16:
             self.gr_sensitivity = max(0.1, self.gr_sensitivity - c.gr_downreg_rate * intensity)
 
         result = StressV2Result(

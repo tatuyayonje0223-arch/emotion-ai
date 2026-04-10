@@ -142,9 +142,11 @@ class FearCircuitV2:
             bnst_s, bnst_e = idx["bnst"]
             drive[:, bnst_s:bnst_e] += c.sustained_threat_amp
 
-        # [Step0較正] CeL PKCd+の背景ノイズを低減（SOM+抑制下に置く）
+        # CeL背景ノイズ低減: SOM+ 15Hz, PKCd+ 5Hz方向
+        som_s, som_e = idx["cel_som"]
+        drive[:, som_s:som_e] *= 0.5  # SOM+背景50%
         pkcd_s, pkcd_e = idx["cel_pkcd"]
-        drive[:, pkcd_s:pkcd_e] *= 0.4  # 背景を40%に低減
+        drive[:, pkcd_s:pkcd_e] *= 0.4  # PKCd+背景40%
         # [R7 H1修正] CeM tonic hackを除去。代わりにPKCd+→CeM抑制弱化+SOM+→CeM強化で対応
         # CeM背景は通常の bg_noise のみ（外部注入なし）
 

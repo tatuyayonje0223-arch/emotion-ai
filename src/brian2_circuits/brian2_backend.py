@@ -42,6 +42,10 @@ class Brian2Backend:
         self._stress_cfg = CALIBRATED_STRESS_CONFIG
         self._interaction_count = 0
 
+        # PersistentFearCircuit（真のSTDP学習用、オプション）
+        self._persistent_fear = None
+        self._use_persistent_fear = False
+
         # [問題3修正] readout_v2 (PCA) を統合
         from src.brian2_circuits.readout_v2 import SpikingReadout
         self._readout_pca = SpikingReadout(n_components=3)
