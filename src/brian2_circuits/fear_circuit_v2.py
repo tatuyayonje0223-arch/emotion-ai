@@ -146,7 +146,7 @@ class FearCircuitV2:
         som_s, som_e = idx["cel_som"]
         drive[:, som_s:som_e] *= 0.5  # SOM+背景50%
         pkcd_s, pkcd_e = idx["cel_pkcd"]
-        drive[:, pkcd_s:pkcd_e] *= 0.4  # PKCd+背景40%
+        drive[:, pkcd_s:pkcd_e] *= 0.15  # PKCd+背景15%（target 5Hz / ratio 3.0）
         # [R7 H1修正] CeM tonic hackを除去。代わりにPKCd+→CeM抑制弱化+SOM+→CeM強化で対応
         # CeM背景は通常の bg_noise のみ（外部注入なし）
 
