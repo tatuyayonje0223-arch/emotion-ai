@@ -71,7 +71,7 @@ def analyze_reward_time_windows(cfg: RewardV2Config | None = None) -> TimeWindow
         s, e = idx[da]
         drive[:, s:e] += 3.8
     s, e = idx["vta_da_lat"]
-    drive[rew_s:rew_e, s:e] += 10.0
+    drive[rew_s:rew_e, s:e] += 6.0  # burst_drive同期
 
     I_drive = TimedArray(drive, dt=cfg.dt_ms * ms)
 

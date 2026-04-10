@@ -105,10 +105,10 @@ class RewardCircuitV2:
         gaba_s, gaba_e = idx["vta_gaba"]
         drive[:, gaba_s:gaba_e] += 4.0
 
-        # 報酬入力（burst 29.5Hz目標）
+        # 報酬入力（burst 25-30Hz目標。回路内増幅を考慮して6.0に低減）
         if reward:
             s, e = idx["vta_da_lat"]
-            drive[rew_s:rew_e, s:e] += 10.0  # burst_drive=10.0
+            drive[rew_s:rew_e, s:e] += 6.0
             s, e = idx["nac_sh_d1"]
             drive[rew_s:rew_e, s:e] += c.reward_amp * 0.5
 
