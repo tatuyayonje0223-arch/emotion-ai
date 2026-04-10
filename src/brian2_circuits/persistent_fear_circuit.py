@@ -172,9 +172,13 @@ class PersistentFearCircuit:
         pkcd_s, pkcd_e = idx["cel_pkcd"]
         drive[:, pkcd_s:pkcd_e] *= 0.4
 
-        # BA tonic背景（STDP post spike生成のため。csに依存しない）
+        # BA tonic背景（消去時は段階的に低減→STDP LTD誘導）
         ba_s, ba_e = idx["ba_exc"]
-        drive[:, ba_s:ba_e] += 4.0
+        ba_tonic = 4.0
+        if phase == "extinction":
+            # 消去が進むとBA駆動が弱まり、post-before-pre方向のLTDが優勢に
+            ba_tonic = max(1.0, 4.0 - self._extinction_count * 0.3)
+        drive[:, ba_s:ba_e] += ba_tonic
 
         if cs:
             la_s, la_e = idx["la_exc"]

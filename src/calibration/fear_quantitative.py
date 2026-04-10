@@ -83,7 +83,7 @@ def validate_fear_circuit(
     details.append(f"BLA baseline: {bla_bl:.1f}Hz (target: {lit.bla_baseline_hz}Hz, score: {s1:.2f})")
 
     # === 2. 条件付け後 BLA 発火率 ===
-    cfg_cond = FearV2Config(**{**cfg.__dict__, "cs_amp": cfg.cs_amp * 2.5, "us_amp": cfg.us_amp * 1.5})
+    cfg_cond = FearV2Config(**{**cfg.__dict__, "cs_amp": cfg.cs_amp * 2.0, "us_amp": cfg.us_amp * 1.2})
     c2 = FearCircuitV2(cfg_cond)
     cond = c2.run_trial(cs=True, us=True, phase="conditioning")
     bla_cond = cond.la_rate + cond.ba_rate
