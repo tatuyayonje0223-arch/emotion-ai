@@ -100,7 +100,7 @@ class RewardCircuitV2:
         # [DAチューニング] tonic_drive=3.8 + GABA tonic for DA suppression
         for da_name in ["vta_da_lat", "vta_da_med"]:
             s, e = idx[da_name]
-            drive[:, s:e] += 3.8
+            drive[:, s:e] += 2.5  # [F-02] tonic低減: 回路内8Hz→5Hz方向
         # VTA GABA tonic（DAのtonic発火を抑制）
         gaba_s, gaba_e = idx["vta_gaba"]
         drive[:, gaba_s:gaba_e] += 4.0

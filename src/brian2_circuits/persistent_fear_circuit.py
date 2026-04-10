@@ -30,10 +30,9 @@ class PersistentFearCircuit:
     """永続型恐怖回路。STDP重みが試行間で自然に蓄積する。"""
 
     def __init__(self, config: FearV2Config | None = None):
-        self.cfg = config or FearV2Config(
-            cs_amp=17.7, us_amp=14.7, bg_noise=1.7, sustained_threat_amp=5.0,
-            duration_ms=200, cs_dur_ms=100, us_onset_ms=130, us_dur_ms=25,
-        )
+        # [F-03修正] CALIBRATED_CONFIGをデフォルトに統一
+        from src.calibration.calibrated_configs import CALIBRATED_FEAR_CONFIG
+        self.cfg = config or CALIBRATED_FEAR_CONFIG
         self._results: list[FearV2TrialResult] = []
         self._trial_count = 0
         self._extinction_count = 0
@@ -106,8 +105,8 @@ class PersistentFearCircuit:
                     dA_ltp/dt = -A_ltp / (20*ms) : 1 (event-driven)
                     dA_ltd/dt = -A_ltd / (20*ms) : 1 (event-driven)
                 """,
-                on_pre="v_post += w; A_ltp += 0.05; w = clip(w + A_ltd, 0, 15)",
-                on_post="A_ltd -= 0.03; w = clip(w + A_ltp, 0, 15)",
+                on_pre="v_post += w; A_ltp += 0.5; w = clip(w + A_ltd, 0, 15)",
+                on_post="A_ltd -= 0.3; w = clip(w + A_ltp, 0, 15)",
                 name=f"pfs{uid}")
             else:
                 syn = Synapses(G, G, "w : 1", on_pre=f"v_post += {sgn} * w",
@@ -200,8 +199,9 @@ class PersistentFearCircuit:
         # TimedArrayを更新（Brian2はTimedArrayの値を直接書き換え可能）
         self._I_drive.values = drive
 
-        # 膜電位を安定状態にリセット（完全リセットではなくソフトリセット）
+        # [F-01修正] 膜電位+回復変数をリセット（uドリフト防止）
         self._G.v = -65 + noise_rng.normal(0, 2, self._total_n)
+        self._G.u = 0.2 * self._G.v[:]
 
         # スパイクモニターをリセット
         self._mon.resize(0)
