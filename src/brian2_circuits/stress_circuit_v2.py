@@ -146,7 +146,7 @@ class StressCircuitV2:
 
         # コルチゾール更新
         pvn_r = _rate("pvn")
-        cort_drive = pvn_r * c.cort_rise_rate * 0.01
+        cort_drive = pvn_r * c.cort_rise_rate * 0.1  # コルチゾール上昇感度10x増
         cort_decay = (self.cortisol - c.cort_baseline) * c.cort_decay_rate
         self.cortisol = max(0.0, min(1.0, self.cortisol + cort_drive - cort_decay))
 
