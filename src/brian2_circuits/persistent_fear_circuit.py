@@ -102,8 +102,8 @@ class PersistentFearCircuit:
             if stdp and not inh:
                 syn = Synapses(G, G, model="""
                     w : 1
-                    dA_ltp/dt = -A_ltp / (20*ms) : 1 (event-driven)
-                    dA_ltd/dt = -A_ltd / (20*ms) : 1 (event-driven)
+                    dA_ltp/dt = -A_ltp / (100*ms) : 1 (event-driven)
+                    dA_ltd/dt = -A_ltd / (100*ms) : 1 (event-driven)
                 """,
                 on_pre="v_post += w; A_ltp += 0.5; w = clip(w + A_ltd, 0, 15)",
                 on_post="A_ltd -= 0.3; w = clip(w + A_ltp, 0, 15)",
@@ -172,9 +172,14 @@ class PersistentFearCircuit:
         pkcd_s, pkcd_e = idx["cel_pkcd"]
         drive[:, pkcd_s:pkcd_e] *= 0.4
 
+        # BA tonic背景（STDP post spike生成のため。csに依存しない）
+        ba_s, ba_e = idx["ba_exc"]
+        drive[:, ba_s:ba_e] += 4.0
+
         if cs:
             la_s, la_e = idx["la_exc"]
             drive[cs_start:cs_end, la_s:la_s + c.n_la_exc // 3] += c.cs_amp
+            drive[cs_start:cs_end, ba_s:ba_s + c.n_ba_exc // 3] += c.cs_amp * 0.8
             pl_s, pl_e = idx["pl"]
             drive[cs_start:cs_end, pl_s:pl_s + c.n_pl // 4] += 4.0
             il_s, il_e = idx["il"]
@@ -196,8 +201,8 @@ class PersistentFearCircuit:
             bnst_s, bnst_e = idx["bnst"]
             drive[:, bnst_s:bnst_e] += c.sustained_threat_amp
 
-        # TimedArrayを更新（Brian2はTimedArrayの値を直接書き換え可能）
-        self._I_drive.values = drive
+        # 新しいTimedArrayを作成（Brian2はvalues書き換えをキャッシュに反映しない場合がある）
+        self._I_drive = TimedArray(drive, dt=c.dt_ms * ms)
 
         # [F-01修正] 膜電位+回復変数をリセット（uドリフト防止）
         self._G.v = -65 + noise_rng.normal(0, 2, self._total_n)
