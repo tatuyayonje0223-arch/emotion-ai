@@ -74,7 +74,8 @@ class FearCircuitV2:
     def __init__(self, config: FearV2Config | None = None):
         self.cfg = config or FearV2Config()
         self._results: list[FearV2TrialResult] = []
-        self._saved_weights: dict[str, np.ndarray] = {}  # [問題1] 試行間STDP重み保存
+        self._saved_weights: dict[str, np.ndarray] = {}
+        self._extinction_trial_count: int = 0  # 消去試行カウンター（IL強化用）
 
     def run_trial(
         self,
@@ -116,12 +117,17 @@ class FearCircuitV2:
 
         if cs:
             la_s, la_e = idx["la_exc"]
-            cs_target = la_s + c.n_la_exc // 3  # 前1/3がCS応答
+            cs_target = la_s + c.n_la_exc // 3
             drive[cs_start:cs_end, la_s:cs_target] += c.cs_amp
             pl_s, pl_e = idx["pl"]
             drive[cs_start:cs_end, pl_s:pl_s + c.n_pl // 4] += 4.0
             il_s, il_e = idx["il"]
-            drive[cs_start:cs_end, il_s:il_s + c.n_il // 4] += 4.0
+            # [STDP消去] 消去フェーズではIL入力を段階的に強化（消去学習の模倣）
+            il_base = 4.0
+            if phase == "extinction":
+                self._extinction_trial_count += 1
+                il_base += self._extinction_trial_count * 1.5  # 試行ごとに+1.5
+            drive[cs_start:cs_end, il_s:il_s + c.n_il // 4] += il_base
 
         if us:
             la_s, la_e = idx["la_exc"]

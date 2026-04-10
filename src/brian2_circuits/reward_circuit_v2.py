@@ -97,10 +97,13 @@ class RewardCircuitV2:
             s, e = idx["nac_co_d1"]
             drive[cs_s:cs_e, s:s + c.n_nac_core_d1 // 3] += c.cs_amp * 0.5
 
-        # [DAチューニング] tonic_drive=3.8, burst_drive=10.0 (score=0.901)
+        # [DAチューニング] tonic_drive=3.8 + GABA tonic for DA suppression
         for da_name in ["vta_da_lat", "vta_da_med"]:
             s, e = idx[da_name]
-            drive[:, s:e] += 3.8  # tonic: 3.5Hz目標
+            drive[:, s:e] += 3.8
+        # VTA GABA tonic（DAのtonic発火を抑制）
+        gaba_s, gaba_e = idx["vta_gaba"]
+        drive[:, gaba_s:gaba_e] += 4.0
 
         # 報酬入力（burst 29.5Hz目標）
         if reward:
@@ -151,9 +154,9 @@ class RewardCircuitV2:
         syns.append(_conn("vta_da_lat", "nac_co_d1", 0.3, 3.0, cid=cid)); cid += 1
         # VTA DA_lat → NAc D2 (抑制的)
         syns.append(_conn("vta_da_lat", "nac_sh_d2", 0.2, 2.0, inh=True, cid=cid)); cid += 1
-        # VTA GABA → VTA DA (局所抑制)
-        syns.append(_conn("vta_gaba", "vta_da_lat", 0.4, 4.0, inh=True, cid=cid)); cid += 1
-        syns.append(_conn("vta_gaba", "vta_da_med", 0.4, 4.0, inh=True, cid=cid)); cid += 1
+        # VTA GABA → VTA DA (局所抑制) [強化: tonic抑制でDA 5Hz方向に]
+        syns.append(_conn("vta_gaba", "vta_da_lat", 0.5, 6.0, inh=True, cid=cid)); cid += 1
+        syns.append(_conn("vta_gaba", "vta_da_med", 0.5, 6.0, inh=True, cid=cid)); cid += 1
         # LHb → VTA GABA (間接抑制: LHb→GABA→DA)
         syns.append(_conn("lhb", "vta_gaba", 0.4, 4.0, cid=cid)); cid += 1
         # OFC → VTA DA_lat (期待報酬: 抑制的=RPE計算)
