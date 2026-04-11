@@ -420,7 +420,7 @@ class EmotionBrainV2:
                 contamination: float = 0.0,
                 attachment_need: float = 0.0,
                 ) -> EmotionStateV2:
-        """入力信号から10情動の活性度を計算する。"""
+        """入力信号から10情動の活性度を計算する（全スパイキング）。"""
         self._step_count += 1
         c = self.cfg
         n_steps = int(c.duration_ms / c.dt_ms)
@@ -432,17 +432,17 @@ class EmotionBrainV2:
         if threat > 0.1 or pain > 0.1:
             la_drive = np.zeros((n_steps, 40))
             cs_start, cs_end = int(50 / c.dt_ms), int(250 / c.dt_ms)
-            la_drive[cs_start:cs_end, :15] = 15.0 * max(0.5, threat * 2)
+            la_drive[cs_start:cs_end, :] = 15.0 * max(0.5, threat * 2)  # drive ALL LA neurons
             if pain > 0.1:
                 la_drive[cs_start:cs_end, :] += 10.0 * pain
             overrides["la_exc"] = la_drive
 
             pl_drive = np.zeros((n_steps, 15))
-            pl_drive[cs_start:cs_end, :5] = 4.0 * threat
+            pl_drive[cs_start:cs_end, :] = 8.0 * threat  # drive ALL PL neurons
             overrides["pl"] = pl_drive
 
             il_drive = np.zeros((n_steps, 15))
-            il_drive[cs_start:cs_end, :5] = 4.0 * (1 - threat)  # IL active when threat low (extinction)
+            il_drive[cs_start:cs_end, :] = 6.0 * max(0.2, 1 - threat)  # IL for extinction
             overrides["il"] = il_drive
 
         # RAGE drive: frustration → MeA/VMH
@@ -460,12 +460,17 @@ class EmotionBrainV2:
             vta_drive = np.zeros((n_steps, 30))
             burst_start = int(100 / c.dt_ms)
             burst_end = int(200 / c.dt_ms)
-            vta_drive[burst_start:burst_end, :] = 5.0 * reward  # phasic burst (calibrated=6.0 max)
+            vta_drive[burst_start:burst_end, :] = 10.0 * reward  # phasic burst (stronger to overcome GABA)
             overrides["vta_da_lat"] = vta_drive
 
             ofc_drive = np.zeros((n_steps, 15))
-            ofc_drive[50:, :] = 5.0 * reward
+            ofc_drive[50:, :] = 8.0 * reward
             overrides["ofc_reward"] = ofc_drive
+
+            # NAc shell activation (reward approach)
+            nac_d1_drive = np.zeros((n_steps, 25))
+            nac_d1_drive[burst_start:burst_end, :] = 6.0 * reward
+            overrides["nac_shell_d1"] = nac_d1_drive
 
         # SADNESS drive: loss → sgACC hyperactivity
         if loss > 0.1:
@@ -487,17 +492,67 @@ class EmotionBrainV2:
             aic_drive[50:, :] = 6.0 * contamination
             overrides["aic"] = aic_drive
 
-        # SURPRISE drive: novelty → LC burst
+        # CARE drive: social/attachment → MPOA, PVN_OXT
+        if social > 0.1 or attachment_need > 0.1:
+            mpoa_drive = np.zeros((n_steps, 15))
+            mpoa_drive[50:, :] = 8.0 * social + 5.0 * attachment_need
+            overrides["mpoa"] = mpoa_drive
+
+            # Boost OXT when social is high
+            oxt_drive = np.zeros((n_steps, 10))
+            oxt_drive[50:, :] = 5.0 * social + 3.0 * attachment_need
+            overrides["pvn_oxt"] = oxt_drive
+
+        # PANIC/GRIEF drive: loss + isolation → dACC, BNST
+        if loss > 0.1 or attachment_need > 0.1:
+            dacc_drive = np.zeros((n_steps, 15))
+            isolation = max(0, 1 - social)  # low social = high isolation
+            dacc_drive[50:, :] = 8.0 * loss + 6.0 * isolation * attachment_need
+            overrides["dacc"] = dacc_drive
+
+            grief_pag_drive = np.zeros((n_steps, 10))
+            grief_pag_drive[100:, :] = 5.0 * loss + 4.0 * attachment_need
+            overrides["grief_pag"] = grief_pag_drive
+
+        # PLAY drive: social + reward + novelty → PFA thalamus
+        if social > 0.1 and (reward > 0.1 or novelty > 0.1):
+            pfa_drive = np.zeros((n_steps, 15))
+            pfa_drive[50:, :] = 6.0 * social + 4.0 * reward + 3.0 * novelty
+            overrides["pfa_thalamus"] = pfa_drive
+
+            play_ctx_drive = np.zeros((n_steps, 10))
+            play_ctx_drive[50:, :] = 4.0 * social + 3.0 * novelty
+            overrides["play_cortex"] = play_ctx_drive
+
+        # LUST drive: social + reward → lust_MPOA, hypothalamus
+        if social > 0.1:
+            lust_mpoa_drive = np.zeros((n_steps, 10))
+            lust_mpoa_drive[50:, :] = 5.0 * social + 3.0 * reward
+            overrides["lust_mpoa"] = lust_mpoa_drive
+
+            lust_hypo_drive = np.zeros((n_steps, 10))
+            lust_hypo_drive[50:, :] = 4.0 * social + 2.0 * reward
+            overrides["lust_hypo"] = lust_hypo_drive
+
+        # SURPRISE drive: novelty → LC burst + surprise_amygdala
         if novelty > 0.3:
             lc_drive = np.zeros((n_steps, 15))
-            lc_drive[50:150, :] = 15.0 * novelty  # short burst
+            lc_drive[50:250, :] = 15.0 * novelty  # sustained burst (8-15 Hz phasic)
             overrides["lc"] = lc_drive
+
+            surp_amyg_drive = np.zeros((n_steps, 10))
+            surp_amyg_drive[50:, :] = 18.0 * novelty  # salience drive (increased for threshold)
+            overrides["surprise_amygdala"] = surp_amyg_drive
+
+            surp_pfc_drive = np.zeros((n_steps, 10))
+            surp_pfc_drive[80:, :] = 15.0 * novelty  # prediction error (increased)
+            overrides["surprise_pfc"] = surp_pfc_drive
 
         # ── Run spiking network ──
         result = self._core.run_trial(drive_overrides=overrides, trial_num=self._step_count)
         rates = result.rates
 
-        # ── Compute spiking emotion activations ──
+        # ── Compute all 10 spiking emotion activations ──
         def _norm(rate: float, max_rate: float = 40.0) -> float:
             return min(1.0, max(0.0, rate / max_rate))
 
@@ -516,34 +571,65 @@ class EmotionBrainV2:
                              rates.get("mea", 0) * 0.2, 30) * min(1.0, frustration * 2)
         else:
             rage_act = _norm(rates.get("vmh", 0) * 0.3 + rates.get("mea", 0) * 0.1, 30) * 0.3
+
+        # SEEKING
         seeking_act = _norm(rates.get("vta_da_lat", 0) * 0.4 + rates.get("nac_shell_d1", 0) * 0.3 +
                             rates.get("ofc_reward", 0) * 0.3, 25)
+
+        # SADNESS
         sadness_act = _norm(rates.get("sgacc", 0) * 0.4 + rates.get("habenula", 0) * 0.3 +
                             rates.get("aic", 0) * 0.15 + rates.get("pvn_crh", 0) * 0.15, 20)
+
+        # DISGUST
         disgust_act = _norm(rates.get("aic", 0) * 0.4 + rates.get("nts_disgust", 0) * 0.3 +
                             rates.get("putamen", 0) * 0.3, 25)
 
-        # ── Mean-field circuits ──
-        care_act = self._mf_care.step({
-            "mpoa": social * 5.0 + attachment_need * 3.0,
-            "oxt_pathway": social * 3.0,
-        })
-        panic_act = self._mf_panic.step({
-            "dacc_pain": loss * 5.0 + (1 - social) * 3.0,
-            "opioid_withdrawal": loss * 4.0 + attachment_need * 2.0,
-        })
-        play_act = self._mf_play.step({
-            "pfa_thalamus": social * 3.0 + reward * 2.0,
-            "cortical_play": social * 2.0 + novelty * 2.0,
-        })
-        lust_act = self._mf_lust.step({
-            "mpoa_sexual": social * 2.0,
-            "hypothalamic": reward * 1.5,
-        })
-        surprise_act = self._mf_surprise.step({
-            "lc_burst": novelty * 8.0 + abs(threat - 0.5) * 3.0,
-            "frontal_parietal": novelty * 4.0,
-        })
+        # CARE: MPOA + OXT + VTA (social-driven, gated by social input)
+        care_signal = max(social, attachment_need)
+        if care_signal > 0.1:
+            care_act = _norm(rates.get("mpoa", 0) * 0.4 + rates.get("pvn_oxt", 0) * 0.3 +
+                             rates.get("care_bnst", 0) * 0.15 +
+                             rates.get("vta_da_lat", 0) * 0.15, 25) * min(1.0, care_signal * 2)
+        else:
+            care_act = 0.0
+
+        # PANIC/GRIEF: dACC + BNST + grief_PAG (gated by loss/attachment)
+        panic_signal = max(loss, attachment_need)
+        if panic_signal > 0.1:
+            panic_act = _norm(rates.get("dacc", 0) * 0.35 + rates.get("bnst", 0) * 0.25 +
+                              rates.get("grief_pag", 0) * 0.20 +
+                              rates.get("aic", 0) * 0.10 +
+                              rates.get("pvn_crh", 0) * 0.10, 25) * min(1.0, panic_signal * 2)
+        else:
+            panic_act = 0.0
+
+        # PLAY: PFA + play_cortex + NAc (gated by social + reward/novelty)
+        play_signal = social * max(reward, novelty)
+        if play_signal > 0.01:
+            play_act = _norm(rates.get("pfa_thalamus", 0) * 0.4 +
+                             rates.get("play_cortex", 0) * 0.3 +
+                             rates.get("nac_shell_d1", 0) * 0.15 +
+                             rates.get("dlpag", 0) * 0.15, 25) * min(1.0, play_signal * 4)
+        else:
+            play_act = 0.0
+
+        # LUST: lust_MPOA + lust_hypo + VTA (gated by social)
+        if social > 0.1:
+            lust_act = _norm(rates.get("lust_mpoa", 0) * 0.4 +
+                             rates.get("lust_hypo", 0) * 0.3 +
+                             rates.get("vta_da_lat", 0) * 0.15 +
+                             rates.get("pvn_oxt", 0) * 0.15, 25) * min(1.0, social * 1.5)
+        else:
+            lust_act = 0.0
+
+        # SURPRISE: LC + surprise_amygdala + surprise_PFC + aIC (gated by novelty)
+        if novelty > 0.3:
+            surprise_act = _norm(rates.get("lc", 0) * 0.3 +
+                                 rates.get("surprise_amygdala", 0) * 0.25 +
+                                 rates.get("surprise_pfc", 0) * 0.25 +
+                                 rates.get("aic", 0) * 0.20, 25) * min(1.0, novelty * 2)
+        else:
+            surprise_act = 0.0
 
         # ── Cross-emotion interactions (literature-based) ──
         # SEEKING↔SADNESS: LHb suppresses both VTA DA and raphe 5-HT
@@ -608,8 +694,6 @@ class EmotionBrainV2:
 
     def reset(self) -> None:
         """全回路をリセット。"""
-        for mf in [self._mf_care, self._mf_panic, self._mf_play, self._mf_lust, self._mf_surprise]:
-            mf.reset()
         self._step_count = 0
 
     @property
