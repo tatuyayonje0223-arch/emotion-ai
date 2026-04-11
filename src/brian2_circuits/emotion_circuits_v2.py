@@ -77,7 +77,7 @@ def register_rage_circuit(core: SharedCoreNetwork) -> None:
     MeA→VMH→dlPAG attack pathway。5-HT(DR)が抑制的に修飾。
     """
     # Populations
-    core.register_population("mea", 20, "LTS")   # MeA GABAergic; baseline 3-8Hz, social 10-25Hz
+    core.register_population("mea", 20, "RS")    # MeA; baseline 3-8Hz (RS for stable firing rates)
     core.register_population("vmh", 25, "RS")     # VMH Esr1+; baseline 2-5Hz, attack 20-50Hz
 
     # MeA → VMH (Hong 2014) — GABAergic, paradoxically facilitates some VMH populations
@@ -136,8 +136,8 @@ def register_sadness_circuit(core: SharedCoreNetwork) -> None:
     # Habenula → VTA/DR (Matsumoto & Hikosaka 2007)
     core.register_connection("habenula", "vta_da_lat", 0.15, 5.0, inh=True,
                              note="LHb→VTA DA inhibition; Matsumoto & Hikosaka 2007")
-    core.register_connection("habenula", "dr", 0.15, 4.0, inh=True,
-                             note="LHb→raphe 5-HT reduction; 20-40% decrease")
+    core.register_connection("habenula", "dr", 0.25, 6.0, inh=True,
+                             note="LHb→raphe 5-HT reduction; 20-40% decrease (strengthened)")
 
     # sgACC → aIC (interoceptive sadness; Craig 2009)
     core.register_connection("sgacc", "aic", 0.10, 1.5, note="sgACC→insula interoception")
@@ -432,7 +432,7 @@ class EmotionBrainV2:
         if threat > 0.1 or pain > 0.1:
             la_drive = np.zeros((n_steps, 40))
             cs_start, cs_end = int(50 / c.dt_ms), int(250 / c.dt_ms)
-            la_drive[cs_start:cs_end, :] = 15.0 * max(0.5, threat * 2)  # drive ALL LA neurons
+            la_drive[cs_start:cs_end, :] = 12.0 * max(0.5, threat * 2)  # drive ALL LA neurons (tuned for 8-35Hz)
             if pain > 0.1:
                 la_drive[cs_start:cs_end, :] += 10.0 * pain
             overrides["la_exc"] = la_drive

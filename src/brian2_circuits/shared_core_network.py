@@ -343,10 +343,10 @@ class SharedCoreNetwork:
             "pvn_crh": 3.0,
             "pvn_oxt": 3.0,
             # FEAR: 既存較正値と同等のtonic
-            "la_exc": 3.2,        # Quirk 2002: baseline 1-5Hz (further tuned)
+            "la_exc": 2.5,        # Quirk 2002: baseline 1-5Hz (target 1-8Hz)
             "ba_exc": 4.0,
-            "cel_som": 3.0,       # Ciocchi 2010: tonic 5-15Hz (LTS type)
-            "cel_pkcd": 1.5,      # Ciocchi 2010: lower tonic (PKCd背景低減, LTS)
+            "cel_som": 2.0,       # Ciocchi 2010: LTS fires easily, keep low
+            "cel_pkcd": 0.8,      # Ciocchi 2010: target 0-5Hz during CS (needs suppression)
             "cem": 3.5,           # baseline 2-5Hz
             "itc": 3.0,
             "pl": 4.0,            # Courtin 2014
@@ -357,7 +357,7 @@ class SharedCoreNetwork:
             "la_pv": 5.0,         # PV fast-spiking: higher threshold
             "la_vip": 4.0,
             # RAGE
-            "mea": 2.0,           # Hong 2014: baseline 3-8Hz (LTS type fires easily)
+            "mea": 1.0,           # Hong 2014: baseline 3-8Hz (LTS, very low tonic needed)
             "vmh": 2.5,           # Lee 2014: baseline 2-5Hz (lowered for target)
             # SEEKING
             "ofc_reward": 4.0,
@@ -368,7 +368,7 @@ class SharedCoreNetwork:
             "sgacc": 3.5,
             "habenula": 3.5,
             # DISGUST
-            "nts_disgust": 2.0,   # reduced: target 5-25Hz with contamination drive
+            "nts_disgust": 1.5,   # target 5-25Hz with contamination drive only
             "putamen": 4.0,
             # CARE
             "mpoa": 3.5,
