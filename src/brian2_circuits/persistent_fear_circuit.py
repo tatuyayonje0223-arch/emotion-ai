@@ -27,15 +27,29 @@ from src.brian2_circuits.fear_circuit_v2 import FearV2Config, FearV2TrialResult
 
 
 class PersistentFearCircuit:
-    """永続型恐怖回路。STDP重みが試行間で自然に蓄積する。"""
+    """永続型恐怖回路。STDP重みが試行間で自然に蓄積する。
 
-    def __init__(self, config: FearV2Config | None = None):
+    消去学習: STDP LTDはevent-drivenトレースだけでは不十分（BA tonic発火で
+    post→preタイミングが得られない）。生物学的な「脱増強（depotentiation）」を
+    モデル化するため、消去試行ごとにシナプス重みの緩やかな減衰を適用する。
+    """
+
+    def __init__(self, config: FearV2Config | None = None,
+                 decay_rate: float = 0.05):
+        """
+        Args:
+            config: 回路パラメータ。Noneで較正済みデフォルト。
+            decay_rate: 消去時の重み減衰率（試行あたり）。
+                        0.0=減衰なし、1.0=1試行で全減衰。
+                        デフォルト0.05: 消去10試行で約40%減衰。
+        """
         # [F-03修正] CALIBRATED_CONFIGをデフォルトに統一
         from src.calibration.calibrated_configs import CALIBRATED_FEAR_CONFIG
         self.cfg = config or CALIBRATED_FEAR_CONFIG
         self._results: list[FearV2TrialResult] = []
         self._trial_count = 0
         self._extinction_count = 0
+        self._decay_rate = decay_rate  # 消去時の重み減衰率
 
         # Brian2 Networkを1回だけ構築
         start_scope()
@@ -230,6 +244,17 @@ class PersistentFearCircuit:
         bnst_r = _rate("bnst")
         self._trial_count += 1
 
+        # [LTD修正] 消去時の脱増強（depotentiation）
+        # 生物学的根拠: USなしのCS提示は、BLA→CeAシナプスの脱増強を誘導する。
+        # event-driven STDP LTDだけではBA tonic発火のため減衰が不十分。
+        # 試行間の緩やかなシナプス弱体化（depotentiation）を明示的にモデル化。
+        if phase == "extinction" and self._decay_rate > 0:
+            for syn in [self._syn_la_ba, self._syn_la_cel]:
+                if len(syn) > 0:
+                    current_w = syn.w[:]
+                    # 重みが高いほど減衰量が大きい（乗法的減衰）
+                    syn.w = np.clip(current_w * (1.0 - self._decay_rate), 0, 15)
+
         # STDP重みの追跡
         la_ba_w = float(np.mean(self._syn_la_ba.w[:])) if len(self._syn_la_ba) > 0 else 0
 
@@ -257,6 +282,21 @@ class PersistentFearCircuit:
     def run_test(self, n=3):
         offset = self._trial_count
         return [self.run_trial(cs=True, us=False, phase="test", trial_num=offset+i) for i in range(n)]
+
+    @property
+    def decay_rate(self) -> float:
+        """消去時の重み減衰率。"""
+        return self._decay_rate
+
+    @decay_rate.setter
+    def decay_rate(self, value: float) -> None:
+        """消去時の重み減衰率を設定する。
+
+        Args:
+            value: 0.0（減衰なし）〜 1.0（即時消去）。
+                   推奨: 0.03-0.10 （消去10-30試行で有意な減衰）。
+        """
+        self._decay_rate = max(0.0, min(1.0, value))
 
     @property
     def la_ba_weight(self) -> float:

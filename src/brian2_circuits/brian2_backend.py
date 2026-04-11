@@ -56,6 +56,47 @@ class Brian2Backend:
         self._homeostatic = HomeostaticController(n_neurons=547)
         self._fear_circuit_ref = None  # homeostatic→fear重みフィードバック用
 
+    def get_pca_emotion_state(self) -> dict[str, object]:
+        """PCAクラスタリングによる情動状態を返す。
+
+        Returns:
+            {
+                "dominant_label": str,   # 最も近いクラスタのラベル（例: "threat", "reward", "neutral"）
+                "confidence": float,     # 支配的クラスタの類似度スコア (0-1)
+                "all_scores": dict,      # 全クラスタの類似度スコア
+                "is_fitted": bool,       # PCAが適合済みか
+            }
+        """
+        if not self._readout_pca.is_fitted:
+            return {
+                "dominant_label": "unknown",
+                "confidence": 0.0,
+                "all_scores": {},
+                "is_fitted": False,
+            }
+
+        # 最新の活動ベクトルがなければunknown
+        if not self._rate_history:
+            return {
+                "dominant_label": "unknown",
+                "confidence": 0.0,
+                "all_scores": {},
+                "is_fitted": True,
+            }
+
+        import numpy as np
+        latest_rates = np.array(self._rate_history[-1][0])
+        classification = self._readout_pca.classify(latest_rates)
+        dominant_label = max(classification, key=classification.get)
+        confidence = classification[dominant_label]
+
+        return {
+            "dominant_label": dominant_label,
+            "confidence": confidence,
+            "all_scores": classification,
+            "is_fitted": True,
+        }
+
     def process(self, sensory: SensoryInput) -> Brian2Result:
         """SensoryInputを処理し、Brian2回路の結果を統合する。"""
         self._interaction_count += 1
@@ -137,13 +178,7 @@ class Brian2Backend:
         label = "threat" if sensory.threat_signal > 0.3 else ("reward" if sensory.reward_signal > 0.3 else "neutral")
         self._rate_history.append((rate_vector.tolist(), label))
 
-        # PCAが適合済みならデータ駆動readoutを補助的に使用
-        pca_valence_mod = 0.0
-        if self._readout_pca.is_fitted:
-            pca_result = self._readout_pca.to_emotion_readout(rate_vector)
-            pca_valence_mod = pca_result.get("valence", 0) * 0.3  # PCA寄与30%
-
-        # 10サンプル以上溜まったらPCAを適合
+        # 10サンプル以上溜まったらPCAを適合（未適合時のみ）
         if len(self._rate_history) >= 10 and not self._readout_pca.is_fitted:
             from src.brian2_circuits.readout_v2 import ReadoutTrainingData
             rates_matrix = np.array([r for r, _ in self._rate_history])
@@ -154,10 +189,37 @@ class Brian2Backend:
             )
             self._readout_pca.fit(data)
 
-        # readout統合（手動線形結合 + PCA補助 + 回路間相互影響反映済み）
-        valence = (reward_approach * 0.5 - fear_freeze * 0.3 - stress_cortisol * 0.2 + pca_valence_mod)
-        arousal = max(fear_freeze, reward_approach, stress_cortisol * 2) * 0.7 + 0.2
-        threat = fear_freeze * 0.6 + fear_anxiety * 0.3 + stress_cortisol * 0.1
+        # 蓄積が増えたらPCAを定期的に再適合（50サンプルごと）
+        if self._readout_pca.is_fitted and len(self._rate_history) % 50 == 0:
+            from src.brian2_circuits.readout_v2 import ReadoutTrainingData
+            rates_matrix = np.array([r for r, _ in self._rate_history])
+            labels = [l for _, l in self._rate_history]
+            data = ReadoutTrainingData(
+                rates_matrix=rates_matrix, labels=labels,
+                population_names=["la", "ba", "cs", "cm", "bn", "vt", "na", "pv"],
+            )
+            self._readout_pca.fit(data)
+
+        # --- readout統合: PCA適合後はPCAが主（70%）、手動が従（30%） ---
+        # 手動線形結合（フォールバック / 従readout）
+        linear_valence = reward_approach * 0.5 - fear_freeze * 0.3 - stress_cortisol * 0.2
+        linear_arousal = max(fear_freeze, reward_approach, stress_cortisol * 2) * 0.7 + 0.2
+        linear_threat = fear_freeze * 0.6 + fear_anxiety * 0.3 + stress_cortisol * 0.1
+
+        if self._readout_pca.is_fitted:
+            # PCAが適合済み → PCA主（70%）+ 手動従（30%）
+            pca_result = self._readout_pca.to_emotion_readout(rate_vector)
+            pca_valence = pca_result.get("valence", 0.0)
+            pca_arousal = pca_result.get("arousal", 0.5)
+
+            valence = pca_valence * 0.7 + linear_valence * 0.3
+            arousal = pca_arousal * 0.7 + linear_arousal * 0.3
+            threat = linear_threat  # 脅威はPCAクラスタでは捉えにくいため手動維持
+        else:
+            # PCA未適合 → 手動線形結合100%（後方互換フォールバック）
+            valence = linear_valence
+            arousal = linear_arousal
+            threat = linear_threat
 
         readout = EmotionReadout(
             valence=max(-1, min(1, valence)),
