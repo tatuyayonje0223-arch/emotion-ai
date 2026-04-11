@@ -1,0 +1,167 @@
+[
+  {
+    "emotion": "DISGUST",
+    "match_score": 1.0,
+    "author": "Small(2003)",
+    "title": "Dissociation of neural representation of intensity and affective valuation in human gustation",
+    "journal": "Neuron",
+    "year": 2003,
+    "doi": "10.1016/s0896-6273(03)00467-7",
+    "key_finding": "Unpleasant taste: left dorsal anterior insula; pleasant taste: right caudolateral OFC; intensity: middle insula",
+    "abstract": "1. Neuron. 2003 Aug 14;39(4):701-11. doi: 10.1016/s0896-6273(03)00467-7.  Dissociation of neural representation of intensity and affective valuation in  human gustation.  Small DM(1), Gregory MD, Mak YE, Gitelman D, Mesulam MM, Parrish T."
+  },
+  {
+    "emotion": "FEAR",
+    "match_score": 1.0,
+    "author": "Duvarci & Pare (2014)",
+    "title": "Amygdala microcircuits controlling learned fear",
+    "journal": "Neuron",
+    "year": 2014,
+    "doi": "10.1016/j.neuron.2014.04.042",
+    "key_finding": "Fear depends on far more complex networks than initially envisioned; parallel inhibitory/excitatory circuits differentially recruited during expression vs extinction",
+    "abstract": "1. Neuron. 2014 Jun 4;82(5):966-80. doi: 10.1016/j.neuron.2014.04.042.  Amygdala microcircuits controlling learned fear.  Duvarci S(1), Pare D(2)."
+  },
+  {
+    "emotion": "SEEKING",
+    "match_score": 1.0,
+    "author": "Nestler & Carlezon(2006)",
+    "title": "The mesolimbic dopamine reward circuit in depression",
+    "journal": "Biological Psychiatry",
+    "year": 2006,
+    "doi": "10.1016/j.biopsych.2005.09.018",
+    "key_finding": "NAc and VTA contribute to anhedonia, reduced motivation in depression; CREB/dynorphin/BDNF in VTA-NAc",
+    "abstract": "1. Biol Psychiatry. 2006 Jun 15;59(12):1151-9. doi: 10.1016/j.biopsych.2005.09.018.  Epub 2006 Mar 29.  The mesolimbic dopamine reward circuit in depression.  Nestler EJ(1), Carlezon WA Jr."
+  },
+  {
+    "emotion": "unknown",
+    "match_score": 0.947,
+    "author": "Kober et al. (2008)",
+    "title": "Functional grouping and cortical-subcortical interactions in emotion: a meta-analysis of neuroimagin",
+    "journal": "NeuroImage",
+    "year": 2008,
+    "doi": "10.1016/j.neuroimage.2008.03.059",
+    "key_finding": "162 studies: 6 distributed functional groups identified (medial/lateral frontal, posterior cortical x2, paralimbic, core limbic/brainstem). dmPFC (BA9/32) uniquely co-activated with both PAG and hypothalamus",
+    "abstract": "1. Neuroimage. 2008 Aug 15;42(2):998-1031. doi: 10.1016/j.neuroimage.2008.03.059.  Epub 2008 Apr 11.  Functional grouping and cortical-subcortical interactions in emotion: a  meta-analysis of neuroimaging studies.  Kober H(1), Barrett LF, Joseph J, Bliss-Moreau E, Lindquist K, Wager TD."
+  },
+  {
+    "emotion": "unknown",
+    "match_score": 0.944,
+    "author": "Kurth et al. (2010)",
+    "title": "A link between the systems: functional differentiation and integration within the human insula revea",
+    "journal": "Brain Structure and Function",
+    "year": 2010,
+    "doi": "10.1007/s00429-010-0255-z",
+    "key_finding": "Meta-analysis of 1,768 experiments: four insular functional zones - sensorimotor (posterior), social-emotional (anterior-ventral), olfacto-gustatory (central), cognitive (anterior-dorsal)",
+    "abstract": "1. Brain Struct Funct. 2010 Jun;214(5-6):519-34. doi: 10.1007/s00429-010-0255-z.  Epub 2010 May 29.  A link between the systems: functional differentiation and integration within  the human insula revealed by meta-analysis.  Kurth F(1), Zilles K, Fox PT, Laird AR, Eickhoff SB."
+  },
+  {
+    "emotion": "unknown",
+    "match_score": 0.938,
+    "author": "Seeley et al. (2007)",
+    "title": "Dissociable intrinsic connectivity networks for salience processing and executive control",
+    "journal": "The Journal of Neuroscience",
+    "year": 2007,
+    "doi": "10.1523/jneurosci.5587-06.2007",
+    "key_finding": "Identified salience network (dACC + orbital frontoinsular cortex + subcortical/limbic) dissociable from executive-control network. Prescan anxiety correlated with SN connectivity",
+    "abstract": "1. J Neurosci. 2007 Feb 28;27(9):2349-56. doi: 10.1523/JNEUROSCI.5587-06.2007.  Dissociable intrinsic connectivity networks for salience processing and  executive control.  Seeley WW(1), Menon V, Schatzberg AF, Keller J, Glover GH, Kenna H, Reiss AL,  Greicius MD."
+  },
+  {
+    "emotion": "unknown",
+    "match_score": 0.938,
+    "author": "Phelps & LeDoux (2005)",
+    "title": "Contributions of the amygdala to emotion processing: from animal models to human behavior",
+    "journal": "Neuron",
+    "year": 2005,
+    "doi": "10.1016/j.neuron.2005.09.025",
+    "key_finding": "Five amygdala functions: implicit emotional learning, emotional modulation of memory, emotional influences on attention/perception, emotion and social behavior, emotion inhibition/regulation",
+    "abstract": "1. Neuron. 2005 Oct 20;48(2):175-87. doi: 10.1016/j.neuron.2005.09.025.  Contributions of the amygdala to emotion processing: from animal models to human  behavior.  Phelps EA(1), LeDoux JE."
+  },
+  {
+    "emotion": "RAGE",
+    "match_score": 0.929,
+    "author": "Golden et al. (2016)",
+    "title": "Basal forebrain projections to the lateral habenula modulate aggression reward",
+    "journal": "Nature",
+    "year": 2016,
+    "doi": "10.1038/nature18601",
+    "key_finding": "GABAergic BF-to-LHb projection bidirectionally controls aggression valence: silencing abolishes aggression CPP; activation promotes CPP in non-aggressors",
+    "abstract": "1. Nature. 2016 Jun 30;534(7609):688-92. doi: 10.1038/nature18601.  Basal forebrain projections to the lateral habenula modulate aggression reward.  Golden SA(1)(2), Heshmati M(1)(2), Flanigan M(1)(2), Christoffel DJ(3), Guise  K(1)(2), Pfau ML(1)(2), Aleyasin H(1), Menard C(1), Zhang H(4), Hodes GE(1),  Bregman D(1), Khibnik L(1), Tai J(1), Rebusi N(1), Krawitz B(1)(2), Chaudhury  D(4), Walsh JJ(3), Han MH(1)(4), Shapiro ML(1), Russo SJ(1)."
+  },
+  {
+    "emotion": "unknown",
+    "match_score": 0.929,
+    "author": "Craig (2009)",
+    "title": "How do you feel -- now? The anterior insula and human awareness",
+    "journal": "Nature Reviews Neuroscience",
+    "year": 2009,
+    "doi": "10.1038/nrn2555",
+    "key_finding": "Anterior insula is neural correlate of awareness; re-represents interoception; contains Von Economo neurons; fundamental to subjective feelings",
+    "abstract": "1. Nat Rev Neurosci. 2009 Jan;10(1):59-70. doi: 10.1038/nrn2555.  How do you feel--now? The anterior insula and human awareness.  Craig AD(1)."
+  },
+  {
+    "emotion": "SADNESS",
+    "match_score": 0.923,
+    "author": "Hamilton(2015)",
+    "title": "Depressive rumination, the default-mode network, and the dark matter of clinical neuroscience",
+    "journal": "Biological Psychiatry",
+    "year": 2015,
+    "doi": "10.1016/j.biopsych.2015.02.020",
+    "key_finding": "Increased DMN-sgACC functional connectivity in MDD; predicts rumination levels; sgACC integrates self-referential + withdrawal",
+    "abstract": "Depressive Rumination, the Default-Mode Network, and the Dark Matter of Clinical  Neuroscience.  Hamilton JP(1), Farmer M(2), Fogelman P(3), Gotlib IH(4)."
+  },
+  {
+    "emotion": "CARE",
+    "match_score": 0.909,
+    "author": "Kirsch et al. (2005)",
+    "title": "Oxytocin modulates neural circuitry for social cognition and fear in humans",
+    "journal": "The Journal of Neuroscience",
+    "year": 2005,
+    "doi": "10.1523/JNEUROSCI.3984-05.2005",
+    "key_finding": "Intranasal OXT potently reduced amygdala activation and reduced amygdala-brainstem coupling for fear stimuli in humans",
+    "abstract": "1. J Neurosci. 2005 Dec 7;25(49):11489-93. doi: 10.1523/JNEUROSCI.3984-05.2005.  Oxytocin modulates neural circuitry for social cognition and fear in humans.  Kirsch P(1), Esslinger C, Chen Q, Mier D, Lis S, Siddhanti S, Gruppe H, Mattay  VS, Gallhofer B, Meyer-Lindenberg A."
+  },
+  {
+    "emotion": "SURPRISE",
+    "match_score": 0.882,
+    "author": "Sara & Bouret (2012)",
+    "title": "Orienting and reorienting: the locus coeruleus mediates cognition through arousal",
+    "journal": "Neuron",
+    "year": 2012,
+    "doi": "10.1016/j.neuron.2012.09.011",
+    "key_finding": "LC activation in response to unexpected stimuli or conditioned relevant stimuli; NE facilitates sensory processing, cognitive flexibility, and offline memory consolidation. \"Network reset\" function",
+    "abstract": "1. Neuron. 2012 Oct 4;76(1):130-41. doi: 10.1016/j.neuron.2012.09.011.  Orienting and reorienting: the locus coeruleus mediates cognition through  arousal.  Sara SJ(1), Bouret S."
+  },
+  {
+    "emotion": "PANIC/GRIEF",
+    "match_score": 0.875,
+    "author": "Gundel et al. (2003)",
+    "title": "Functional neuroanatomy of grief: an fMRI study",
+    "journal": "American Journal of Psychiatry",
+    "year": 2003,
+    "doi": "10.1176/appi.ajp.160.11.1946",
+    "key_finding": "Grief activates posterior cingulate, medial/superior frontal gyrus, cerebellum (both picture+word); dACC, insula, fusiform activated by picture of deceased",
+    "abstract": "1. Am J Psychiatry. 2003 Nov;160(11):1946-53. doi: 10.1176/appi.ajp.160.11.1946.  Functional neuroanatomy of grief: an FMRI study.  Gündel H(1), O'Connor MF, Littrell L, Fort C, Lane RD."
+  },
+  {
+    "emotion": "LUST",
+    "match_score": 0.846,
+    "author": "Dominguez & Hull (2005)",
+    "title": "Dopamine, the medial preoptic area, and male sexual behavior",
+    "journal": "Physiology &amp; Behavior",
+    "year": 2005,
+    "doi": "10.1016/j.physbeh.2005.08.006",
+    "key_finding": "DA release in MPOA increases during precopulatory exposure to estrous female and during copulation; removes tonic inhibition for sensorimotor integration",
+    "abstract": "1. Physiol Behav. 2005 Oct 15;86(3):356-68. doi: 10.1016/j.physbeh.2005.08.006.  Epub 2005 Aug 30.  Dopamine, the medial preoptic area, and male sexual behavior.  Dominguez JM(1), Hull EM."
+  },
+  {
+    "emotion": "PLAY",
+    "match_score": 0.842,
+    "author": "Siviy & Panksepp (2011)",
+    "title": "In search of the neurobiological substrates for social playfulness in mammalian brains",
+    "journal": "Neuroscience &amp; Biobehavioral Reviews",
+    "year": 2011,
+    "doi": "10.1016/j.neubiorev.2011.03.006",
+    "key_finding": "Executive play circuit: parafascicular thalamus, frontal cortex, striatum. Cholinergic, dopaminergic controls; opioids and cannabinoids positively modulate. All aversive neuropeptides reduce play",
+    "abstract": "1. Neurosci Biobehav Rev. 2011 Oct;35(9):1821-30. doi:  10.1016/j.neubiorev.2011.03.006. Epub 2011 Mar 22.  In search of the neurobiological substrates for social playfulness in mammalian  brains.  Siviy SM(1), Panksepp J."
+  }
+]

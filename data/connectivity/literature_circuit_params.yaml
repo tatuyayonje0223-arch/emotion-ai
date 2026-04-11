@@ -1,0 +1,527 @@
+# Literature-Derived Circuit Parameters for EmotionAI v2
+# Source: 232 verified papers (DOI + abstract confirmed via CrossRef/PubMed)
+# Generated: 2026-04-11
+# Each parameter includes source paper and confidence level
+
+# ========================================
+# SHARED BRAIN REGIONS (Spiking, Phase A)
+# ========================================
+
+shared_regions:
+  PAG:
+    subregions:
+      vlPAG:
+        cell_type: RS
+        n: 20
+        function: "freezing, passive coping, distress vocalizations"
+        baseline_hz: 2-5
+        active_hz: 5-15  # freezing-related tonic
+        source: "Tovote 2015 Nat Rev Neurosci; Duvarci & Pare 2014 Neuron"
+        emotions: [FEAR, PANIC_GRIEF, SADNESS]
+      dlPAG:
+        cell_type: RS
+        n: 20
+        function: "flight, active defense, attack, active distress calls"
+        baseline_hz: 2-5
+        active_hz: 15-40  # attack/flight burst
+        source: "Falkner 2020; Tovote 2015"
+        emotions: [RAGE, FEAR, PLAY]
+    allen_id: 795
+
+  BNST:
+    cell_type: LTS
+    n: 15
+    function: "sustained anxiety, separation anxiety, CRF signaling"
+    baseline_hz: 3-5
+    active_hz: 8-15
+    source: "Davis 2010 Neuropsychopharmacol; Lebow & Chen 2016"
+    allen_id: 351
+    emotions: [FEAR, PANIC_GRIEF, CARE]
+
+  PVN:
+    subregions:
+      PVN_CRH:
+        cell_type: CRH_neuron
+        n: 10
+        function: "CRH production, HPA axis initiation"
+        source: "Herman 2003; stress_circuit_v2 existing"
+        emotions: [FEAR, PANIC_GRIEF, SADNESS]
+      PVN_OXT:
+        cell_type: OXT_neuron
+        n: 10
+        function: "oxytocin production, social bonding, amygdala dampening"
+        source: "Kirsch 2005 J Neurosci; Knobloch 2012"
+        emotions: [CARE, LUST]
+    allen_id: 38
+
+  VTA:
+    subregions:
+      VTA_DA_lat:
+        cell_type: IB  # NOTE: use calibrated params a=0.01,b=0.2,c=-65,d=10 (da_neuron_tuning.py), not IB defaults
+        n: 30  # aligned with existing reward_circuit_v2 (was 25 in initial draft)
+        function: "reward RPE, wanting/incentive salience"
+        tonic_hz: 3-8  # Grace 2007; corroborated by Schultz 1997 (VERIFIED)
+        burst_hz: 15-30  # 2-6 spikes; Schultz 1997 (VERIFIED); calibrated=25Hz in existing code
+        pause_ms: 100-500  # negative RPE
+        source: "Schultz 1997 Science; Grace 2007; Lammel 2012 Nature"
+        emotions: [SEEKING, CARE, PLAY]
+      VTA_DA_med:
+        cell_type: DA_medial
+        n: 10
+        function: "aversion signaling, mPFC projection"
+        source: "Lammel 2012 Nature"
+        emotions: [SADNESS, FEAR]
+      VTA_GABA:
+        cell_type: PV
+        n: 15
+        function: "local inhibition, expected reward signal"
+        source: "Cohen 2012 Nature"
+        emotions: [SEEKING]
+    allen_id: 749
+
+  NAc:
+    subregions:
+      NAc_shell_D1:
+        cell_type: D1_MSN
+        n: 25  # aligned with existing reward_circuit_v2
+        function: "Go pathway, reward approach, hedonic hotspot (mu-opioid)"
+        source: "Floresco 2015; Berridge 2009"
+        emotions: [SEEKING, PLAY]
+      NAc_shell_D2:
+        cell_type: D2_MSN
+        n: 25  # aligned with existing reward_circuit_v2
+        function: "NoGo pathway, aversion avoidance"
+        source: "Floresco 2015"
+        emotions: [SEEKING, DISGUST]
+      NAc_core_D1:
+        cell_type: D1_MSN
+        n: 15  # aligned with existing reward_circuit_v2
+        function: "instrumental approach"
+        source: "Floresco 2015"
+        emotions: [SEEKING]
+    allen_id: 56
+
+  LC:
+    cell_type: NE_neuron
+    n: 15
+    function: "NE production, arousal, orienting, network reset"
+    tonic_hz: 1-3  # exploration mode
+    phasic_hz: 8-15  # burst to unexpected stimuli
+    source: "Sara & Bouret 2012 Neuron; Aston-Jones & Cohen 2005"
+    allen_id: 147
+    emotions: [SURPRISE, FEAR]
+
+  DR:
+    cell_type: 5HT_neuron
+    n: 15
+    function: "5-HT production, mood regulation, aggression inhibition"
+    tonic_hz: 1-5
+    source: "de Jong 2022 Neuron"
+    allen_id: 872
+    emotions: [SADNESS, RAGE, DISGUST]
+
+  aIC:
+    cell_type: RS
+    n: 20
+    function: "interoception, disgust core, awareness, empathic processing"
+    source: "Craig 2009 Nat Rev Neurosci; Phillips 1997 Nature"
+    allen_id: 95
+    emotions: [DISGUST, SADNESS, PANIC_GRIEF, SURPRISE]
+
+# ========================================
+# FEAR CIRCUIT (Spiking, existing + extension)
+# ========================================
+
+fear:
+  paper_count: 30
+  top_paper: "Duvarci & Pare 2014 Neuron (score=1.00)"
+
+  populations:
+    LA_exc:
+      cell_type: RS
+      n: 40
+      baseline_hz: 1-5
+      cs_evoked_hz: 10-30
+      source: "Quirk 2002; Repa 2001"
+    BA_exc:
+      cell_type: RS
+      n: 30
+      baseline_hz: 3-8
+      source: "Duvarci & Pare 2014"
+    CeL_SOM:
+      cell_type: CeL_SOM
+      n: 15
+      cs_evoked_hz: 5-20  # increase
+      source: "Ciocchi 2010 Nature; Haubensak 2010 Nature"
+    CeL_PKCd:
+      cell_type: PKCd
+      n: 15
+      baseline_hz: ~5
+      cs_evoked_hz: "<1"  # decrease (inhibited by SOM+)
+      source: "Ciocchi 2010"
+    CeM:
+      cell_type: RS
+      n: 15
+      baseline_hz: 2-5
+      active_hz: 10-25
+      source: "Ciocchi 2010; Duvarci & Pare 2014"
+    PL:
+      cell_type: RS
+      n: 15
+      fear_burst_hz: 15-40  # during CS
+      source: "Courtin 2014 Nature"
+    IL:
+      cell_type: RS
+      n: 15
+      extinction_hz: 5-15  # tone response
+      source: "Quirk 2002 Nature"
+    ITC:
+      cell_type: LTS
+      n: 10
+      function: "CeM inhibition during extinction"
+      source: "Likhtik 2008"
+    LA_PV:
+      cell_type: PV
+      n: 10
+      source: "Wolff 2014 Nature"
+    LA_VIP:
+      cell_type: VIP
+      n: 5
+      function: "disinhibition via PV suppression"
+      source: "Wolff 2014 Nature"
+
+  connections:
+    - {from: LA_exc, to: BA_exc, p: 0.15-0.20, type: exc, plasticity: STDP, source: "Duvarci & Pare 2014"}
+    - {from: BA_exc, to: CeM, p: 0.10, type: exc, source: "Duvarci & Pare 2014"}
+    - {from: BA_exc, to: CeL_SOM, p: 0.05-0.10, type: exc, source: "Duvarci & Pare 2014"}
+    - {from: CeL_SOM, to: CeL_PKCd, p: 0.30, type: inh, source: "Ciocchi 2010", note: "literature=0.30; existing calibrated=0.70 for SOM+/PKCd+ ratio=3.05. USE CALIBRATED VALUE"}
+    - {from: CeL_PKCd, to: CeM, p: 0.20-0.30, type: inh, note: "tonic inhibition", source: "Ciocchi 2010"}
+    - {from: CeM, to: vlPAG, p: 0.15, type: exc, source: "LeDoux 2000"}
+    - {from: PL, to: LA_exc, p: 0.10-0.15, type: exc, note: "fear expression drive", source: "Courtin 2014"}
+    - {from: IL, to: ITC, p: 0.15-0.20, type: exc, plasticity: STDP, source: "Likhtik 2008"}
+    - {from: ITC, to: CeM, p: 0.20, type: inh, note: "extinction pathway", source: "Likhtik 2008"}
+    - {from: LA_PV, to: LA_exc, p: 0.40, type: inh, source: "Wolff 2014"}
+    - {from: LA_VIP, to: LA_PV, p: 0.50, type: inh, note: "disinhibition", source: "Wolff 2014"}
+    - {from: CeA, to: BNST, p: 0.15, type: exc, source: "Lebow & Chen 2016"}
+    - {from: LC, to: LA_exc, p: 0.10, type: mod_NE, note: "enables LTP", source: "Tully 2007"}
+
+  synaptic_params:
+    LA_LTP_magnitude: "150-200% of baseline"
+    extinction_depotentiation: "reduces to ~120% of original"
+    fast_GABA_tau_ms: 10-15
+    glutamate_AMPA_tau_ms: 5-10
+    glutamate_NMDA_tau_ms: 50-100
+    source: "Duvarci & Pare 2014; Herry 2008 Nature"
+
+  theta_oscillations:
+    mPFC_BLA_hz: 4-8  # 4Hz sync during fear
+    vHPC_mPFC_hz: 6-10  # anxiety/contextual
+    source: "Likhtik 2014; Courtin 2014"
+
+# ========================================
+# RAGE CIRCUIT (Spiking, new)
+# ========================================
+
+rage:
+  paper_count: 25
+  top_paper: "Golden 2016 Nature (score=0.93)"
+
+  populations:
+    MeA:
+      cell_type: LTS  # GABAergic
+      n: 20
+      baseline_hz: 3-8
+      social_encounter_hz: 10-25
+      source: "Hong 2014"
+      allen_id: 403
+    VMH:
+      cell_type: RS  # Esr1+ glutamatergic
+      n: 25
+      baseline_hz: 2-5
+      investigation_hz: 5-15
+      attack_hz: 20-50
+      note: "scalable response: investigation -> mount -> attack"
+      source: "Lee 2014; Falkner 2016 Nat Neurosci; Lin 2011 Nature"
+      allen_id: 693
+
+  connections:
+    - {from: MeA, to: VMH, p: 0.15-0.25, type: inh_GABA, source: "Hong 2014"}
+    - {from: VMH, to: dlPAG, p: 0.10-0.15, type: exc_vGlut2, source: "Lin 2011 Nature; Falkner 2020"}
+    - {from: DR, to: VMH, p: 0.10, type: mod_5HT, note: "5-HT1A reduces VMH by 40-60%", source: "de Boer 2009"}
+    - {from: PFC, to: VMH, p: 0.10, type: inh, note: "top-down control", source: "Nelson & Trainor 2007"}
+
+  synaptic_params:
+    glutamate_AMPA_tau_ms: 5-10  # same as fear circuit (standard cortical)
+    GABA_tau_ms: 10-15
+    note: "RAGE circuit uses standard synaptic time constants; no STDP (attack is innate, not learned)"
+    source: "Standard values from Duvarci & Pare 2014 applied"
+
+  neuromodulation:
+    serotonin: "5-HT1A activation reduces VMH firing by ~40-60%"
+    substance_P: "NK1 agonist increases PAG-evoked rage by ~200%"
+    testosterone: "chronic elevation facilitates VMH reactivity (hours-days)"
+    cortisol: "acute rise facilitates hypothalamic aggression"
+    source: "de Boer 2009; Kruk 2004; Siegel & Victoroff 2009"
+
+# ========================================
+# SEEKING CIRCUIT (Spiking, existing + extension)
+# ========================================
+
+seeking:
+  paper_count: 23
+  top_paper: "Nestler & Carlezon 2006 Biol Psychiatry (score=1.00)"
+
+  populations:
+    OFC_reward:
+      cell_type: RS
+      n: 15
+      function: "economic value encoding, reward evaluation"
+      source: "Padoa-Schioppa & Assad 2006 Nature (VERIFIED, score=0.92)"
+    vmPFC_value:
+      cell_type: RS
+      n: 15
+      function: "subjective value, decision-making"
+      source: "Haber & Knutson 2010"
+    VP:
+      cell_type: LTS
+      n: 10
+      function: "ventral pallidum, hedonic output relay"
+      source: "Haber & Knutson 2010"
+      note: "NAc shell -> VP disinhibition = hedonic 'liking' output"
+    LHb:
+      cell_type: RS
+      n: 10
+      function: "negative RPE, disappointment signal"
+      source: "Matsumoto & Hikosaka 2007 Nature (VERIFIED)"
+      allen_id: 186
+
+  key_params:
+    VTA_DA_count_rat: 27000  # Nair-Roberts 2008
+    VTA_composition: {DA: 60%, GABA: 35%, Glu: 5%}  # Nair-Roberts 2008
+    DA_tonic_hz: 3-8  # Grace 2007
+    DA_phasic_burst_hz: 15-30  # 2-6 spikes; Schultz 1997
+    DA_pause_ms: 100-500  # negative RPE
+    RPE_positive: "+10-20 spikes/s above baseline"  # Bayer & Glimcher 2005
+    RPE_negative: "complete suppression ~200ms"  # Schultz 1997
+    D1_MSN_proportion: 50%  # Floresco 2015
+    D2_MSN_proportion: 50%
+    hedonic_hotspot_size: "~1 mm^3 in medial shell"  # Berridge 2009
+    VTA_NAc_DA_latency_ms: 100-200  # Tsai 2009
+
+  connections:
+    - {from: VTA_DA_lat, to: NAc_shell_D1, p: 0.15, type: mod_DA, source: "Schultz 1997; Haber & Knutson 2010"}
+    - {from: VTA_DA_lat, to: NAc_core_D1, p: 0.10, type: mod_DA, source: "Haber & Knutson 2010"}
+    - {from: VTA_DA_med, to: PFC, p: 0.10, type: mod_DA, note: "mesocortical", source: "Lammel 2012"}
+    - {from: NAc, to: VP, p: 0.20, type: inh_GABA, source: "Haber & Knutson 2010"}
+    - {from: NAc, to: VTA_GABA, p: 0.15, type: inh_GABA, source: "Haber & Knutson 2010"}
+    - {from: LHb, to: VTA_DA_lat, p: 0.15, type: inh, note: "via RMTg, negative RPE", source: "Matsumoto & Hikosaka 2007 Nature"}
+    - {from: hippocampus, to: VTA, p: 0.10, type: exc, note: "novelty/context", source: "Floresco 2003 Nat Neurosci"}
+
+# ========================================
+# SADNESS CIRCUIT (Spiking, new)
+# ========================================
+
+sadness:
+  paper_count: 19
+  top_paper: "Hamilton 2015 Biol Psychiatry (score=0.92)"
+
+  populations:
+    sgACC:
+      cell_type: RS
+      n: 20
+      function: "hyperactive in depression/sadness, yearning in grief"
+      metabolic_increase: "+20-40% vs healthy"
+      source: "Mayberg 1999; Drevets 1997 Nature"
+      allen_id: 31  # ACA subregion
+    habenula:
+      cell_type: RS
+      n: 15
+      function: "disappointment center, inhibits VTA DA + raphe 5-HT"
+      LHb_VTA_inhibition_latency_ms: 10-20
+      source: "Matsumoto & Hikosaka 2007 Nature"
+      allen_id: 186
+
+  connections:
+    - {from: sgACC, to: hypothalamus, p: 0.15, type: exc, source: "Mayberg 2005; Johansen-Berg 2008"}
+    - {from: sgACC, to: amygdala, p: 0.10, type: exc, source: "Johansen-Berg 2008"}
+    - {from: sgACC, to: NAc, p: 0.10, type: exc, note: "anhedonia pathway", source: "Johansen-Berg 2008"}
+    - {from: habenula, to: VTA_DA_lat, p: 0.15, type: inh, note: "via RMTg", source: "Matsumoto & Hikosaka 2007"}
+    - {from: habenula, to: DR, p: 0.15, type: inh, note: "5-HT reduction", source: "Matsumoto & Hikosaka 2007"}
+
+  synaptic_params:
+    glutamate_AMPA_tau_ms: 5-10
+    GABA_tau_ms: 10-15
+    note: "sgACC→subcortical projections are glutamatergic; LHb→VTA is glutamatergic (disynaptic inhibition via RMTg GABA)"
+    source: "Johansen-Berg 2008; Matsumoto & Hikosaka 2007"
+
+  key_params:
+    sgACC_grey_matter_loss: "39-48% volume reduction in depression"
+    serotonin_reduction: "estimated 20-40% decrease"
+    DMN_sgACC_connectivity: "positive correlation with rumination"
+    VTA_DA_in_depression: "reduced phasic, normal tonic"
+    social_pain_dACC_zscore: "3-4 for exclusion vs inclusion"
+    source: "Drevets 1997; Hamilton 2015; Eisenberger 2003"
+
+# ========================================
+# DISGUST CIRCUIT (Spiking, new)
+# ========================================
+
+disgust:
+  paper_count: 18
+  top_paper: "Small 2003 Neuron (score=1.00)"
+
+  populations:
+    # aIC is in shared regions
+    NTS:
+      cell_type: RS
+      n: 10
+      function: "visceral nausea signal, area postrema"
+      source: "Miller 2021"
+      allen_id: 651
+    putamen:
+      cell_type: D1_MSN
+      n: 15
+      function: "disgust recognition, basal ganglia processing"
+      source: "Calder 2000 Nat Neurosci; Sprengelmeyer 1996"
+
+  connections:
+    - {from: NTS, to: aIC, p: 0.15, type: exc, note: "visceral→insular", source: "Craig 2009"}
+    - {from: aIC, to: putamen, p: 0.15, type: exc, note: "bidirectional", source: "Calder 2000"}
+    - {from: aIC, to: OFC, p: 0.10, type: exc, note: "evaluative disgust", source: "Small 2003"}
+
+  synaptic_params:
+    glutamate_AMPA_tau_ms: 5-10
+    GABA_tau_ms: 10-15
+    note: "CTA involves rapid plasticity in PBN/NTS; aIC processing is largely feedforward"
+    source: "Garcia & Koelling 1966; Carter 2015"
+
+  key_params:
+    insula_response_latency_ms: ~200  # N200; Krolak-Salmon 2003
+    insula_fMRI_zscore: 3-5  # disgust vs neutral; Phillips 1997
+    CTA_learning_rate: "1 trial (Garcia effect)"
+    CTA_CS_US_delay_tolerance_min: 75
+    disgust_sensitivity_insula_r: 0.41  # Calder 2007
+
+# ========================================
+# CARE CIRCUIT (Mean-field, Phase B)
+# ========================================
+
+care:
+  paper_count: 20
+  top_paper: "Kirsch 2005 J Neurosci (score=0.91)"
+  implementation: mean_field
+
+  key_regions: [MPOA, PVN_OXT, VTA, amygdala, BNST]
+
+  key_params:
+    MPOA_to_VTA: "excitatory, galanin+/glutamate"
+    MPOA_to_amygdala: "inhibitory (suppresses avoidance)"
+    OXT_amygdala_reduction: "~30-50% BOLD reduction"
+    prolactin_MPOA: "essential for nursing; deletion = pup abandonment"
+    DA_infant_response: "VTA/SN scaled by infant affect: happy > neutral > sad"
+    OXT_NAc: "enables social reward via 5-HT1b co-activation"
+    source: "Kohl 2018 Nature; Wu 2014 Nature; Kirsch 2005; Brown 2017 PNAS; Dolen 2013"
+
+# ========================================
+# PANIC/GRIEF CIRCUIT (Mean-field, Phase B)
+# ========================================
+
+panic_grief:
+  paper_count: 21
+  top_paper: "Gundel 2003 Am J Psychiatry (score=0.88)"
+  implementation: mean_field
+
+  key_regions: [dACC, sgACC, BNST, PAG, NAc, aIC]
+
+  key_params:
+    social_pain_dACC: "z-score 3-4 for exclusion; Eisenberger 2003"
+    opioid_distress_reduction: "morphine reduces vocalizations 35-75%; Herman & Panksepp 1978"
+    CRF_BNST: "increases with partner loss; antagonist blocks grief behavior; Bosch 2009"
+    complicated_grief_NAc: "NAc activation correlated with yearning; O'Connor 2008"
+    OXT_social_buffering: "attachment figure buffers HPA; Hennessy 2009"
+    opioid_social_bond: "tonic mu-opioid maintains bonds; withdrawal = distress; Machin & Dunbar 2011"
+
+# ========================================
+# PLAY CIRCUIT (Mean-field, Phase B)
+# ========================================
+
+play:
+  paper_count: 15
+  top_paper: "Siviy & Panksepp 2011 Neurosci Biobehav Rev (score=0.84)"
+  implementation: mean_field
+
+  key_regions: [parafascicular_thalamus, PFC, striatum, NAc]
+
+  key_params:
+    PFA_lesion_effect: "reduces pinning by 73%; Panksepp & Siviy 1987"
+    opioid_role: "NAc opioids mediate social play reward; Vanderschuren 2016"
+    eCB_role: "endocannabinoids in amygdala/NAc mediate social play; Trezza 2012"
+    DA_role: "NAc DA modulates play motivation"
+    developmental: "play deprivation impairs social competence; Pellis & Pellis 2007"
+
+# ========================================
+# LUST CIRCUIT (Mean-field, Phase B)
+# ========================================
+
+lust:
+  paper_count: 15
+  top_paper: "Dominguez & Hull 2005 Physiol Behav (score=0.85)"
+  implementation: mean_field
+
+  key_regions: [MPOA, VMH, VTA, NAc, hypothalamus]
+
+  key_params:
+    DA_MPOA: "increases during precopulatory exposure + copulation; Dominguez & Hull 2005"
+    MPOA_function: "removes tonic inhibition for sensorimotor integration"
+    testosterone_effect: "facilitates MPOA/hypothalamic reactivity"
+    OXT_AVP: "pair bonding in prairie voles; Young & Wang 2004"
+    reward_system: "VTA-NAc activated during sexual arousal"
+
+# ========================================
+# SURPRISE CIRCUIT (Mean-field, Phase B)
+# ========================================
+
+surprise:
+  paper_count: 18
+  top_paper: "Sara & Bouret 2012 Neuron (score=0.88)"
+  implementation: mean_field
+
+  key_regions: [LC, amygdala, dACC, aIC, hippocampus]
+
+  key_params:
+    LC_phasic_burst: "8-15 Hz to unexpected stimuli"
+    LC_tonic_mode: "1-3 Hz, exploration/disengagement"
+    P300_latency_ms: 250-500  # Naatanen 2007
+    MMN_latency_ms: 100-250
+    network_reset: "LC NE burst resets cortical networks; Sara & Bouret 2012"
+    hippocampal_novelty: "CA1 novelty detection, pattern separation"
+    prediction_error: "surprise = large prediction error signal"
+
+# ========================================
+# CROSS-EMOTION INTERACTIONS
+# ========================================
+
+interactions:
+  SEEKING_SADNESS:
+    mechanism: "LHb hyperactivity suppresses both VTA DA (anhedonia) and raphe 5-HT (low mood)"
+    ketamine: "blocks LHb NMDA bursting, disinhibiting VTA DA"
+    source: "Yang 2018; Nestler & Carlezon 2006"
+
+  DISGUST_SADNESS:
+    mechanism: "anterior insula processes both disgust and interoceptive sadness awareness"
+    shared_region: aIC
+    source: "Craig 2009"
+
+  SEEKING_DISGUST:
+    mechanism: "PBN CGRP→VTA inhibits DA, suppressing approach to avoid pathogens"
+    source: "Carter 2015"
+
+  FEAR_RAGE:
+    shared_PAG: "vlPAG=freezing vs dlPAG=attack; competing behavioral programs"
+    shared_5HT: "5-HT modulates extinction (FEAR) and inhibits aggression (RAGE)"
+    source: "Tovote 2015; Nelson & Trainor 2007"
+
+  CARE_PANIC:
+    mechanism: "OXT from CARE buffers PANIC/GRIEF; OXT withdrawal = separation distress"
+    shared_BNST: "BNST integrates both parental motivation and separation anxiety"
+    source: "Nelson & Panksepp 1998"
