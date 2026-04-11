@@ -233,6 +233,18 @@ class SharedCoreNetwork:
                 self._G.b[s:e] = 0.2
                 self._G.c[s:e] = -65
                 self._G.d[s:e] = 10
+            # PAG: 高d値で連続発火を抑制（u recovery強化）
+            elif p.name in ("vlpag", "dlpag"):
+                self._G.a[s:e] = 0.02
+                self._G.b[s:e] = 0.2
+                self._G.c[s:e] = -65
+                self._G.d[s:e] = 12  # 高d = 強い適応 → 連続発火を抑制
+            # D1/D2-MSN: 閾値が高い（down-state）→ 追加電流が必要
+            elif p.cell_type in ("D1_MSN", "D2_MSN"):
+                self._G.a[s:e] = ct["a"]
+                self._G.b[s:e] = ct["b"]
+                self._G.c[s:e] = -80  # deeper reset for MSN down-state
+                self._G.d[s:e] = ct["d"]
             else:
                 self._G.a[s:e] = ct["a"]
                 self._G.b[s:e] = ct["b"]
@@ -339,6 +351,9 @@ class SharedCoreNetwork:
             "itc": 3.0,
             "pl": 4.0,            # Courtin 2014
             "il": 4.0,            # Quirk 2002
+            "nac_shell_d1": 3.5,  # D1-MSN needs more drive (deep reset)
+            "nac_shell_d2": 3.0,
+            "nac_core_d1": 3.0,
             "la_pv": 5.0,         # PV fast-spiking: higher threshold
             "la_vip": 4.0,
             # RAGE
