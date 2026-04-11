@@ -1,16 +1,13 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 2 — 全脳情動モデル V2 (30% complete)
+## Current Phase: Phase 2 — 全脳情動モデル V2 (80% complete)
 
 ## Active To-Dos
 
 | # | Task | Owner | Status | Due |
 |---|------|-------|--------|-----|
-| 1 | GPU環境構築(NVIDIA + GeNN) | owner | pending | — |
-| 2 | GitHub公開判断 | owner | pending | — |
-| 3 | Phase B 5回路のスパイキング化 (GPU後) | agent | todo | GPU後 |
-| 4 | SBI較正: RAGE/SADNESS/DISGUST回路 | agent | todo | — |
-| 5 | 文献DOI未取得45件の補完 | agent | todo | — |
+| 1 | GPU環境構築(NVIDIA + GeNN) → 10Kスケールアップ | owner | pending | — |
+| 2 | SBI較正: 全回路の発火率をターゲット範囲に収束 | agent | todo | — |
 
 ## Completed (Phase 2)
 
@@ -24,8 +21,11 @@
 - [x] Phase B 5 mean-field回路: CARE/PANIC_GRIEF/PLAY/LUST/SURPRISE — 4/11
 - [x] 情動間相互作用: 5対の文献準拠クロストーク — 4/11
 - [x] 統合readout: valence/arousal/dominance + 10情動活性度 — 4/11
-- [x] IntegratedBrainV2: neuromod/sleep/safety/policy統合(12テストパス) — 4/11
-- [x] 全テスト86本パス(V2: 48本 + 既存: 38本, 133秒) — 4/11
+- [x] IntegratedBrainV2: neuromod/sleep/safety/policy統合 — 4/11
+- [x] **Phase B全スパイキング化: 5回路追加(115ニューロン)** — 4/11
+- [x] **GitHub公開: tatuyayonje0223-arch/emotion-ai** — 4/11
+- [x] **定量バリデーションスクリプト: run_v2_validation.py** — 4/11
+- [x] 全テスト93本パス(V2: 55本 + 既存: 38本, 288秒) — 4/11
 
 ## Completed (Phase 1)
 
@@ -58,8 +58,12 @@
 | SEEKING | OFC, vmPFC, VP, LHb | 50 |
 | SADNESS | sgACC, Habenula | 35 |
 | DISGUST | NTS, Putamen | 25 |
-| **Spiking Total** | **34 populations** | **570** |
-| Mean-field | CARE(2), PANIC_GRIEF(2), PLAY(2), LUST(2), SURPRISE(2) | 10 regions |
+| CARE | MPOA, care_BNST | 25 |
+| PANIC/GRIEF | dACC, grief_PAG | 25 |
+| PLAY | PFA_thalamus, play_cortex | 25 |
+| LUST | lust_MPOA, lust_hypothalamus | 20 |
+| SURPRISE | surprise_amygdala, surprise_PFC | 20 |
+| **Spiking Total** | **44 populations** | **685** |
 
 ## Validation Scores (V1, preserved)
 
