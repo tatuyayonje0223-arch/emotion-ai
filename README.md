@@ -1,68 +1,89 @@
 # Emotion-Capable Brain-Inspired AI
 
-情動神経回路の簡略モデルを探索するプロジェクト。
+232検証済み論文に基づき、ヒトの10情動回路を685スパイキングニューロンでモデル化するプロジェクト。
 
-## 概要
+**注意**: これは「忠実な再現」ではなく「定性的な模倣の研究用モデル」です。
 
-547スパイキングニューロン（Izhikevich）+ 4 mean-field領域で、ヒトの情動回路を定性的に模倣する。
-恐怖条件付け/消去、報酬学習、ストレス応答の3回路をBrian2上に実装。
+## V2 アーキテクチャ (2026-04-12)
 
-**注意**: これは「忠実な再現」ではなく「定性的な模倣のトイモデル」です。
+```
+IntegratedBrainV2 (テキスト → 10情動 → readout → ポリシー)
+├── SharedCoreNetwork (14共有領域, 245 neurons)
+│   PAG(vl/dl) / BNST / PVN(CRH/OXT) / VTA(DA_lat/DA_med/GABA)
+│   NAc(shell_D1/D2, core_D1) / LC / DR / aIC
+├── 10 Spiking Emotion Circuits (44 populations, 685 neurons)
+│   ├── FEAR: LA→BA→CeL(SOM+/PKCd+)→CeM + PL/IL + STDP
+│   ├── RAGE: MeA→VMH→dlPAG + 5-HT inhibition
+│   ├── SEEKING: VTA DA RPE → NAc + OFC/vmPFC/VP/LHb
+│   ├── SADNESS: sgACC → habenula → VTA/DR inhibition
+│   ├── DISGUST: NTS → aIC → putamen
+│   ├── CARE: MPOA → VTA + PVN OXT
+│   ├── PANIC/GRIEF: dACC → BNST → PAG + opioid
+│   ├── PLAY: PFA thalamus → cortex + eCB/DA
+│   ├── LUST: MPOA → VTA + hypothalamus
+│   └── SURPRISE: LC NE burst → amygdala → PFC
+├── Neuromodulation: eCB / ACh / theta / structural plasticity
+├── Sleep Replay: NREM(SWR) + REM(theta consolidation)
+└── Safety + LLM Bridge + Session API
+```
+
+## 文献基盤
+
+| 情動 | 検証済み論文 | トップ論文 |
+|------|-------------|-----------|
+| FEAR | 30 | Duvarci & Pare 2014 Neuron |
+| RAGE | 25 | Golden 2016 Nature |
+| SEEKING | 23 | Nestler & Carlezon 2006 |
+| SADNESS | 19 | Hamilton 2015 Biol Psychiatry |
+| DISGUST | 18 | Small 2003 Neuron |
+| CARE | 20 | Kirsch 2005 J Neurosci |
+| PANIC/GRIEF | 21 | Gundel 2003 Am J Psychiatry |
+| PLAY | 15 | Siviy & Panksepp 2011 |
+| LUST | 15 | Dominguez & Hull 2005 |
+| SURPRISE | 18 | Sara & Bouret 2012 Neuron |
+| **Total** | **232** | DOI 94% verified (CrossRef) |
 
 ## クイックスタート
 
 ```bash
 pip install brian2 pydantic fastapi uvicorn pyyaml numpy scipy
 
-# 脳+LLM統合対話（API不要）
-python scripts/emotion_chat.py --mock
+# V2 10情動デモ
+PYTHONPATH=. python scripts/emotion_brain_v2_demo.py
 
-# E2Eデモ（恐怖→睡眠→消去）
-python scripts/emotion_brain_demo.py
+# テキスト入力で情動処理
+PYTHONPATH=. python scripts/emotion_brain_v2_demo.py --text "I'm terrified"
 
-# 定量検証レポート
-python scripts/run_full_validation.py
+# 定量バリデーション
+PYTHONPATH=. python scripts/run_v2_validation.py
 
-# API起動
-python scripts/run_api.py
+# テスト実行
+python -m pytest tests/test_v2_emotion_brain.py tests/test_v2_shared_core.py tests/test_v2_integrated.py -v
+
+# 論文DOI検証
+PYTHONPATH=. python scripts/verify_literature_full.py --phase doi-search --limit 10
 ```
 
-## アーキテクチャ
+## バリデーション
 
-```
-EmotionBrain (正式最終システム)
-├── ハイブリッド脳
-│   ├── Brian2スパイキング (547 neurons)
-│   │   ├── 恐怖: LA→BA→CeL(SOM+/PKCd+脱抑制)→CeM + PL/IL + BNST
-│   │   ├── 報酬: VTA(DA tuned a=0.01,d=10)→NAc(Shell/Core×D1/D2)
-│   │   └── ストレス: BLA→PVN(MR/GR) + LC
-│   └── AdEx mean-field (4 regions)
-│       └── 島皮質 / ACC / dlPFC / 海馬
-├── 神経修飾: eCB / ACh / シータ / 構造的可塑性
-├── 睡眠リプレイ: NREM(SWR) + REM(シータ固定化)
-└── 安全チェック + LLMブリッジ + セッションAPI
-```
-
-## 検証スコア
+V2スコア: **50.0% (12/24 targets PASS)** — SBI較正済み (ABC rejection, score=0.881)
 
 | 回路 | スコア | 主要結果 |
 |------|--------|---------|
-| 恐怖 | 0.805 | BLA 9.1Hz(目標8), SOM+/PKCd+ 3.28(目標3.0) |
-| 消去 | PASS | 40.9%低下(目標30%+) |
-| 報酬 | 0.806 | DA burst 25Hz(目標25, 回路内実測), tonic 7.2Hz(目標5) |
-| ストレス | 1.000 | 全5項目PASS |
-| **平均** | **0.870** | |
+| FEAR | 2/8 | LA baseline 3.9Hz(PASS), IL extinction 13.3Hz(PASS) |
+| RAGE | 5/6 (83%) | MeA/VMH/dlPAG全てターゲット範囲内 |
+| SEEKING | 2/4 | VTA DA tonic 10Hz(PASS), burst 20Hz(PASS) |
+| SADNESS | 2/3 | sgACC 29.8Hz(PASS), DR suppressed 0Hz(PASS) |
+| DISGUST | 1/3 | aIC 25.3Hz(PASS) |
 
-## 監査
-
-11ラウンドの独立監査を実施。R10で全指摘0件を達成。
+V1スコア (preserved): 恐怖0.805 / 報酬0.864 / ストレス1.000 / 平均0.890
 
 ## 技術スタック
 
-- Python 3.14 + Brian2 2.10.1
-- Pydantic, FastAPI, numpy, scipy
-- Allen Brain Atlas API integration
-- SBI (ABC rejection) parameter estimation
+- Python 3.14 + Brian2 2.10.1 (Izhikevich spiking neurons)
+- SBI: ABC rejection + differential evolution
+- 232 papers verified via CrossRef API + PubMed abstracts
+- Pydantic, FastAPI, numpy, scipy, PyYAML
 
 ## ライセンス
 

@@ -116,6 +116,57 @@ DISGUST_TARGETS = [
 ]
 
 # ═══════════════════════════════════════════════════════════
+# CARE (Phase B spiking)
+# ═══════════════════════════════════════════════════════════
+
+CARE_TARGETS = [
+    FiringRateTarget("mpoa", "social_bonding", 3, 20,
+                     "Kohl 2018 Nature; Wu 2014 Nature"),
+    FiringRateTarget("pvn_oxt", "social_bonding", 3, 20,
+                     "Kirsch 2005 J Neurosci"),
+]
+
+# ═══════════════════════════════════════════════════════════
+# PANIC/GRIEF (Phase B spiking)
+# ═══════════════════════════════════════════════════════════
+
+PANIC_GRIEF_TARGETS = [
+    FiringRateTarget("dacc", "separation", 5, 25,
+                     "Eisenberger 2003 Science (dACC z=3-4)"),
+    FiringRateTarget("bnst", "separation", 5, 20,
+                     "Davis 2010; Bosch 2009"),
+]
+
+# ═══════════════════════════════════════════════════════════
+# PLAY (Phase B spiking)
+# ═══════════════════════════════════════════════════════════
+
+PLAY_TARGETS = [
+    FiringRateTarget("pfa_thalamus", "social_play", 3, 20,
+                     "Siviy & Panksepp 2011"),
+]
+
+# ═══════════════════════════════════════════════════════════
+# LUST (Phase B spiking)
+# ═══════════════════════════════════════════════════════════
+
+LUST_TARGETS = [
+    FiringRateTarget("lust_mpoa", "sexual_arousal", 3, 20,
+                     "Dominguez & Hull 2005"),
+]
+
+# ═══════════════════════════════════════════════════════════
+# SURPRISE (Phase B spiking)
+# ═══════════════════════════════════════════════════════════
+
+SURPRISE_TARGETS = [
+    FiringRateTarget("lc", "novelty_burst", 5, 20,
+                     "Sara & Bouret 2012 Neuron (phasic 8-15Hz)"),
+    FiringRateTarget("surprise_amygdala", "novelty", 3, 20,
+                     "Sara & Bouret 2012"),
+]
+
+# ═══════════════════════════════════════════════════════════
 # Summary
 # ═══════════════════════════════════════════════════════════
 
@@ -125,4 +176,9 @@ ALL_TARGETS = {
     "seeking": (SEEKING_TARGETS, SEEKING_RATIOS),
     "sadness": (SADNESS_TARGETS, SADNESS_RATIOS),
     "disgust": (DISGUST_TARGETS, []),
+    "care": (CARE_TARGETS, []),
+    "panic_grief": (PANIC_GRIEF_TARGETS, []),
+    "play": (PLAY_TARGETS, []),
+    "lust": (LUST_TARGETS, []),
+    "surprise": (SURPRISE_TARGETS, []),
 }

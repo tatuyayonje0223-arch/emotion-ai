@@ -15,6 +15,12 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from src.brian2_circuits.integrated_brain import EmotionBrain, IntegratedResult
+# V2 support
+try:
+    from src.brian2_circuits.integrated_brain_v2 import IntegratedBrainV2, IntegratedResultV2
+    _HAS_V2 = True
+except ImportError:
+    _HAS_V2 = False
 from src.llm.provider import LLMProvider, get_best_provider, MockProvider
 from src.neurocircuit.brain import EmotionReadout
 from src.safety.guardian import check_anthropomorphic_claims

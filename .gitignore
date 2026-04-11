@@ -32,3 +32,8 @@ Thumbs.db
 
 # Experiments output
 experiments/results/
+
+# Large generated files (regenerate with scripts)
+docs/literature/full_verification_results.json
+docs/literature/verified_parameters_db.json
+src/calibration/sbi_v2_best_params.json

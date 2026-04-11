@@ -426,6 +426,11 @@ class EmotionBrainV2:
                 attachment_need: float = 0.0,
                 ) -> EmotionStateV2:
         """入力信号から10情動の活性度を計算する（全スパイキング）。"""
+        _c = lambda v: max(0.0, min(1.0, float(v)))
+        threat, reward, social = _c(threat), _c(reward), _c(social)
+        novelty, pain, loss = _c(novelty), _c(pain), _c(loss)
+        frustration, contamination, attachment_need = _c(frustration), _c(contamination), _c(attachment_need)
+
         self._step_count += 1
         c = self.cfg
         n_steps = int(c.duration_ms / c.dt_ms)
