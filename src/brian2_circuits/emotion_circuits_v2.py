@@ -390,7 +390,8 @@ class EmotionBrainV2:
     全10回路がSharedCoreNetworkのスパイキングニューロンとして統合。
     """
 
-    def __init__(self, config: SharedCoreConfig | None = None):
+    def __init__(self, config: SharedCoreConfig | None = None,
+                 tonic_overrides: dict[str, float] | None = None):
         self.cfg = config or SharedCoreConfig()
 
         # All 10 spiking circuits in SharedCoreNetwork
@@ -406,6 +407,10 @@ class EmotionBrainV2:
         register_lust_circuit(self._core)
         register_surprise_circuit(self._core)
         self._core.build()
+
+        # SBI較正用tonic drive override
+        if tonic_overrides:
+            self._core.set_tonic_override(tonic_overrides)
 
         self._step_count = 0
 
@@ -432,7 +437,7 @@ class EmotionBrainV2:
         if threat > 0.1 or pain > 0.1:
             la_drive = np.zeros((n_steps, 40))
             cs_start, cs_end = int(50 / c.dt_ms), int(250 / c.dt_ms)
-            la_drive[cs_start:cs_end, :] = 12.0 * max(0.5, threat * 2)  # drive ALL LA neurons (tuned for 8-35Hz)
+            la_drive[cs_start:cs_end, :] = 18.78 * max(0.5, threat * 2)  # SBI V2 calibrated (score=0.881)
             if pain > 0.1:
                 la_drive[cs_start:cs_end, :] += 10.0 * pain
             overrides["la_exc"] = la_drive
@@ -466,7 +471,7 @@ class EmotionBrainV2:
             vta_drive = np.zeros((n_steps, 30))
             burst_start = int(100 / c.dt_ms)
             burst_end = int(200 / c.dt_ms)
-            vta_drive[burst_start:burst_end, :] = 25.0 * reward  # phasic burst (must overcome GABA inhibition)
+            vta_drive[burst_start:burst_end, :] = 25.64 * reward  # SBI V2 calibrated
             overrides["vta_da_lat"] = vta_drive
 
             ofc_drive = np.zeros((n_steps, 15))

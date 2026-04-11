@@ -310,6 +310,10 @@ class SharedCoreNetwork:
         self._net = Network(self._G, self._mon, *self._synapses)
         self._built = True
 
+    def set_tonic_override(self, overrides: dict[str, float]) -> None:
+        """tonic driveの外部上書き（SBI較正用）。"""
+        self._tonic_overrides = overrides
+
     def run_trial(self, drive_overrides: dict[str, np.ndarray] | None = None,
                   trial_num: int = 0) -> CoreTrialResult:
         """1試行を実行する。
@@ -333,20 +337,20 @@ class SharedCoreNetwork:
         # Izhikevich RS threshold ~I=4-5 for onset, ~8-10 for 10Hz
         tonic_drives = {
             # 共有領域
-            "vta_gaba": 3.0,      # Cohen 2012: tonic firing (reduced to allow DA burst)
+            "vta_gaba": 1.54,     # SBI V2 calibrated (reduced for DA burst)
             "vta_da_lat": 4.5,    # Grace 2007: tonic 3-8Hz
             "vta_da_med": 3.0,
             "bnst": 2.5,          # Davis 2010: baseline 3-5Hz (LTS type fires easily)
             "lc": 4.0,            # Sara 2012: tonic 1-3Hz
-            "dr": 2.5,            # de Jong 2022: tonic 1-5Hz (needs to be suppressible by LHb)
+            "dr": 2.18,           # SBI V2 calibrated
             "aic": 3.5,
             "pvn_crh": 3.0,
             "pvn_oxt": 3.0,
             # FEAR: 既存較正値と同等のtonic
-            "la_exc": 2.5,        # Quirk 2002: baseline 1-5Hz (target 1-8Hz)
+            "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
-            "cel_som": 2.0,       # Ciocchi 2010: LTS fires easily, keep low
-            "cel_pkcd": 0.8,      # Ciocchi 2010: target 0-5Hz during CS (needs suppression)
+            "cel_som": 0.92,      # SBI V2 calibrated
+            "cel_pkcd": 1.15,     # SBI V2 calibrated
             "cem": 3.5,           # baseline 2-5Hz
             "itc": 3.0,
             "pl": 4.0,            # Courtin 2014
@@ -357,8 +361,8 @@ class SharedCoreNetwork:
             "la_pv": 5.0,         # PV fast-spiking: higher threshold
             "la_vip": 4.0,
             # RAGE
-            "mea": 1.0,           # Hong 2014: baseline 3-8Hz (LTS, very low tonic needed)
-            "vmh": 2.5,           # Lee 2014: baseline 2-5Hz (lowered for target)
+            "mea": 1.96,          # SBI V2 calibrated
+            "vmh": 1.96,          # SBI V2 calibrated
             # SEEKING
             "ofc_reward": 4.0,
             "vmpfc_value": 3.5,
@@ -368,7 +372,7 @@ class SharedCoreNetwork:
             "sgacc": 3.5,
             "habenula": 3.5,
             # DISGUST
-            "nts_disgust": 1.5,   # target 5-25Hz with contamination drive only
+            "nts_disgust": 2.32,  # SBI V2 calibrated
             "putamen": 4.0,
             # CARE
             "mpoa": 3.5,
@@ -386,10 +390,13 @@ class SharedCoreNetwork:
             "surprise_amygdala": 3.5,
             "surprise_pfc": 3.5,
         }
+        # SBI較正用override適用
+        overrides = getattr(self, '_tonic_overrides', {})
         for pop_name, tonic in tonic_drives.items():
             if pop_name in self._idx:
                 ps, pe = self._idx[pop_name]
-                drive[:, ps:pe] += tonic
+                actual_tonic = overrides.get(pop_name, tonic)
+                drive[:, ps:pe] += actual_tonic
 
         # PAG: 入力駆動のみ。tonic driveを追加しない（上のdictに含めない）
         for pag_name in ["vlpag", "dlpag"]:
