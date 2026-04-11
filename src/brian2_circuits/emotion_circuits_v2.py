@@ -59,9 +59,9 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("il", "itc", 0.18, 2.5, stdp=True, note="IL→ITC extinction; Quirk 2002")
     core.register_connection("itc", "cem", 0.20, 5.0, inh=True, note="ITC inhibits CeM for extinction")
 
-    # CeM → shared PAG (LeDoux 2000) — weight scaled for PAG low-background
-    core.register_connection("cem", "vlpag", 0.15, 2.0, note="CeM→vlPAG freezing; LeDoux 2000")
-    core.register_connection("cem", "dlpag", 0.10, 1.0, note="CeM→dlPAG flight")
+    # CeM → shared PAG (LeDoux 2000) — low weight: PAG needs strong input to fire from low background
+    core.register_connection("cem", "vlpag", 0.10, 1.0, note="CeM→vlPAG freezing; LeDoux 2000")
+    core.register_connection("cem", "dlpag", 0.08, 0.8, note="CeM→dlPAG flight")
 
     # CeA → shared BNST (Lebow & Chen 2016)
     core.register_connection("cel_som", "bnst", 0.15, 1.5, note="CeA→BNST sustained anxiety")
@@ -455,12 +455,18 @@ class EmotionBrainV2:
             vmh_drive[50:, :] = 10.0 * frustration + 3.0 * threat
             overrides["vmh"] = vmh_drive
 
+            # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
+            if frustration > 0.5:
+                dlpag_drive = np.zeros((n_steps, 20))
+                dlpag_drive[100:, :] = 12.0 * frustration
+                overrides["dlpag"] = dlpag_drive
+
         # SEEKING drive: reward → VTA DA
         if reward > 0.1:
             vta_drive = np.zeros((n_steps, 30))
             burst_start = int(100 / c.dt_ms)
             burst_end = int(200 / c.dt_ms)
-            vta_drive[burst_start:burst_end, :] = 10.0 * reward  # phasic burst (stronger to overcome GABA)
+            vta_drive[burst_start:burst_end, :] = 25.0 * reward  # phasic burst (must overcome GABA inhibition)
             overrides["vta_da_lat"] = vta_drive
 
             ofc_drive = np.zeros((n_steps, 15))
@@ -469,7 +475,7 @@ class EmotionBrainV2:
 
             # NAc shell activation (reward approach)
             nac_d1_drive = np.zeros((n_steps, 25))
-            nac_d1_drive[burst_start:burst_end, :] = 6.0 * reward
+            nac_d1_drive[burst_start:burst_end, :] = 12.0 * reward  # stronger NAc activation
             overrides["nac_shell_d1"] = nac_d1_drive
 
         # SADNESS drive: loss → sgACC hyperactivity
@@ -576,13 +582,19 @@ class EmotionBrainV2:
         seeking_act = _norm(rates.get("vta_da_lat", 0) * 0.4 + rates.get("nac_shell_d1", 0) * 0.3 +
                             rates.get("ofc_reward", 0) * 0.3, 25)
 
-        # SADNESS
-        sadness_act = _norm(rates.get("sgacc", 0) * 0.4 + rates.get("habenula", 0) * 0.3 +
-                            rates.get("aic", 0) * 0.15 + rates.get("pvn_crh", 0) * 0.15, 20)
+        # SADNESS (gated by loss input — prevent tonic activation from baseline sgACC/habenula)
+        if loss > 0.1:
+            sadness_act = _norm(rates.get("sgacc", 0) * 0.4 + rates.get("habenula", 0) * 0.3 +
+                                rates.get("aic", 0) * 0.15 + rates.get("pvn_crh", 0) * 0.15, 20) * min(1.0, loss * 2)
+        else:
+            sadness_act = 0.0
 
-        # DISGUST
-        disgust_act = _norm(rates.get("aic", 0) * 0.4 + rates.get("nts_disgust", 0) * 0.3 +
-                            rates.get("putamen", 0) * 0.3, 25)
+        # DISGUST (gated by contamination input)
+        if contamination > 0.1:
+            disgust_act = _norm(rates.get("aic", 0) * 0.4 + rates.get("nts_disgust", 0) * 0.3 +
+                                rates.get("putamen", 0) * 0.3, 25) * min(1.0, contamination * 2)
+        else:
+            disgust_act = 0.0
 
         # CARE: MPOA + OXT + VTA (social-driven, gated by social input)
         care_signal = max(social, attachment_need)

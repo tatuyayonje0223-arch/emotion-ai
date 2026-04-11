@@ -140,9 +140,9 @@ class SharedCoreNetwork:
         Source: brain_connectome_literature.md Connection Matrix
         """
         # VTA内部
-        self._conn_defs.append({"src": "vta_gaba", "tgt": "vta_da_lat", "p": 0.5, "w": 6.0, "inh": True,
-                                "note": "GABA→DA inhibition; Cohen 2012 Nature"})
-        self._conn_defs.append({"src": "vta_gaba", "tgt": "vta_da_med", "p": 0.3, "w": 4.0, "inh": True})
+        self._conn_defs.append({"src": "vta_gaba", "tgt": "vta_da_lat", "p": 0.3, "w": 3.0, "inh": True,
+                                "note": "GABA→DA inhibition; Cohen 2012 (reduced for burst)"})
+        self._conn_defs.append({"src": "vta_gaba", "tgt": "vta_da_med", "p": 0.2, "w": 2.0, "inh": True})
 
         # VTA → NAc (DA modulation)
         self._conn_defs.append({"src": "vta_da_lat", "tgt": "nac_shell_d1", "p": 0.15, "w": 3.0,
@@ -317,20 +317,70 @@ class SharedCoreNetwork:
         # ドライブ構築
         drive = c.bg_noise + noise_rng.normal(0, c.bg_noise * 0.3, (n_steps, self._total_n))
 
-        # VTA GABA tonic (文献: Cohen 2012)
-        gs, ge = self._idx["vta_gaba"]
-        drive[:, gs:ge] += 4.0
+        # ── Population-specific tonic drives (文献準拠) ──
+        # Izhikevich RS threshold ~I=4-5 for onset, ~8-10 for 10Hz
+        tonic_drives = {
+            # 共有領域
+            "vta_gaba": 3.0,      # Cohen 2012: tonic firing (reduced to allow DA burst)
+            "vta_da_lat": 4.5,    # Grace 2007: tonic 3-8Hz
+            "vta_da_med": 3.0,
+            "bnst": 2.5,          # Davis 2010: baseline 3-5Hz (LTS type fires easily)
+            "lc": 4.0,            # Sara 2012: tonic 1-3Hz
+            "dr": 2.5,            # de Jong 2022: tonic 1-5Hz (needs to be suppressible by LHb)
+            "aic": 3.5,
+            "pvn_crh": 3.0,
+            "pvn_oxt": 3.0,
+            # FEAR: 既存較正値と同等のtonic
+            "la_exc": 3.2,        # Quirk 2002: baseline 1-5Hz (further tuned)
+            "ba_exc": 4.0,
+            "cel_som": 3.0,       # Ciocchi 2010: tonic 5-15Hz (LTS type)
+            "cel_pkcd": 1.5,      # Ciocchi 2010: lower tonic (PKCd背景低減, LTS)
+            "cem": 3.5,           # baseline 2-5Hz
+            "itc": 3.0,
+            "pl": 4.0,            # Courtin 2014
+            "il": 4.0,            # Quirk 2002
+            "la_pv": 5.0,         # PV fast-spiking: higher threshold
+            "la_vip": 4.0,
+            # RAGE
+            "mea": 2.0,           # Hong 2014: baseline 3-8Hz (LTS type fires easily)
+            "vmh": 2.5,           # Lee 2014: baseline 2-5Hz (lowered for target)
+            # SEEKING
+            "ofc_reward": 4.0,
+            "vmpfc_value": 3.5,
+            "vp": 4.0,
+            "lhb": 3.5,
+            # SADNESS
+            "sgacc": 3.5,
+            "habenula": 3.5,
+            # DISGUST
+            "nts_disgust": 2.0,   # reduced: target 5-25Hz with contamination drive
+            "putamen": 4.0,
+            # CARE
+            "mpoa": 3.5,
+            "care_bnst": 4.0,
+            # PANIC
+            "dacc": 3.5,
+            "grief_pag": 3.0,
+            # PLAY
+            "pfa_thalamus": 3.5,
+            "play_cortex": 3.5,
+            # LUST
+            "lust_mpoa": 3.0,
+            "lust_hypo": 3.0,
+            # SURPRISE
+            "surprise_amygdala": 3.5,
+            "surprise_pfc": 3.5,
+        }
+        for pop_name, tonic in tonic_drives.items():
+            if pop_name in self._idx:
+                ps, pe = self._idx[pop_name]
+                drive[:, ps:pe] += tonic
 
-        # VTA DA lateral tonic (文献: 較正済み tonic_drive=2.5)
-        ds, de = self._idx["vta_da_lat"]
-        drive[:, ds:de] += 2.5
-
-        # PAG背景活動を低めに維持 (文献: baseline 2-5 Hz)
-        # PAGは入力駆動で活性化すべきで、自発発火は低い
+        # PAG: 入力駆動のみ。tonic driveを追加しない（上のdictに含めない）
         for pag_name in ["vlpag", "dlpag"]:
             if pag_name in self._idx:
                 ps, pe = self._idx[pag_name]
-                drive[:, ps:pe] *= 0.3  # 背景低減
+                drive[:, ps:pe] = c.bg_noise * 0.2  # 非常に低い背景のみ
 
         # 情動固有のドライブ上書き
         if drive_overrides:
