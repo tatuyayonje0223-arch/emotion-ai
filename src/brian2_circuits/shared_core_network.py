@@ -41,7 +41,7 @@ from src.brian2_circuits.neuron_models import IZH_TIMED_EQS, CELL_TYPES
 # ─── 追加セルタイプ（neuron_models.pyに将来追加予定）─────────────
 EXTENDED_CELL_TYPES: dict[str, dict[str, float]] = {
     **CELL_TYPES,
-    "OXT_neuron": {"a": 0.02, "b": 0.2, "c": -50, "d": 2},
+    "OXT_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},  # RS-like for stable rates
     "CRH_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},
     "5HT_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},
     "NE_neuron":  {"a": 0.02, "b": 0.2, "c": -65, "d": 10},
@@ -111,7 +111,7 @@ class SharedCoreNetwork:
         self._shared_pops: list[PopulationDef] = [
             PopulationDef("vlpag", self.cfg.n_vlpag, "RS"),
             PopulationDef("dlpag", self.cfg.n_dlpag, "RS"),
-            PopulationDef("bnst", self.cfg.n_bnst, "LTS"),
+            PopulationDef("bnst", self.cfg.n_bnst, "RS"),  # RS for stable rates (was LTS)
             PopulationDef("pvn_crh", self.cfg.n_pvn_crh, "CRH_neuron"),
             PopulationDef("pvn_oxt", self.cfg.n_pvn_oxt, "OXT_neuron"),
             PopulationDef("vta_da_lat", self.cfg.n_vta_da_lat, "IB"),
@@ -340,12 +340,12 @@ class SharedCoreNetwork:
             "vta_gaba": 1.54,     # SBI V2 calibrated (reduced for DA burst)
             "vta_da_lat": 4.5,    # Grace 2007: tonic 3-8Hz
             "vta_da_med": 3.0,
-            "bnst": 2.5,          # Davis 2010: baseline 3-5Hz (LTS type fires easily)
+            "bnst": 1.5,          # Davis 2010: baseline 3-5Hz (LTS, further reduced)
             "lc": 4.0,            # Sara 2012: tonic 1-3Hz
             "dr": 2.18,           # SBI V2 calibrated
             "aic": 3.5,
             "pvn_crh": 3.0,
-            "pvn_oxt": 3.0,
+            "pvn_oxt": 1.5,       # OXT neuron: low tonic (target 3-20Hz with social drive)
             # FEAR: 既存較正値と同等のtonic
             "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
