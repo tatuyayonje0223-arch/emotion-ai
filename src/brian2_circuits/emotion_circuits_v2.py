@@ -508,46 +508,45 @@ class EmotionBrainV2:
             aic_drive[50:, :] = 6.0 * contamination
             overrides["aic"] = aic_drive
 
-        # CARE drive: social/attachment → MPOA, PVN_OXT
+        # CARE drive: social/attachment → MPOA, PVN_OXT (halved for target range)
         if social > 0.1 or attachment_need > 0.1:
             mpoa_drive = np.zeros((n_steps, 15))
-            mpoa_drive[50:, :] = 8.0 * social + 5.0 * attachment_need
+            mpoa_drive[50:, :] = 4.0 * social + 2.5 * attachment_need
             overrides["mpoa"] = mpoa_drive
 
-            # Boost OXT when social is high
             oxt_drive = np.zeros((n_steps, 10))
-            oxt_drive[50:, :] = 5.0 * social + 3.0 * attachment_need
+            oxt_drive[50:, :] = 2.5 * social + 1.5 * attachment_need
             overrides["pvn_oxt"] = oxt_drive
 
-        # PANIC/GRIEF drive: loss + isolation → dACC, BNST
+        # PANIC/GRIEF drive: loss + isolation → dACC, BNST (reduced)
         if loss > 0.1 or attachment_need > 0.1:
             dacc_drive = np.zeros((n_steps, 15))
-            isolation = max(0, 1 - social)  # low social = high isolation
-            dacc_drive[50:, :] = 8.0 * loss + 6.0 * isolation * attachment_need
+            isolation = max(0, 1 - social)
+            dacc_drive[50:, :] = 4.0 * loss + 3.0 * isolation * attachment_need
             overrides["dacc"] = dacc_drive
 
             grief_pag_drive = np.zeros((n_steps, 10))
-            grief_pag_drive[100:, :] = 5.0 * loss + 4.0 * attachment_need
+            grief_pag_drive[100:, :] = 2.5 * loss + 2.0 * attachment_need
             overrides["grief_pag"] = grief_pag_drive
 
-        # PLAY drive: social + reward + novelty → PFA thalamus
+        # PLAY drive: social + reward + novelty → PFA thalamus (reduced)
         if social > 0.1 and (reward > 0.1 or novelty > 0.1):
             pfa_drive = np.zeros((n_steps, 15))
-            pfa_drive[50:, :] = 6.0 * social + 4.0 * reward + 3.0 * novelty
+            pfa_drive[50:, :] = 3.0 * social + 2.0 * reward + 1.5 * novelty
             overrides["pfa_thalamus"] = pfa_drive
 
             play_ctx_drive = np.zeros((n_steps, 10))
-            play_ctx_drive[50:, :] = 4.0 * social + 3.0 * novelty
+            play_ctx_drive[50:, :] = 2.0 * social + 1.5 * novelty
             overrides["play_cortex"] = play_ctx_drive
 
-        # LUST drive: social + reward → lust_MPOA, hypothalamus
+        # LUST drive: social + reward → lust_MPOA (reduced)
         if social > 0.1:
             lust_mpoa_drive = np.zeros((n_steps, 10))
-            lust_mpoa_drive[50:, :] = 5.0 * social + 3.0 * reward
+            lust_mpoa_drive[50:, :] = 3.0 * social + 1.5 * reward
             overrides["lust_mpoa"] = lust_mpoa_drive
 
             lust_hypo_drive = np.zeros((n_steps, 10))
-            lust_hypo_drive[50:, :] = 4.0 * social + 2.0 * reward
+            lust_hypo_drive[50:, :] = 2.0 * social + 1.0 * reward
             overrides["lust_hypo"] = lust_hypo_drive
 
         # SURPRISE drive: novelty → LC burst + surprise_amygdala
@@ -557,11 +556,11 @@ class EmotionBrainV2:
             overrides["lc"] = lc_drive
 
             surp_amyg_drive = np.zeros((n_steps, 10))
-            surp_amyg_drive[50:, :] = 18.0 * novelty  # salience drive (increased for threshold)
+            surp_amyg_drive[50:, :] = 6.0 * novelty  # reduced for target 3-20Hz
             overrides["surprise_amygdala"] = surp_amyg_drive
 
             surp_pfc_drive = np.zeros((n_steps, 10))
-            surp_pfc_drive[80:, :] = 15.0 * novelty  # prediction error (increased)
+            surp_pfc_drive[80:, :] = 5.0 * novelty
             overrides["surprise_pfc"] = surp_pfc_drive
 
         # ── Run spiking network ──

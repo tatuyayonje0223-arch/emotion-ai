@@ -59,6 +59,22 @@ def main():
             "baseline": {"contamination": 0.0},
             "stimulus": {"contamination": 0.8},
         },
+        "care": {
+            "social_bonding": {"social": 0.8, "attachment_need": 0.6},
+        },
+        "panic_grief": {
+            "separation": {"loss": 0.8, "attachment_need": 0.8},
+        },
+        "play": {
+            "social_play": {"social": 0.7, "reward": 0.5, "novelty": 0.3},
+        },
+        "lust": {
+            "sexual_arousal": {"social": 0.7, "reward": 0.4},
+        },
+        "surprise": {
+            "novelty_burst": {"novelty": 0.9},
+            "novelty": {"novelty": 0.9},
+        },
     }
 
     all_rates: dict[str, dict[str, dict[str, float]]] = {}

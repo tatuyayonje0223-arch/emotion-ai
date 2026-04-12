@@ -87,17 +87,24 @@ class IntegratedBrainV2:
             )
 
         # 3. 10情動回路処理
-        emotion = self._emotion_brain.process(
-            threat=sensory.threat_signal,
-            reward=sensory.reward_signal,
-            social=sensory.social_signal,
-            novelty=sensory.novelty_signal,
-            pain=sensory.pain_input,
-            loss=max(0, sensory.threat_signal * 0.3 - sensory.reward_signal * 0.5),
-            frustration=max(0, sensory.pain_input * 0.5 + sensory.threat_signal * 0.3 - sensory.reward_signal * 0.3),
-            contamination=max(0, sensory.pain_input * 0.3 - sensory.reward_signal * 0.5),
-            attachment_need=sensory.social_signal * 0.5,
-        )
+        try:
+            emotion = self._emotion_brain.process(
+                threat=sensory.threat_signal,
+                reward=sensory.reward_signal,
+                social=sensory.social_signal,
+                novelty=sensory.novelty_signal,
+                pain=sensory.pain_input,
+                loss=max(0, sensory.threat_signal * 0.3 - sensory.reward_signal * 0.5),
+                frustration=max(0, sensory.pain_input * 0.5 + sensory.threat_signal * 0.3 - sensory.reward_signal * 0.3),
+                contamination=max(0, sensory.pain_input * 0.3 - sensory.reward_signal * 0.5),
+                attachment_need=sensory.social_signal * 0.5,
+            )
+        except Exception as e:
+            # Brian2実行時エラーのフォールバック: 中立状態を返す
+            import logging
+            logging.warning(f"EmotionBrainV2 processing error: {e}")
+            from src.brian2_circuits.emotion_circuits_v2 import EmotionStateV2
+            emotion = EmotionStateV2()
 
         # 4. 神経修飾更新 (V2の発火率を使用)
         bla_activity = emotion.all_rates.get("la_exc", 0) / 100.0

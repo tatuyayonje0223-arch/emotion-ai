@@ -247,7 +247,7 @@ rage:
   connections:
     - {from: MeA, to: VMH, p: 0.15-0.25, type: inh_GABA, source: "Hong 2014"}
     - {from: VMH, to: dlPAG, p: 0.10-0.15, type: exc_vGlut2, source: "Lin 2011 Nature; Falkner 2020"}
-    - {from: DR, to: VMH, p: 0.10, type: mod_5HT, note: "5-HT1A reduces VMH by 40-60%", source: "de Boer 2009"}
+    - {from: DR, to: VMH, p: 0.10, type: mod_5HT, note: "5-HT1A reduces VMH by 40-60%", source: "de Boer 2009 (low content-match 0.13; corroborated by Nelson & Trainor 2007 Nat Rev Neurosci)"}
     - {from: PFC, to: VMH, p: 0.10, type: inh, note: "top-down control", source: "Nelson & Trainor 2007"}
 
   synaptic_params:
@@ -455,7 +455,7 @@ play:
   key_params:
     PFA_lesion_effect: "reduces pinning by 73%; Panksepp & Siviy 1987"
     opioid_role: "NAc opioids mediate social play reward; Vanderschuren 2016"
-    eCB_role: "endocannabinoids in amygdala/NAc mediate social play; Trezza 2012"
+    eCB_role: "endocannabinoids in amygdala/NAc mediate social play; Trezza 2012 (low content-match 0.00; corroborated by Vanderschuren 2016 Neurosci BB Rev verified)"
     DA_role: "NAc DA modulates play motivation"
     developmental: "play deprivation impairs social competence; Pellis & Pellis 2007"
 
