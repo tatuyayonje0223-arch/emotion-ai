@@ -34,10 +34,14 @@ def main():
     print("=" * 90)
 
     # ── Scenarios ──
+    # Scenario names MUST match target condition names in quantitative_targets_v2.py
     scenarios: dict[str, dict[str, dict]] = {
         "fear": {
             "baseline": {"threat": 0.0},
             "cs_evoked": {"threat": 0.8},
+            "fear_expression": {"threat": 0.8},       # = cs_evoked (alias for cem target)
+            "fear_burst": {"threat": 0.8},             # = cs_evoked (alias for pl target)
+            "freezing": {"threat": 0.8},               # = cs_evoked (alias for vlpag target)
             "extinction_recall": {"threat": 0.1},
         },
         "rage": {
@@ -49,15 +53,20 @@ def main():
         "seeking": {
             "tonic": {"reward": 0.0},
             "phasic_burst": {"reward": 0.8},
+            "reward": {"reward": 0.8},                 # alias for nac target
             "pause": {"loss": 0.5},
         },
         "sadness": {
             "baseline": {"loss": 0.0},
             "depression": {"loss": 0.8},
+            "reward_omission": {"loss": 0.5},          # habenula activated by loss
+            "sadness_suppressed": {"loss": 0.8},       # DR should be suppressed
         },
         "disgust": {
             "baseline": {"contamination": 0.0},
-            "stimulus": {"contamination": 0.8},
+            "disgust_stimulus": {"contamination": 0.8},
+            "contamination": {"contamination": 0.8},   # alias for nts target
+            "disgust_recognition": {"contamination": 0.8},  # alias for putamen
         },
         "care": {
             "social_bonding": {"social": 0.8, "attachment_need": 0.6},
