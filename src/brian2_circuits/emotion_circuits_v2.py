@@ -45,8 +45,8 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("la_pv", "la_exc", 0.4, 4.0, inh=True)
     core.register_connection("la_vip", "la_pv", 0.5, 5.0, inh=True, note="disinhibition; Wolff 2014")
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
-    core.register_connection("la_exc", "cel_som", 0.10, 1.2, stdp=True, note="LA→CeL SOM+; reduced for strict 8-16Hz")
-    core.register_connection("ba_exc", "cel_som", 0.10, 1.5)
+    core.register_connection("la_exc", "cel_som", 0.08, 0.8, stdp=True, note="LA→CeL SOM+; strict 8-16Hz (further reduced)")
+    core.register_connection("ba_exc", "cel_som", 0.05, 0.8, note="reduced for strict 8-16Hz")
     core.register_connection("cel_som", "cel_pkcd", 0.90, 15.0, inh=True,
                              note="maximum suppression for PKCd+ 0-5Hz target; Ciocchi 2010")
     core.register_connection("cel_pkcd", "cel_som", 0.3, 3.0, inh=True)
@@ -458,7 +458,7 @@ class EmotionBrainV2:
             # vlPAG direct drive for freezing (CeM→vlPAG synaptic alone insufficient in single trial)
             if threat > 0.3:
                 vlpag_drive = np.zeros((n_steps, 25))  # matched to vlpag n=25
-                vlpag_drive[cs_start:cs_end, :] = 5.5 * threat  # strict 7-13Hz (was 6.7→aim 10)
+                vlpag_drive[cs_start:cs_end, :] = 6.0 * threat  # strict 7-13Hz (n=25, aim 10Hz)
                 overrides["vlpag"] = vlpag_drive
 
         # RAGE drive: frustration → MeA/VMH
@@ -469,7 +469,7 @@ class EmotionBrainV2:
 
             vmh_drive = np.zeros((n_steps, 25))
             # VMH: nonlinear scaling — low frustration=moderate, high=attack
-            vmh_amp = 12.0 * (frustration ** 1.5) + 2.0 * threat  # supralinear for attack threshold
+            vmh_amp = 14.0 * (frustration ** 2.0) + 2.0 * threat  # quadratic: investigation=low, attack=high
             vmh_drive[50:, :] = vmh_amp
             overrides["vmh"] = vmh_drive
 
@@ -507,7 +507,7 @@ class EmotionBrainV2:
             overrides["vta_da_lat"] = vta_suppress
 
             # DR suppression during loss (LHb→DR inhibition)
-            dr_suppress = np.full((n_steps, 15), -0.5 * loss)  # strict 2-4Hz (reduce 20-40% from ~7Hz baseline)
+            dr_suppress = np.full((n_steps, 15), -0.6 * loss)  # strict 2-4Hz
             overrides["dr"] = dr_suppress
 
             hab_drive = np.zeros((n_steps, 15))
@@ -558,7 +558,7 @@ class EmotionBrainV2:
         # LUST drive: social + reward → lust_MPOA (reduced)
         if social > 0.1:
             lust_mpoa_drive = np.zeros((n_steps, 10))
-            lust_mpoa_drive[50:, :] = 1.5 * social + 0.8 * reward  # strict 8-16Hz
+            lust_mpoa_drive[50:, :] = 0.8 * social + 0.4 * reward  # strict 8-16Hz
             overrides["lust_mpoa"] = lust_mpoa_drive
 
             lust_hypo_drive = np.zeros((n_steps, 10))

@@ -355,12 +355,12 @@ class SharedCoreNetwork:
             # FEAR: 既存較正値と同等のtonic
             "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
-            "cel_som": 0.57,      # SBI strict calibrated
+            "cel_som": 0.3,       # strict 8-16Hz (very low tonic, input-driven only)
             "cel_pkcd": 0.30,     # minimal tonic, must stay 0-5Hz during CS
             "cem": 3.5,           # baseline 2-5Hz
             "itc": 3.0,
             "pl": 4.0,            # Courtin 2014
-            "il": 4.0,            # Quirk 2002
+            "il": 3.5,            # strict 7-13Hz (reduce from 13.3 to ~10Hz)
             "nac_shell_d1": 3.5,  # D1-MSN needs more drive (deep reset)
             "nac_shell_d2": 3.0,
             "nac_core_d1": 3.0,
@@ -390,7 +390,7 @@ class SharedCoreNetwork:
             "pfa_thalamus": 2.5,  # aim 10Hz
             "play_cortex": 3.5,
             # LUST
-            "lust_mpoa": 3.0,
+            "lust_mpoa": 3.3,     # strict 8-16Hz
             "lust_hypo": 3.0,
             # SURPRISE
             "surprise_amygdala": 2.5,  # aim 10Hz
