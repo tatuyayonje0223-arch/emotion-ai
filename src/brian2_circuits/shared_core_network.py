@@ -41,7 +41,7 @@ from src.brian2_circuits.neuron_models import IZH_TIMED_EQS, CELL_TYPES
 # ─── 追加セルタイプ（neuron_models.pyに将来追加予定）─────────────
 EXTENDED_CELL_TYPES: dict[str, dict[str, float]] = {
     **CELL_TYPES,
-    "OXT_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},  # RS-like for stable rates
+    "OXT_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 2},  # original spec; d=2
     "CRH_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},
     "5HT_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},
     "NE_neuron":  {"a": 0.02, "b": 0.2, "c": -65, "d": 10},
@@ -111,7 +111,7 @@ class SharedCoreNetwork:
         self._shared_pops: list[PopulationDef] = [
             PopulationDef("vlpag", self.cfg.n_vlpag, "RS"),
             PopulationDef("dlpag", self.cfg.n_dlpag, "RS"),
-            PopulationDef("bnst", self.cfg.n_bnst, "RS"),  # RS for stable rates (was LTS)
+            PopulationDef("bnst", self.cfg.n_bnst, "LTS"),  # Davis 2010: BNST GABAergic LTS neurons
             PopulationDef("pvn_crh", self.cfg.n_pvn_crh, "CRH_neuron"),
             PopulationDef("pvn_oxt", self.cfg.n_pvn_oxt, "OXT_neuron"),
             PopulationDef("vta_da_lat", self.cfg.n_vta_da_lat, "IB"),
@@ -239,12 +239,6 @@ class SharedCoreNetwork:
                 self._G.b[s:e] = 0.2
                 self._G.c[s:e] = -65
                 self._G.d[s:e] = 12  # 高d = 強い適応 → 連続発火を抑制
-            # PKCd+: 高aで速い適応、高dでスパイク後回復 → 低頻度発火
-            elif p.name == "cel_pkcd":
-                self._G.a[s:e] = 0.1   # fast adaptation (like PV)
-                self._G.b[s:e] = 0.2
-                self._G.c[s:e] = -65
-                self._G.d[s:e] = 8     # strong post-spike recovery
             # D1/D2-MSN: 閾値が高い（down-state）→ 追加電流が必要
             elif p.cell_type in ("D1_MSN", "D2_MSN"):
                 self._G.a[s:e] = ct["a"]
@@ -339,62 +333,71 @@ class SharedCoreNetwork:
         # ドライブ構築
         drive = c.bg_noise + noise_rng.normal(0, c.bg_noise * 0.3, (n_steps, self._total_n))
 
-        # ── Population-specific tonic drives (文献準拠) ──
-        # Izhikevich RS threshold ~I=4-5 for onset, ~8-10 for 10Hz
+        # ── Population-specific tonic drives (literature-based principles) ──
+        # Izhikevich RS neuron needs ~4-5 of constant current to start firing at ~1-3Hz.
+        # Categories:
+        #   Baseline 1-5Hz: tonic = 4.0 (just above threshold)
+        #   Baseline 3-8Hz: tonic = 4.5
+        #   No spontaneous activity (PKCd during CS): tonic = 3.0
+        #   PV/fast-spiking: tonic = 5.0 (higher threshold)
+        #   LTS populations (BNST, ITC, MeA): tonic = 2.5 (lower threshold due to LTS rebound)
+        #   PAG (vlPAG/dlPAG): input-driven only (handled below)
+        #   VTA DA: 4.5 (tonic 3-8Hz, Grace 2007)
+        #   VTA GABA: 4.0 (tonic firing, Cohen 2012)
         tonic_drives = {
-            # 共有領域
-            "vta_gaba": 1.54,     # SBI V2 calibrated
-            "vta_da_lat": 2.13,   # SBI strict calibrated (typical 5Hz)
-            "vta_da_med": 3.0,
-            "bnst": 2.0,          # Davis 2010: baseline 3-5Hz (RS now, slight increase)
-            "lc": 4.0,            # Sara 2012: tonic 1-3Hz
-            "dr": 2.18,           # manual best (DR needs to be suppressible)
-            "aic": 3.5,
-            "pvn_crh": 3.0,
-            "pvn_oxt": 1.0,       # strict 5-11Hz
-            # FEAR: 既存較正値と同等のtonic
-            "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
-            "ba_exc": 4.0,
-            "cel_som": 3.0,       # RS type, aim 12Hz during CS
-            "cel_pkcd": 0.30,     # minimal tonic, must stay 0-5Hz during CS
-            "cem": 3.5,           # baseline 2-5Hz
-            "itc": 3.0,
-            "pl": 4.0,            # Courtin 2014
-            "il": 3.5,            # strict 7-13Hz (reduce from 13.3 to ~10Hz)
-            "nac_shell_d1": 3.5,  # D1-MSN needs more drive (deep reset)
-            "nac_shell_d2": 3.0,
-            "nac_core_d1": 3.0,
-            "la_pv": 5.0,         # PV fast-spiking: higher threshold
-            "la_vip": 4.0,
-            # RAGE
-            "mea": 1.96,          # SBI V2 calibrated
-            "vmh": 1.74,          # SBI strict calibrated
-            # SEEKING
-            "ofc_reward": 4.0,
-            "vmpfc_value": 3.5,
-            "vp": 4.0,
-            "lhb": 3.5,
-            # SADNESS
-            "sgacc": 3.5,
-            "habenula": 3.5,
-            # DISGUST
-            "nts_disgust": 2.32,  # manual best
-            "putamen": 3.0,       # aim 10Hz (3spikes/20neurons/0.3s)
-            # CARE
-            "mpoa": 2.5,          # aim 10Hz
-            "care_bnst": 4.0,
-            # PANIC
-            "dacc": 3.5,
-            "grief_pag": 3.0,
-            # PLAY
-            "pfa_thalamus": 2.5,  # aim 10Hz
-            "play_cortex": 3.5,
-            # LUST
-            "lust_mpoa": 3.3,     # strict 8-16Hz
-            "lust_hypo": 3.0,
-            # SURPRISE
-            "surprise_amygdala": 2.5,  # aim 10Hz
-            "surprise_pfc": 3.0,
+            # ── Shared regions ──
+            "vta_da_lat": 4.5,       # Grace 2007: tonic 3-8Hz
+            "vta_da_med": 4.5,       # tonic 3-8Hz
+            "vta_gaba": 4.0,         # Cohen 2012: tonic firing; PV type uses 5.0 but VTA GABA is 4.0
+            "bnst": 2.5,             # Davis 2010: LTS, baseline 3-5Hz
+            "lc": 4.0,               # Sara 2012: tonic 1-3Hz (just above threshold)
+            "dr": 4.0,               # de Jong 2022: tonic 1-5Hz
+            "aic": 4.0,              # baseline 1-5Hz
+            "pvn_crh": 4.0,          # baseline 1-5Hz
+            "pvn_oxt": 4.0,          # baseline 1-5Hz
+            "nac_shell_d1": 4.0,     # baseline 1-5Hz
+            "nac_shell_d2": 4.0,     # baseline 1-5Hz
+            "nac_core_d1": 4.0,      # baseline 1-5Hz
+            # ── FEAR ──
+            "la_exc": 4.0,           # Quirk 2002: baseline 1-5Hz
+            "ba_exc": 4.5,           # Duvarci & Pare 2014: baseline 3-8Hz
+            "cel_som": 4.0,          # CeL SOM+: baseline 1-5Hz
+            "cel_pkcd": 3.0,         # no spontaneous activity during CS
+            "cem": 4.0,              # baseline 1-5Hz (tonic inhibited by PKCd)
+            "itc": 2.5,              # LTS: lower threshold
+            "pl": 4.0,               # Courtin 2014: baseline 1-5Hz
+            "il": 4.0,               # Quirk 2002: baseline 1-5Hz
+            "la_pv": 5.0,            # PV fast-spiking: higher threshold
+            "la_vip": 4.0,           # baseline 1-5Hz
+            # ── RAGE ──
+            "mea": 2.5,              # LTS (YAML: GABAergic LTS), baseline 3-8Hz
+            "vmh": 4.0,              # RS, baseline 2-5Hz
+            # ── SEEKING ──
+            "ofc_reward": 4.0,       # RS, baseline 1-5Hz
+            "vmpfc_value": 4.0,      # RS, baseline 1-5Hz
+            "vp": 2.5,               # LTS, baseline
+            "lhb": 4.0,              # RS, baseline 1-5Hz
+            # ── SADNESS ──
+            "sgacc": 4.0,            # RS, baseline 1-5Hz
+            "habenula": 4.0,         # RS, baseline 1-5Hz
+            # ── DISGUST ──
+            "nts_disgust": 4.0,      # RS, baseline 1-5Hz
+            "putamen": 4.0,          # D1_MSN, baseline 1-5Hz
+            # ── CARE ──
+            "mpoa": 4.0,             # RS, baseline 1-5Hz
+            "care_bnst": 2.5,        # LTS, baseline
+            # ── PANIC/GRIEF ──
+            "dacc": 4.0,             # RS, baseline 1-5Hz
+            "grief_pag": 4.0,        # RS, baseline 1-5Hz
+            # ── PLAY ──
+            "pfa_thalamus": 4.0,     # RS, baseline 1-5Hz
+            "play_cortex": 4.0,      # RS, baseline 1-5Hz
+            # ── LUST ──
+            "lust_mpoa": 4.0,        # RS, baseline 1-5Hz
+            "lust_hypo": 4.0,        # RS, baseline 1-5Hz
+            # ── SURPRISE ──
+            "surprise_amygdala": 4.0, # RS, baseline 1-5Hz
+            "surprise_pfc": 4.0,     # RS, baseline 1-5Hz
         }
         # SBI較正用override適用
         overrides = getattr(self, '_tonic_overrides', {})
@@ -404,11 +407,11 @@ class SharedCoreNetwork:
                 actual_tonic = overrides.get(pop_name, tonic)
                 drive[:, ps:pe] += actual_tonic
 
-        # PAG: 入力駆動のみ。tonic driveを追加しない（上のdictに含めない）
+        # PAG: input-driven only. bg_noise * 0.2 as before (no tonic drive)
         for pag_name in ["vlpag", "dlpag"]:
             if pag_name in self._idx:
                 ps, pe = self._idx[pag_name]
-                drive[:, ps:pe] = c.bg_noise * 0.2  # 非常に低い背景のみ
+                drive[:, ps:pe] = c.bg_noise * 0.2
 
         # 情動固有のドライブ上書き
         if drive_overrides:

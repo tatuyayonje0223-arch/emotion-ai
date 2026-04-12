@@ -33,7 +33,7 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_population("la_pv", 10, "PV")
     core.register_population("la_vip", 5, "VIP")
     core.register_population("ba_exc", 30, "RS")
-    core.register_population("cel_som", 20, "RS")  # 15→20 RS (was CeL_SOM/LTS, too low threshold)
+    core.register_population("cel_som", 20, "CeL_SOM")  # Ciocchi 2010: CeL SOM+ neurons; n=20 for resolution
     core.register_population("cel_pkcd", 15, "PKCd")
     core.register_population("cem", 15, "RS")
     core.register_population("itc", 10, "LTS")
@@ -45,10 +45,10 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("la_pv", "la_exc", 0.4, 4.0, inh=True)
     core.register_connection("la_vip", "la_pv", 0.5, 5.0, inh=True, note="disinhibition; Wolff 2014")
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
-    core.register_connection("la_exc", "cel_som", 0.08, 0.8, stdp=True, note="LA→CeL SOM+; strict 8-16Hz (further reduced)")
-    core.register_connection("ba_exc", "cel_som", 0.05, 0.8, note="reduced for strict 8-16Hz")
-    core.register_connection("cel_som", "cel_pkcd", 0.90, 15.0, inh=True,
-                             note="maximum suppression for PKCd+ 0-5Hz target; Ciocchi 2010")
+    core.register_connection("la_exc", "cel_som", 0.15, 2.0, stdp=True, note="LA→CeL SOM+; YAML p=0.15-0.20")
+    core.register_connection("ba_exc", "cel_som", 0.10, 1.5, note="BA→CeL SOM+; YAML p=0.05-0.10")
+    core.register_connection("cel_som", "cel_pkcd", 0.70, 8.0, inh=True,
+                             note="SOM+→PKCd+ inhibition; YAML calibrated=0.70; Ciocchi 2010")
     core.register_connection("cel_pkcd", "cel_som", 0.3, 3.0, inh=True)
     core.register_connection("cel_pkcd", "cem", 0.3, 1.5, inh=True, note="tonic inhibition of CeM")
     core.register_connection("cel_som", "cem", 0.6, 8.0, note="CeA disinhibition pathway")
@@ -442,7 +442,7 @@ class EmotionBrainV2:
         if threat > 0.1 or pain > 0.1:
             la_drive = np.zeros((n_steps, 40))
             cs_start, cs_end = int(50 / c.dt_ms), int(250 / c.dt_ms)
-            la_drive[cs_start:cs_end, :] = 5.0 * max(0.5, threat * 2)  # strict target 14-26Hz typical 20
+            la_drive[cs_start:cs_end, :] = 10.0 * threat  # amplitude * signal (linear)
             if pain > 0.1:
                 la_drive[cs_start:cs_end, :] += 10.0 * pain
             overrides["la_exc"] = la_drive
@@ -452,7 +452,7 @@ class EmotionBrainV2:
             overrides["pl"] = pl_drive
 
             il_drive = np.zeros((n_steps, 20))  # matched to il n=20
-            il_drive[cs_start:cs_end, :] = 2.5 * max(0.2, 1 - threat)  # strict 7-13Hz
+            il_drive[cs_start:cs_end, :] = 2.5 * (1 - threat)  # IL active during extinction (linear)
             overrides["il"] = il_drive
 
             # vlPAG direct drive for freezing (CeM→vlPAG synaptic alone insufficient in single trial)
@@ -468,9 +468,8 @@ class EmotionBrainV2:
             overrides["mea"] = mea_drive
 
             vmh_drive = np.zeros((n_steps, 25))
-            # VMH: nonlinear scaling — low frustration=moderate, high=attack
-            vmh_amp = 16.0 * (frustration ** 2.5) + 2.0 * threat  # steep: 0.5→2.8, 0.8→9.1
-            vmh_drive[50:, :] = vmh_amp
+            # VMH: simple linear scaling (literature-based, no nonlinear tricks)
+            vmh_drive[50:, :] = 10.0 * frustration
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
@@ -496,22 +495,15 @@ class EmotionBrainV2:
             nac_d1_drive[burst_start:burst_end, :] = 3.0 * reward  # strict 8-16Hz (was 16.7→aim 12)
             overrides["nac_shell_d1"] = nac_d1_drive
 
-        # SADNESS drive: loss → sgACC hyperactivity + VTA/DR suppression
+        # SADNESS drive: loss → sgACC hyperactivity
+        # VTA/DR suppression is handled by LHb→VTA and LHb→DR synaptic inhibition (no artificial drives)
         if loss > 0.1:
             sg_drive = np.zeros((n_steps, 20))
-            sg_drive[:, :] = 3.0 * loss  # strict target 14-20Hz typical 16
+            sg_drive[:, :] = 3.0 * loss
             overrides["sgacc"] = sg_drive
 
-            # VTA DA suppression during loss (LHb→VTA inhibition + reduced tonic)
-            vta_suppress = np.full((n_steps, 30), -4.0 * loss)  # suppress but not completely (DR needs 2-4Hz)
-            overrides["vta_da_lat"] = vta_suppress
-
-            # DR suppression during loss (LHb→DR inhibition)
-            dr_suppress = np.full((n_steps, 15), -0.6 * loss)  # strict 2-4Hz
-            overrides["dr"] = dr_suppress
-
             hab_drive = np.zeros((n_steps, 15))
-            hab_drive[:, :] = 5.0 * loss  # habenula activation
+            hab_drive[:, :] = 5.0 * loss  # habenula activation drives LHb→VTA/DR inhibition
             overrides["habenula"] = hab_drive
 
         # DISGUST drive: contamination → NTS/aIC
@@ -587,21 +579,21 @@ class EmotionBrainV2:
         def _norm(rate: float, max_rate: float = 40.0) -> float:
             return min(1.0, max(0.0, rate / max_rate))
 
-        # FEAR: 脅威入力でゲート（CeM/PAG基底活性をFEARと誤解しない）
+        # FEAR: gated by threat/pain input (CeM/PAG baseline should not register as FEAR)
         fear_signal = max(threat, pain)
         if fear_signal > 0.1:
             vlpag_fear = min(rates.get("vlpag", 0), 50)  # cap PAG contribution
             fear_act = _norm(rates.get("cem", 0) * 0.6 + vlpag_fear * 0.2 +
-                             rates.get("bnst", 0) * 0.2, 25) * min(1.0, fear_signal * 2)
+                             rates.get("bnst", 0) * 0.2, 25)
         else:
             fear_act = 0.0
 
-        # RAGE: フラストレーション入力でゲート
+        # RAGE: gated by frustration input
         if frustration > 0.1:
             rage_act = _norm(rates.get("vmh", 0) * 0.5 + rates.get("dlpag", 0) * 0.3 +
-                             rates.get("mea", 0) * 0.2, 30) * min(1.0, frustration * 2)
+                             rates.get("mea", 0) * 0.2, 30)
         else:
-            rage_act = _norm(rates.get("vmh", 0) * 0.3 + rates.get("mea", 0) * 0.1, 30) * 0.3
+            rage_act = 0.0
 
         # SEEKING
         seeking_act = _norm(rates.get("vta_da_lat", 0) * 0.4 + rates.get("nac_shell_d1", 0) * 0.3 +
@@ -610,14 +602,14 @@ class EmotionBrainV2:
         # SADNESS (gated by loss input — prevent tonic activation from baseline sgACC/habenula)
         if loss > 0.1:
             sadness_act = _norm(rates.get("sgacc", 0) * 0.4 + rates.get("habenula", 0) * 0.3 +
-                                rates.get("aic", 0) * 0.15 + rates.get("pvn_crh", 0) * 0.15, 20) * min(1.0, loss * 2)
+                                rates.get("aic", 0) * 0.15 + rates.get("pvn_crh", 0) * 0.15, 20)
         else:
             sadness_act = 0.0
 
         # DISGUST (gated by contamination input)
         if contamination > 0.1:
             disgust_act = _norm(rates.get("aic", 0) * 0.4 + rates.get("nts_disgust", 0) * 0.3 +
-                                rates.get("putamen", 0) * 0.3, 25) * min(1.0, contamination * 2)
+                                rates.get("putamen", 0) * 0.3, 25)
         else:
             disgust_act = 0.0
 
@@ -626,7 +618,7 @@ class EmotionBrainV2:
         if care_signal > 0.1:
             care_act = _norm(rates.get("mpoa", 0) * 0.4 + rates.get("pvn_oxt", 0) * 0.3 +
                              rates.get("care_bnst", 0) * 0.15 +
-                             rates.get("vta_da_lat", 0) * 0.15, 25) * min(1.0, care_signal * 2)
+                             rates.get("vta_da_lat", 0) * 0.15, 25)
         else:
             care_act = 0.0
 
@@ -636,7 +628,7 @@ class EmotionBrainV2:
             panic_act = _norm(rates.get("dacc", 0) * 0.35 + rates.get("bnst", 0) * 0.25 +
                               rates.get("grief_pag", 0) * 0.20 +
                               rates.get("aic", 0) * 0.10 +
-                              rates.get("pvn_crh", 0) * 0.10, 25) * min(1.0, panic_signal * 2)
+                              rates.get("pvn_crh", 0) * 0.10, 25)
         else:
             panic_act = 0.0
 
@@ -646,7 +638,7 @@ class EmotionBrainV2:
             play_act = _norm(rates.get("pfa_thalamus", 0) * 0.4 +
                              rates.get("play_cortex", 0) * 0.3 +
                              rates.get("nac_shell_d1", 0) * 0.15 +
-                             rates.get("dlpag", 0) * 0.15, 25) * min(1.0, play_signal * 4)
+                             rates.get("dlpag", 0) * 0.15, 25)
         else:
             play_act = 0.0
 
@@ -655,7 +647,7 @@ class EmotionBrainV2:
             lust_act = _norm(rates.get("lust_mpoa", 0) * 0.4 +
                              rates.get("lust_hypo", 0) * 0.3 +
                              rates.get("vta_da_lat", 0) * 0.15 +
-                             rates.get("pvn_oxt", 0) * 0.15, 25) * min(1.0, social * 1.5)
+                             rates.get("pvn_oxt", 0) * 0.15, 25)
         else:
             lust_act = 0.0
 
@@ -664,7 +656,7 @@ class EmotionBrainV2:
             surprise_act = _norm(rates.get("lc", 0) * 0.3 +
                                  rates.get("surprise_amygdala", 0) * 0.25 +
                                  rates.get("surprise_pfc", 0) * 0.25 +
-                                 rates.get("aic", 0) * 0.20, 25) * min(1.0, novelty * 2)
+                                 rates.get("aic", 0) * 0.20, 25)
         else:
             surprise_act = 0.0
 
