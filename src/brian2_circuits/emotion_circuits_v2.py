@@ -33,7 +33,7 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_population("la_pv", 10, "PV")
     core.register_population("la_vip", 5, "VIP")
     core.register_population("ba_exc", 30, "RS")
-    core.register_population("cel_som", 15, "CeL_SOM")
+    core.register_population("cel_som", 20, "RS")  # 15→20 RS (was CeL_SOM/LTS, too low threshold)
     core.register_population("cel_pkcd", 15, "PKCd")
     core.register_population("cem", 15, "RS")
     core.register_population("itc", 10, "LTS")
@@ -469,7 +469,7 @@ class EmotionBrainV2:
 
             vmh_drive = np.zeros((n_steps, 25))
             # VMH: nonlinear scaling — low frustration=moderate, high=attack
-            vmh_amp = 14.0 * (frustration ** 2.0) + 2.0 * threat  # quadratic: investigation=low, attack=high
+            vmh_amp = 16.0 * (frustration ** 2.5) + 2.0 * threat  # steep: 0.5→2.8, 0.8→9.1
             vmh_drive[50:, :] = vmh_amp
             overrides["vmh"] = vmh_drive
 

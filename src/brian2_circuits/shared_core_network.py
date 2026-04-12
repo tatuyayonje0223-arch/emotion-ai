@@ -355,7 +355,7 @@ class SharedCoreNetwork:
             # FEAR: 既存較正値と同等のtonic
             "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
-            "cel_som": 0.3,       # strict 8-16Hz (very low tonic, input-driven only)
+            "cel_som": 3.0,       # RS type, aim 12Hz during CS
             "cel_pkcd": 0.30,     # minimal tonic, must stay 0-5Hz during CS
             "cem": 3.5,           # baseline 2-5Hz
             "itc": 3.0,
