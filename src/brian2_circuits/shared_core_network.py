@@ -333,71 +333,75 @@ class SharedCoreNetwork:
         # ドライブ構築
         drive = c.bg_noise + noise_rng.normal(0, c.bg_noise * 0.3, (n_steps, self._total_n))
 
-        # ── Population-specific tonic drives (literature-based principles) ──
-        # Izhikevich RS neuron needs ~4-5 of constant current to start firing at ~1-3Hz.
-        # Categories:
-        #   Baseline 1-5Hz: tonic = 4.0 (just above threshold)
-        #   Baseline 3-8Hz: tonic = 4.5
-        #   No spontaneous activity (PKCd during CS): tonic = 3.0
-        #   PV/fast-spiking: tonic = 5.0 (higher threshold)
-        #   LTS populations (BNST, ITC, MeA): tonic = 2.5 (lower threshold due to LTS rebound)
-        #   PAG (vlPAG/dlPAG): input-driven only (handled below)
-        #   VTA DA: 4.5 (tonic 3-8Hz, Grace 2007)
-        #   VTA GABA: 4.0 (tonic firing, Cohen 2012)
+        # ── Population-specific tonic drives (literature-based, bg_noise-adjusted) ──
+        #
+        # Izhikevich (2003) IEEE Trans Neural Networks 14(6):1569-1572
+        # RS rheobase ≈ 3.78, LTS rheobase ≈ 2.5, PV/FS rheobase ≈ 3.0
+        #
+        # bg_noise = 1.7 is already applied to ALL neurons.
+        # tonic = target_total_I - bg_noise
+        #
+        # Target total I by baseline rate:
+        #   1-5Hz  → I ≈ 4.0  → tonic = 4.0 - 1.7 = 2.3
+        #   3-8Hz  → I ≈ 4.5  → tonic = 4.5 - 1.7 = 2.8
+        #   <1Hz   → I ≈ 3.5  → tonic = 3.5 - 1.7 = 1.8
+        #   LTS 3-5Hz → I ≈ 2.8 → tonic = 2.8 - 1.7 = 1.1
+        #   PV 40-60Hz → I ≈ 5.0 → tonic = 5.0 - 1.7 = 3.3
+        #
         tonic_drives = {
             # ── Shared regions ──
-            "vta_da_lat": 4.5,       # Grace 2007: tonic 3-8Hz
-            "vta_da_med": 4.5,       # tonic 3-8Hz
-            "vta_gaba": 4.0,         # Cohen 2012: tonic firing; PV type uses 5.0 but VTA GABA is 4.0
-            "bnst": 2.5,             # Davis 2010: LTS, baseline 3-5Hz
-            "lc": 4.0,               # Sara 2012: tonic 1-3Hz (just above threshold)
-            "dr": 4.0,               # de Jong 2022: tonic 1-5Hz
-            "aic": 4.0,              # baseline 1-5Hz
-            "pvn_crh": 4.0,          # baseline 1-5Hz
-            "pvn_oxt": 4.0,          # baseline 1-5Hz
-            "nac_shell_d1": 4.0,     # baseline 1-5Hz
-            "nac_shell_d2": 4.0,     # baseline 1-5Hz
-            "nac_core_d1": 4.0,      # baseline 1-5Hz
+            "vta_da_lat": 2.8,       # Grace 2007: tonic 3-8Hz (I=4.5)
+            "vta_da_med": 2.8,
+            "vta_gaba": 2.3,         # Cohen 2012: PV type but moderate tonic (I=4.0)
+            "bnst": 1.1,             # Davis 2010: LTS, baseline 3-5Hz (I=2.8)
+            "lc": 2.3,               # Sara & Bouret 2012: tonic 1-3Hz (I=4.0)
+            "dr": 2.3,               # de Jong 2022: tonic 1-5Hz (I=4.0)
+            "aic": 2.3,              # Craig 2009: baseline (I=4.0)
+            "pvn_crh": 2.3,
+            "pvn_oxt": 2.3,
+            "nac_shell_d1": 2.3,
+            "nac_shell_d2": 2.3,
+            "nac_core_d1": 2.3,
             # ── FEAR ──
-            "la_exc": 4.0,           # Quirk 2002: baseline 1-5Hz
-            "ba_exc": 4.5,           # Duvarci & Pare 2014: baseline 3-8Hz
-            "cel_som": 4.0,          # CeL SOM+: baseline 1-5Hz
-            "cel_pkcd": 3.0,         # no spontaneous activity during CS
-            "cem": 4.0,              # baseline 1-5Hz (tonic inhibited by PKCd)
-            "itc": 2.5,              # LTS: lower threshold
-            "pl": 4.0,               # Courtin 2014: baseline 1-5Hz
-            "il": 4.0,               # Quirk 2002: baseline 1-5Hz
-            "la_pv": 5.0,            # PV fast-spiking: higher threshold
-            "la_vip": 4.0,           # baseline 1-5Hz
+            "la_exc": 2.3,           # Quirk 2002: baseline 1-5Hz (I=4.0)
+            "ba_exc": 2.8,           # Duvarci & Pare 2014: baseline 3-8Hz (I=4.5)
+            "cel_som": 1.1,          # CeL SOM+ is LTS type (I=2.8)
+            "cel_pkcd": 1.1,         # CeL PKCd+ is LTS-like (I=2.8) — baseline ~5Hz (Ciocchi 2010)
+            "cem": 2.3,              # baseline 2-5Hz (I=4.0)
+            "itc": 1.1,              # ITC is LTS (I=2.8)
+            "pl": 2.3,               # Courtin 2014: baseline (I=4.0)
+            "il": 2.3,               # Quirk 2002: baseline (I=4.0)
+            "la_pv": 3.3,            # PV fast-spiking (I=5.0)
+            "la_vip": 2.3,           # VIP: baseline (I=4.0)
             # ── RAGE ──
-            "mea": 2.5,              # LTS (YAML: GABAergic LTS), baseline 3-8Hz
-            "vmh": 4.0,              # RS, baseline 2-5Hz
+            "mea": 1.1,              # Hong 2014: LTS type, baseline 3-8Hz (I=2.8)
+            "vmh": 2.3,              # Lee 2014: RS, baseline 2-5Hz (I=4.0)
             # ── SEEKING ──
-            "ofc_reward": 4.0,       # RS, baseline 1-5Hz
-            "vmpfc_value": 4.0,      # RS, baseline 1-5Hz
-            "vp": 2.5,               # LTS, baseline
-            "lhb": 4.0,              # RS, baseline 1-5Hz
+            "ofc_reward": 2.3,
+            "vmpfc_value": 2.3,
+            "vp": 1.1,               # LTS type
+            "lhb": 2.3,
             # ── SADNESS ──
-            "sgacc": 4.0,            # RS, baseline 1-5Hz
-            "habenula": 4.0,         # RS, baseline 1-5Hz
+            "sgacc": 2.3,            # Mayberg 1999: baseline ~12Hz in healthy
+            "habenula": 2.3,
             # ── DISGUST ──
-            "nts_disgust": 4.0,      # RS, baseline 1-5Hz
-            "putamen": 4.0,          # D1_MSN, baseline 1-5Hz
+            "nts_disgust": 2.3,
+            "putamen": 2.3,
             # ── CARE ──
-            "mpoa": 4.0,             # RS, baseline 1-5Hz
-            "care_bnst": 2.5,        # LTS, baseline
+            "mpoa": 2.3,             # Kohl 2018
+            "care_bnst": 1.1,        # LTS type
             # ── PANIC/GRIEF ──
-            "dacc": 4.0,             # RS, baseline 1-5Hz
-            "grief_pag": 4.0,        # RS, baseline 1-5Hz
+            "dacc": 2.3,             # Eisenberger 2003
+            "grief_pag": 2.3,
             # ── PLAY ──
-            "pfa_thalamus": 4.0,     # RS, baseline 1-5Hz
-            "play_cortex": 4.0,      # RS, baseline 1-5Hz
+            "pfa_thalamus": 2.3,     # Siviy & Panksepp 2011
+            "play_cortex": 2.3,
             # ── LUST ──
-            "lust_mpoa": 4.0,        # RS, baseline 1-5Hz
-            "lust_hypo": 4.0,        # RS, baseline 1-5Hz
+            "lust_mpoa": 2.3,        # Dominguez & Hull 2005
+            "lust_hypo": 2.3,
             # ── SURPRISE ──
-            "surprise_amygdala": 4.0, # RS, baseline 1-5Hz
-            "surprise_pfc": 4.0,     # RS, baseline 1-5Hz
+            "surprise_amygdala": 2.3, # Sara & Bouret 2012
+            "surprise_pfc": 2.3,
         }
         # SBI較正用override適用
         overrides = getattr(self, '_tonic_overrides', {})

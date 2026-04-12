@@ -47,8 +47,10 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
     core.register_connection("la_exc", "cel_som", 0.15, 2.0, stdp=True, note="LA→CeL SOM+; YAML p=0.15-0.20")
     core.register_connection("ba_exc", "cel_som", 0.10, 1.5, note="BA→CeL SOM+; YAML p=0.05-0.10")
-    core.register_connection("cel_som", "cel_pkcd", 0.70, 8.0, inh=True,
-                             note="SOM+→PKCd+ inhibition; YAML calibrated=0.70; Ciocchi 2010")
+    # w/sqrt(N*p) scaling correction: N=20,p=0.70→実効w=w_base/sqrt(14)≈w_base/3.74
+    # Target effective w=8.0 (Ciocchi 2010) → w_base=8.0*3.74≈30 (van Rossum 2000)
+    core.register_connection("cel_som", "cel_pkcd", 0.70, 30.0, inh=True,
+                             note="w=30→effective≈8.0 after /sqrt(N*p); Ciocchi 2010; van Rossum 2000")
     core.register_connection("cel_pkcd", "cel_som", 0.3, 3.0, inh=True)
     core.register_connection("cel_pkcd", "cem", 0.3, 1.5, inh=True, note="tonic inhibition of CeM")
     core.register_connection("cel_som", "cem", 0.6, 8.0, note="CeA disinhibition pathway")
@@ -133,11 +135,14 @@ def register_sadness_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("sgacc", "nac_shell_d2", 0.10, 2.0, note="sgACC→NAc anhedonia")
     core.register_connection("sgacc", "bnst", 0.10, 1.5)
 
-    # Habenula → VTA/DR (Matsumoto & Hikosaka 2007)
-    core.register_connection("habenula", "vta_da_lat", 0.15, 5.0, inh=True,
-                             note="LHb→VTA DA inhibition; Matsumoto & Hikosaka 2007")
-    core.register_connection("habenula", "dr", 0.25, 6.0, inh=True,
-                             note="LHb→raphe 5-HT reduction; 20-40% decrease (strengthened)")
+    # Habenula → VTA/DR: disynaptic pathway LHb(Glu)→RMTg(GABA)→VTA(DA)
+    # Matsumoto & Hikosaka 2007 Nature 447:1111; Yang 2018 Nature 554:317
+    # Strong inhibition sufficient for complete DA pause during reward omission
+    core.register_connection("habenula", "vta_da_lat", 0.25, 8.0, inh=True,
+                             note="LHb→VTA: disynaptic via RMTg; Matsumoto & Hikosaka 2007; Yang 2018")
+    # Matsumoto & Hikosaka 2009 J Neurosci: LHb→DRN inhibition
+    core.register_connection("habenula", "dr", 0.25, 8.0, inh=True,
+                             note="LHb→DR: Matsumoto & Hikosaka 2009 J Neurosci")
 
     # sgACC → aIC (interoceptive sadness; Craig 2009)
     core.register_connection("sgacc", "aic", 0.10, 1.5, note="sgACC→insula interoception")
