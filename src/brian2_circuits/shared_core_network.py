@@ -343,8 +343,8 @@ class SharedCoreNetwork:
         # Izhikevich RS threshold ~I=4-5 for onset, ~8-10 for 10Hz
         tonic_drives = {
             # 共有領域
-            "vta_gaba": 1.54,     # SBI V2 calibrated (reduced for DA burst)
-            "vta_da_lat": 4.5,    # Grace 2007: tonic 3-8Hz
+            "vta_gaba": 1.54,     # SBI V2 calibrated
+            "vta_da_lat": 3.0,    # Grace 2007: typical 5Hz (reduced from 4.5 for strict target 3-7Hz)
             "vta_da_med": 3.0,
             "bnst": 2.0,          # Davis 2010: baseline 3-5Hz (RS now, slight increase)
             "lc": 4.0,            # Sara 2012: tonic 1-3Hz
@@ -368,7 +368,7 @@ class SharedCoreNetwork:
             "la_vip": 4.0,
             # RAGE
             "mea": 1.96,          # SBI V2 calibrated
-            "vmh": 1.96,          # SBI V2 calibrated
+            "vmh": 1.2,           # strict target 2-5Hz typical 3.5
             # SEEKING
             "ofc_reward": 4.0,
             "vmpfc_value": 3.5,

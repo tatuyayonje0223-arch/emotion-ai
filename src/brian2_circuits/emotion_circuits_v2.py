@@ -442,17 +442,17 @@ class EmotionBrainV2:
         if threat > 0.1 or pain > 0.1:
             la_drive = np.zeros((n_steps, 40))
             cs_start, cs_end = int(50 / c.dt_ms), int(250 / c.dt_ms)
-            la_drive[cs_start:cs_end, :] = 10.0 * max(0.5, threat * 2)  # tuned for 8-35Hz target
+            la_drive[cs_start:cs_end, :] = 5.0 * max(0.5, threat * 2)  # strict target 14-26Hz typical 20
             if pain > 0.1:
                 la_drive[cs_start:cs_end, :] += 10.0 * pain
             overrides["la_exc"] = la_drive
 
             pl_drive = np.zeros((n_steps, 15))
-            pl_drive[cs_start:cs_end, :] = 8.0 * threat  # drive ALL PL neurons
+            pl_drive[cs_start:cs_end, :] = 5.0 * threat  # strict target 17-33Hz
             overrides["pl"] = pl_drive
 
             il_drive = np.zeros((n_steps, 15))
-            il_drive[cs_start:cs_end, :] = 6.0 * max(0.2, 1 - threat)  # IL for extinction
+            il_drive[cs_start:cs_end, :] = 3.0 * max(0.2, 1 - threat)  # strict target 7-13Hz
             overrides["il"] = il_drive
 
             # vlPAG direct drive for freezing (CeM→vlPAG synaptic alone insufficient in single trial)
@@ -491,21 +491,21 @@ class EmotionBrainV2:
 
             # NAc shell activation (reward approach)
             nac_d1_drive = np.zeros((n_steps, 25))
-            nac_d1_drive[burst_start:burst_end, :] = 12.0 * reward  # stronger NAc activation
+            nac_d1_drive[burst_start:burst_end, :] = 4.0 * reward  # strict 8-16Hz
             overrides["nac_shell_d1"] = nac_d1_drive
 
         # SADNESS drive: loss → sgACC hyperactivity + VTA/DR suppression
         if loss > 0.1:
             sg_drive = np.zeros((n_steps, 20))
-            sg_drive[:, :] = 8.0 * loss  # sustained hyperactivity
+            sg_drive[:, :] = 3.0 * loss  # strict target 14-20Hz typical 16
             overrides["sgacc"] = sg_drive
 
             # VTA DA suppression during loss (LHb→VTA inhibition + reduced tonic)
-            vta_suppress = np.full((n_steps, 30), -8.0 * loss)  # strong suppression for near-zero pause
+            vta_suppress = np.full((n_steps, 30), -4.0 * loss)  # suppress but not completely (DR needs 2-4Hz)
             overrides["vta_da_lat"] = vta_suppress
 
             # DR suppression during loss (LHb→DR inhibition)
-            dr_suppress = np.full((n_steps, 15), -2.0 * loss)
+            dr_suppress = np.full((n_steps, 15), -1.0 * loss)  # target 2-4Hz (20-40% of ~5Hz baseline)
             overrides["dr"] = dr_suppress
 
             hab_drive = np.zeros((n_steps, 15))
@@ -515,17 +515,17 @@ class EmotionBrainV2:
         # DISGUST drive: contamination → NTS/aIC
         if contamination > 0.1:
             nts_drive = np.zeros((n_steps, 10))
-            nts_drive[50:, :] = 5.0 * contamination  # target 5-25Hz
+            nts_drive[50:, :] = 3.0 * contamination  # strict target 10-20Hz
             overrides["nts_disgust"] = nts_drive
 
             aic_drive = np.zeros((n_steps, 20))
-            aic_drive[50:, :] = 6.0 * contamination
+            aic_drive[50:, :] = 2.5 * contamination  # strict target 10-20Hz
             overrides["aic"] = aic_drive
 
         # CARE drive: social/attachment → MPOA, PVN_OXT (halved for target range)
         if social > 0.1 or attachment_need > 0.1:
             mpoa_drive = np.zeros((n_steps, 15))
-            mpoa_drive[50:, :] = 2.5 * social + 1.5 * attachment_need  # target 3-20Hz
+            mpoa_drive[50:, :] = 1.0 * social + 0.5 * attachment_need  # strict target 7-13Hz
             overrides["mpoa"] = mpoa_drive
 
             oxt_drive = np.zeros((n_steps, 10))
@@ -536,7 +536,7 @@ class EmotionBrainV2:
         if loss > 0.1 or attachment_need > 0.1:
             dacc_drive = np.zeros((n_steps, 15))
             isolation = max(0, 1 - social)
-            dacc_drive[50:, :] = 2.5 * loss + 2.0 * isolation * attachment_need  # target 5-25Hz
+            dacc_drive[50:, :] = 1.5 * loss + 1.0 * isolation * attachment_need  # strict 10-20Hz
             overrides["dacc"] = dacc_drive
 
             grief_pag_drive = np.zeros((n_steps, 10))
@@ -546,7 +546,7 @@ class EmotionBrainV2:
         # PLAY drive: social + reward + novelty → PFA thalamus (reduced)
         if social > 0.1 and (reward > 0.1 or novelty > 0.1):
             pfa_drive = np.zeros((n_steps, 15))
-            pfa_drive[50:, :] = 2.0 * social + 1.5 * reward + 1.0 * novelty  # target 3-20Hz
+            pfa_drive[50:, :] = 1.0 * social + 0.5 * reward + 0.5 * novelty  # strict 7-13Hz
             overrides["pfa_thalamus"] = pfa_drive
 
             play_ctx_drive = np.zeros((n_steps, 10))
@@ -556,7 +556,7 @@ class EmotionBrainV2:
         # LUST drive: social + reward → lust_MPOA (reduced)
         if social > 0.1:
             lust_mpoa_drive = np.zeros((n_steps, 10))
-            lust_mpoa_drive[50:, :] = 3.0 * social + 1.5 * reward
+            lust_mpoa_drive[50:, :] = 1.5 * social + 0.8 * reward  # strict 8-16Hz
             overrides["lust_mpoa"] = lust_mpoa_drive
 
             lust_hypo_drive = np.zeros((n_steps, 10))
@@ -566,11 +566,11 @@ class EmotionBrainV2:
         # SURPRISE drive: novelty → LC burst + surprise_amygdala
         if novelty > 0.3:
             lc_drive = np.zeros((n_steps, 15))
-            lc_drive[50:250, :] = 5.0 * novelty  # target 5-20Hz phasic
+            lc_drive[50:250, :] = 2.5 * novelty  # strict target 8-16Hz
             overrides["lc"] = lc_drive
 
             surp_amyg_drive = np.zeros((n_steps, 10))
-            surp_amyg_drive[50:, :] = 3.5 * novelty  # target 3-20Hz
+            surp_amyg_drive[50:, :] = 1.5 * novelty  # strict 7-13Hz
             overrides["surprise_amygdala"] = surp_amyg_drive
 
             surp_pfc_drive = np.zeros((n_steps, 10))
