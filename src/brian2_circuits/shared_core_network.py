@@ -239,6 +239,12 @@ class SharedCoreNetwork:
                 self._G.b[s:e] = 0.2
                 self._G.c[s:e] = -65
                 self._G.d[s:e] = 12  # 高d = 強い適応 → 連続発火を抑制
+            # PKCd+: 高aで速い適応、高dでスパイク後回復 → 低頻度発火
+            elif p.name == "cel_pkcd":
+                self._G.a[s:e] = 0.1   # fast adaptation (like PV)
+                self._G.b[s:e] = 0.2
+                self._G.c[s:e] = -65
+                self._G.d[s:e] = 8     # strong post-spike recovery
             # D1/D2-MSN: 閾値が高い（down-state）→ 追加電流が必要
             elif p.cell_type in ("D1_MSN", "D2_MSN"):
                 self._G.a[s:e] = ct["a"]
@@ -349,8 +355,8 @@ class SharedCoreNetwork:
             # FEAR: 既存較正値と同等のtonic
             "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
-            "cel_som": 0.80,      # target 5-25Hz (reduced from 0.92)
-            "cel_pkcd": 0.50,     # target 0-5Hz during CS (needs strong SOM+ suppression)
+            "cel_som": 0.60,      # target 5-25Hz
+            "cel_pkcd": 0.30,     # minimal tonic, must stay 0-5Hz during CS
             "cem": 3.5,           # baseline 2-5Hz
             "itc": 3.0,
             "pl": 4.0,            # Courtin 2014

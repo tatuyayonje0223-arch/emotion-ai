@@ -47,8 +47,8 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
     core.register_connection("la_exc", "cel_som", 0.15, 2.0, stdp=True, note="LA→CeL SOM+; STDP")
     core.register_connection("ba_exc", "cel_som", 0.10, 1.5)
-    core.register_connection("cel_som", "cel_pkcd", 0.80, 12.0, inh=True,
-                             note="strengthened for PKCd+ suppression to 0-5Hz; Ciocchi 2010")
+    core.register_connection("cel_som", "cel_pkcd", 0.90, 15.0, inh=True,
+                             note="maximum suppression for PKCd+ 0-5Hz target; Ciocchi 2010")
     core.register_connection("cel_pkcd", "cel_som", 0.3, 3.0, inh=True)
     core.register_connection("cel_pkcd", "cem", 0.3, 1.5, inh=True, note="tonic inhibition of CeM")
     core.register_connection("cel_som", "cem", 0.6, 8.0, note="CeA disinhibition pathway")
@@ -501,7 +501,7 @@ class EmotionBrainV2:
             overrides["sgacc"] = sg_drive
 
             # VTA DA suppression during loss (LHb→VTA inhibition + reduced tonic)
-            vta_suppress = np.full((n_steps, 30), -5.0 * loss)  # stronger suppression for pause
+            vta_suppress = np.full((n_steps, 30), -8.0 * loss)  # strong suppression for near-zero pause
             overrides["vta_da_lat"] = vta_suppress
 
             # DR suppression during loss (LHb→DR inhibition)
