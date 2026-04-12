@@ -368,7 +368,7 @@ class SharedCoreNetwork:
             "la_vip": 4.0,
             # RAGE
             "mea": 1.96,          # SBI V2 calibrated
-            "vmh": 1.2,           # strict target 2-5Hz typical 3.5
+            "vmh": 1.8,           # strict 2-5Hz (was 0.1→aim 3.5)
             # SEEKING
             "ofc_reward": 4.0,
             "vmpfc_value": 3.5,

@@ -452,13 +452,13 @@ class EmotionBrainV2:
             overrides["pl"] = pl_drive
 
             il_drive = np.zeros((n_steps, 15))
-            il_drive[cs_start:cs_end, :] = 3.0 * max(0.2, 1 - threat)  # strict target 7-13Hz
+            il_drive[cs_start:cs_end, :] = 2.5 * max(0.2, 1 - threat)  # strict 7-13Hz (was 13.3→aim 10)
             overrides["il"] = il_drive
 
             # vlPAG direct drive for freezing (CeM→vlPAG synaptic alone insufficient in single trial)
             if threat > 0.3:
                 vlpag_drive = np.zeros((n_steps, 20))
-                vlpag_drive[cs_start:cs_end, :] = 5.0 * threat  # target 5-20Hz (slightly increased)
+                vlpag_drive[cs_start:cs_end, :] = 5.5 * threat  # strict 7-13Hz (was 6.7→aim 10)
                 overrides["vlpag"] = vlpag_drive
 
         # RAGE drive: frustration → MeA/VMH
@@ -474,7 +474,7 @@ class EmotionBrainV2:
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
             if frustration > 0.5:
                 dlpag_drive = np.zeros((n_steps, 20))
-                dlpag_drive[100:, :] = 12.0 * frustration
+                dlpag_drive[100:, :] = 14.0 * frustration  # strict 17-33Hz
                 overrides["dlpag"] = dlpag_drive
 
         # SEEKING drive: reward → VTA DA
@@ -482,7 +482,7 @@ class EmotionBrainV2:
             vta_drive = np.zeros((n_steps, 30))
             burst_start = int(100 / c.dt_ms)
             burst_end = int(200 / c.dt_ms)
-            vta_drive[burst_start:burst_end, :] = 25.64 * reward  # SBI V2 calibrated
+            vta_drive[burst_start:burst_end, :] = 28.0 * reward  # strict 17-33Hz (was 16.7→aim 25)
             overrides["vta_da_lat"] = vta_drive
 
             ofc_drive = np.zeros((n_steps, 15))
@@ -491,7 +491,7 @@ class EmotionBrainV2:
 
             # NAc shell activation (reward approach)
             nac_d1_drive = np.zeros((n_steps, 25))
-            nac_d1_drive[burst_start:burst_end, :] = 4.0 * reward  # strict 8-16Hz
+            nac_d1_drive[burst_start:burst_end, :] = 3.0 * reward  # strict 8-16Hz (was 16.7→aim 12)
             overrides["nac_shell_d1"] = nac_d1_drive
 
         # SADNESS drive: loss → sgACC hyperactivity + VTA/DR suppression
@@ -505,7 +505,7 @@ class EmotionBrainV2:
             overrides["vta_da_lat"] = vta_suppress
 
             # DR suppression during loss (LHb→DR inhibition)
-            dr_suppress = np.full((n_steps, 15), -1.0 * loss)  # target 2-4Hz (20-40% of ~5Hz baseline)
+            dr_suppress = np.full((n_steps, 15), -0.5 * loss)  # strict 2-4Hz (reduce 20-40% from ~7Hz baseline)
             overrides["dr"] = dr_suppress
 
             hab_drive = np.zeros((n_steps, 15))
@@ -525,7 +525,7 @@ class EmotionBrainV2:
         # CARE drive: social/attachment → MPOA, PVN_OXT (halved for target range)
         if social > 0.1 or attachment_need > 0.1:
             mpoa_drive = np.zeros((n_steps, 15))
-            mpoa_drive[50:, :] = 1.0 * social + 0.5 * attachment_need  # strict target 7-13Hz
+            mpoa_drive[50:, :] = 0.5 * social + 0.3 * attachment_need  # strict 7-13Hz (was 16.7→aim 10)
             overrides["mpoa"] = mpoa_drive
 
             oxt_drive = np.zeros((n_steps, 10))
@@ -546,7 +546,7 @@ class EmotionBrainV2:
         # PLAY drive: social + reward + novelty → PFA thalamus (reduced)
         if social > 0.1 and (reward > 0.1 or novelty > 0.1):
             pfa_drive = np.zeros((n_steps, 15))
-            pfa_drive[50:, :] = 1.0 * social + 0.5 * reward + 0.5 * novelty  # strict 7-13Hz
+            pfa_drive[50:, :] = 0.5 * social + 0.3 * reward + 0.2 * novelty  # strict 7-13Hz (was 16.7)
             overrides["pfa_thalamus"] = pfa_drive
 
             play_ctx_drive = np.zeros((n_steps, 10))
@@ -570,7 +570,7 @@ class EmotionBrainV2:
             overrides["lc"] = lc_drive
 
             surp_amyg_drive = np.zeros((n_steps, 10))
-            surp_amyg_drive[50:, :] = 1.5 * novelty  # strict 7-13Hz
+            surp_amyg_drive[50:, :] = 0.8 * novelty  # strict 7-13Hz (was 16.7→aim 10)
             overrides["surprise_amygdala"] = surp_amyg_drive
 
             surp_pfc_drive = np.zeros((n_steps, 10))
