@@ -468,7 +468,7 @@ class EmotionBrainV2:
             overrides["mea"] = mea_drive
 
             vmh_drive = np.zeros((n_steps, 25))
-            vmh_drive[50:, :] = 10.0 * frustration + 3.0 * threat
+            vmh_drive[50:, :] = 8.0 * frustration + 2.0 * threat  # attack target 24-46, investigation 7-13
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
@@ -570,7 +570,7 @@ class EmotionBrainV2:
             overrides["lc"] = lc_drive
 
             surp_amyg_drive = np.zeros((n_steps, 10))
-            surp_amyg_drive[50:, :] = 0.8 * novelty  # strict 7-13Hz (was 16.7→aim 10)
+            surp_amyg_drive[50:, :] = 0.6 * novelty  # strict 7-13Hz
             overrides["surprise_amygdala"] = surp_amyg_drive
 
             surp_pfc_drive = np.zeros((n_steps, 10))

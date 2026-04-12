@@ -54,7 +54,7 @@ class SharedCoreConfig:
     """Shared Core Networkの設定。"""
 
     dt_ms: float = 0.5
-    duration_ms: float = 300.0
+    duration_ms: float = 300.0  # 300ms standard (quantization: 1spike/10neurons = 0.33Hz)
     bg_noise: float = 1.7  # 較正済み値と同じ
 
     # 共有領域のニューロン数 (literature_circuit_params.yaml準拠)
