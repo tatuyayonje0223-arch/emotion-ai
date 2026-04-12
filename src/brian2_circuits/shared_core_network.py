@@ -344,18 +344,18 @@ class SharedCoreNetwork:
         tonic_drives = {
             # 共有領域
             "vta_gaba": 1.54,     # SBI V2 calibrated
-            "vta_da_lat": 3.0,    # Grace 2007: typical 5Hz (reduced from 4.5 for strict target 3-7Hz)
+            "vta_da_lat": 2.13,   # SBI strict calibrated (typical 5Hz)
             "vta_da_med": 3.0,
             "bnst": 2.0,          # Davis 2010: baseline 3-5Hz (RS now, slight increase)
             "lc": 4.0,            # Sara 2012: tonic 1-3Hz
-            "dr": 2.18,           # SBI V2 calibrated
+            "dr": 2.18,           # manual best (DR needs to be suppressible)
             "aic": 3.5,
             "pvn_crh": 3.0,
             "pvn_oxt": 1.5,       # OXT neuron: low tonic (target 3-20Hz with social drive)
             # FEAR: 既存較正値と同等のtonic
             "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
-            "cel_som": 0.60,      # target 5-25Hz
+            "cel_som": 0.57,      # SBI strict calibrated
             "cel_pkcd": 0.30,     # minimal tonic, must stay 0-5Hz during CS
             "cem": 3.5,           # baseline 2-5Hz
             "itc": 3.0,
@@ -368,7 +368,7 @@ class SharedCoreNetwork:
             "la_vip": 4.0,
             # RAGE
             "mea": 1.96,          # SBI V2 calibrated
-            "vmh": 1.8,           # strict 2-5Hz (was 0.1→aim 3.5)
+            "vmh": 1.74,          # SBI strict calibrated
             # SEEKING
             "ofc_reward": 4.0,
             "vmpfc_value": 3.5,
@@ -378,7 +378,7 @@ class SharedCoreNetwork:
             "sgacc": 3.5,
             "habenula": 3.5,
             # DISGUST
-            "nts_disgust": 2.32,  # SBI V2 calibrated
+            "nts_disgust": 2.32,  # manual best
             "putamen": 4.0,
             # CARE
             "mpoa": 3.5,
