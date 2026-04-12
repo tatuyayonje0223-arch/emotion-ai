@@ -58,7 +58,7 @@ class SharedCoreConfig:
     bg_noise: float = 1.7  # 較正済み値と同じ
 
     # 共有領域のニューロン数 (literature_circuit_params.yaml準拠)
-    n_vlpag: int = 20
+    n_vlpag: int = 25  # increased for finer rate resolution
     n_dlpag: int = 20
     n_bnst: int = 15
     n_pvn_crh: int = 10
@@ -351,7 +351,7 @@ class SharedCoreNetwork:
             "dr": 2.18,           # manual best (DR needs to be suppressible)
             "aic": 3.5,
             "pvn_crh": 3.0,
-            "pvn_oxt": 1.5,       # OXT neuron: low tonic (target 3-20Hz with social drive)
+            "pvn_oxt": 1.0,       # strict 5-11Hz
             # FEAR: 既存較正値と同等のtonic
             "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
@@ -379,22 +379,22 @@ class SharedCoreNetwork:
             "habenula": 3.5,
             # DISGUST
             "nts_disgust": 2.32,  # manual best
-            "putamen": 4.0,
+            "putamen": 3.0,       # aim 10Hz (3spikes/20neurons/0.3s)
             # CARE
-            "mpoa": 3.5,
+            "mpoa": 2.5,          # aim 10Hz
             "care_bnst": 4.0,
             # PANIC
             "dacc": 3.5,
             "grief_pag": 3.0,
             # PLAY
-            "pfa_thalamus": 3.5,
+            "pfa_thalamus": 2.5,  # aim 10Hz
             "play_cortex": 3.5,
             # LUST
             "lust_mpoa": 3.0,
             "lust_hypo": 3.0,
             # SURPRISE
-            "surprise_amygdala": 3.5,
-            "surprise_pfc": 3.5,
+            "surprise_amygdala": 2.5,  # aim 10Hz
+            "surprise_pfc": 3.0,
         }
         # SBI較正用override適用
         overrides = getattr(self, '_tonic_overrides', {})

@@ -38,14 +38,14 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_population("cem", 15, "RS")
     core.register_population("itc", 10, "LTS")
     core.register_population("pl", 15, "RS")
-    core.register_population("il", 15, "RS")
+    core.register_population("il", 20, "RS")  # 15→20 for finer rate resolution
 
     # Intra-amygdala connections (Duvarci & Pare 2014; Ciocchi 2010)
     core.register_connection("la_exc", "la_pv", 0.3, 3.0)
     core.register_connection("la_pv", "la_exc", 0.4, 4.0, inh=True)
     core.register_connection("la_vip", "la_pv", 0.5, 5.0, inh=True, note="disinhibition; Wolff 2014")
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
-    core.register_connection("la_exc", "cel_som", 0.15, 2.0, stdp=True, note="LA→CeL SOM+; STDP")
+    core.register_connection("la_exc", "cel_som", 0.10, 1.2, stdp=True, note="LA→CeL SOM+; reduced for strict 8-16Hz")
     core.register_connection("ba_exc", "cel_som", 0.10, 1.5)
     core.register_connection("cel_som", "cel_pkcd", 0.90, 15.0, inh=True,
                              note="maximum suppression for PKCd+ 0-5Hz target; Ciocchi 2010")
@@ -149,8 +149,8 @@ def register_disgust_circuit(core: SharedCoreNetwork) -> None:
     aICは共有領域。NTS + putamenが固有。
     """
     # Populations
-    core.register_population("nts_disgust", 10, "RS")    # NTS/area postrema; visceral nausea
-    core.register_population("putamen", 15, "D1_MSN")    # Basal ganglia disgust; Calder 2000
+    core.register_population("nts_disgust", 10, "RS")    # NTS/area postrema
+    core.register_population("putamen", 20, "D1_MSN")    # 15→20 for finer resolution
 
     # NTS → shared aIC (Craig 2009)
     core.register_connection("nts_disgust", "aic", 0.15, 3.0, note="NTS→aIC visceral disgust")
@@ -176,7 +176,7 @@ def register_care_circuit(core: SharedCoreNetwork) -> None:
     PVN_OXT already in shared regions.
     """
     # Populations
-    core.register_population("mpoa", 15, "RS")          # medial preoptic area; parental care hub
+    core.register_population("mpoa", 20, "RS")  # 15→20 for finer resolution          # medial preoptic area; parental care hub
     core.register_population("care_bnst", 10, "LTS")    # BNST subset for care/separation anxiety
 
     # MPOA → VTA DA (Kohl 2018 Nature; galanin+ projection)
@@ -249,7 +249,7 @@ def register_play_circuit(core: SharedCoreNetwork) -> None:
     eCB/DA in amygdala/NAc mediate social play reward。
     """
     # Populations
-    core.register_population("pfa_thalamus", 15, "RS")   # parafascicular thalamus; play hub
+    core.register_population("pfa_thalamus", 20, "RS")  # 15→20   # parafascicular thalamus; play hub
     core.register_population("play_cortex", 10, "RS")    # cortical play; motor planning
 
     # PFA → cortex (thalamocortical play drive; Siviy & Panksepp 2011)
@@ -313,7 +313,7 @@ def register_surprise_circuit(core: SharedCoreNetwork) -> None:
     P300 latency 250-500ms; novelty detection in hippocampus。
     """
     # Populations
-    core.register_population("surprise_amygdala", 10, "RS")  # amygdala novelty/salience
+    core.register_population("surprise_amygdala", 15, "RS")  # 10→15  # amygdala novelty/salience
     core.register_population("surprise_pfc", 10, "RS")       # PFC prediction error
 
     # LC → surprise_amygdala (NE burst for salience; Sara & Bouret 2012)
@@ -451,13 +451,13 @@ class EmotionBrainV2:
             pl_drive[cs_start:cs_end, :] = 5.0 * threat  # strict target 17-33Hz
             overrides["pl"] = pl_drive
 
-            il_drive = np.zeros((n_steps, 15))
-            il_drive[cs_start:cs_end, :] = 2.5 * max(0.2, 1 - threat)  # strict 7-13Hz (was 13.3→aim 10)
+            il_drive = np.zeros((n_steps, 20))  # matched to il n=20
+            il_drive[cs_start:cs_end, :] = 2.5 * max(0.2, 1 - threat)  # strict 7-13Hz
             overrides["il"] = il_drive
 
             # vlPAG direct drive for freezing (CeM→vlPAG synaptic alone insufficient in single trial)
             if threat > 0.3:
-                vlpag_drive = np.zeros((n_steps, 20))
+                vlpag_drive = np.zeros((n_steps, 25))  # matched to vlpag n=25
                 vlpag_drive[cs_start:cs_end, :] = 5.5 * threat  # strict 7-13Hz (was 6.7→aim 10)
                 overrides["vlpag"] = vlpag_drive
 
@@ -468,7 +468,9 @@ class EmotionBrainV2:
             overrides["mea"] = mea_drive
 
             vmh_drive = np.zeros((n_steps, 25))
-            vmh_drive[50:, :] = 8.0 * frustration + 2.0 * threat  # attack target 24-46, investigation 7-13
+            # VMH: nonlinear scaling — low frustration=moderate, high=attack
+            vmh_amp = 12.0 * (frustration ** 1.5) + 2.0 * threat  # supralinear for attack threshold
+            vmh_drive[50:, :] = vmh_amp
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
@@ -524,7 +526,7 @@ class EmotionBrainV2:
 
         # CARE drive: social/attachment → MPOA, PVN_OXT (halved for target range)
         if social > 0.1 or attachment_need > 0.1:
-            mpoa_drive = np.zeros((n_steps, 15))
+            mpoa_drive = np.zeros((n_steps, 20))  # matched to mpoa n=20
             mpoa_drive[50:, :] = 0.5 * social + 0.3 * attachment_need  # strict 7-13Hz (was 16.7→aim 10)
             overrides["mpoa"] = mpoa_drive
 
@@ -545,7 +547,7 @@ class EmotionBrainV2:
 
         # PLAY drive: social + reward + novelty → PFA thalamus (reduced)
         if social > 0.1 and (reward > 0.1 or novelty > 0.1):
-            pfa_drive = np.zeros((n_steps, 15))
+            pfa_drive = np.zeros((n_steps, 20))  # matched to pfa n=20
             pfa_drive[50:, :] = 0.5 * social + 0.3 * reward + 0.2 * novelty  # strict 7-13Hz (was 16.7)
             overrides["pfa_thalamus"] = pfa_drive
 
@@ -569,7 +571,7 @@ class EmotionBrainV2:
             lc_drive[50:250, :] = 2.5 * novelty  # strict target 8-16Hz
             overrides["lc"] = lc_drive
 
-            surp_amyg_drive = np.zeros((n_steps, 10))
+            surp_amyg_drive = np.zeros((n_steps, 15))  # matched to surprise_amyg n=15
             surp_amyg_drive[50:, :] = 0.6 * novelty  # strict 7-13Hz
             overrides["surprise_amygdala"] = surp_amyg_drive
 
