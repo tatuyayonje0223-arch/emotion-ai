@@ -47,8 +47,8 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
     core.register_connection("la_exc", "cel_som", 0.15, 2.0, stdp=True, note="LA→CeL SOM+; STDP")
     core.register_connection("ba_exc", "cel_som", 0.10, 1.5)
-    core.register_connection("cel_som", "cel_pkcd", 0.70, 8.0, inh=True,
-                             note="calibrated=0.70 for SOM+/PKCd+ ratio=3.05; Ciocchi 2010")
+    core.register_connection("cel_som", "cel_pkcd", 0.80, 12.0, inh=True,
+                             note="strengthened for PKCd+ suppression to 0-5Hz; Ciocchi 2010")
     core.register_connection("cel_pkcd", "cel_som", 0.3, 3.0, inh=True)
     core.register_connection("cel_pkcd", "cem", 0.3, 1.5, inh=True, note="tonic inhibition of CeM")
     core.register_connection("cel_som", "cem", 0.6, 8.0, note="CeA disinhibition pathway")
@@ -455,6 +455,12 @@ class EmotionBrainV2:
             il_drive[cs_start:cs_end, :] = 6.0 * max(0.2, 1 - threat)  # IL for extinction
             overrides["il"] = il_drive
 
+            # vlPAG direct drive for freezing (CeM→vlPAG synaptic alone insufficient in single trial)
+            if threat > 0.3:
+                vlpag_drive = np.zeros((n_steps, 20))
+                vlpag_drive[cs_start:cs_end, :] = 5.0 * threat  # target 5-20Hz (slightly increased)
+                overrides["vlpag"] = vlpag_drive
+
         # RAGE drive: frustration → MeA/VMH
         if frustration > 0.1:
             mea_drive = np.zeros((n_steps, 20))
@@ -488,11 +494,19 @@ class EmotionBrainV2:
             nac_d1_drive[burst_start:burst_end, :] = 12.0 * reward  # stronger NAc activation
             overrides["nac_shell_d1"] = nac_d1_drive
 
-        # SADNESS drive: loss → sgACC hyperactivity
+        # SADNESS drive: loss → sgACC hyperactivity + VTA/DR suppression
         if loss > 0.1:
             sg_drive = np.zeros((n_steps, 20))
             sg_drive[:, :] = 8.0 * loss  # sustained hyperactivity
             overrides["sgacc"] = sg_drive
+
+            # VTA DA suppression during loss (LHb→VTA inhibition + reduced tonic)
+            vta_suppress = np.full((n_steps, 30), -5.0 * loss)  # stronger suppression for pause
+            overrides["vta_da_lat"] = vta_suppress
+
+            # DR suppression during loss (LHb→DR inhibition)
+            dr_suppress = np.full((n_steps, 15), -2.0 * loss)
+            overrides["dr"] = dr_suppress
 
             hab_drive = np.zeros((n_steps, 15))
             hab_drive[:, :] = 5.0 * loss  # habenula activation

@@ -340,7 +340,7 @@ class SharedCoreNetwork:
             "vta_gaba": 1.54,     # SBI V2 calibrated (reduced for DA burst)
             "vta_da_lat": 4.5,    # Grace 2007: tonic 3-8Hz
             "vta_da_med": 3.0,
-            "bnst": 1.5,          # Davis 2010: baseline 3-5Hz (LTS, further reduced)
+            "bnst": 2.0,          # Davis 2010: baseline 3-5Hz (RS now, slight increase)
             "lc": 4.0,            # Sara 2012: tonic 1-3Hz
             "dr": 2.18,           # SBI V2 calibrated
             "aic": 3.5,
@@ -349,8 +349,8 @@ class SharedCoreNetwork:
             # FEAR: 既存較正値と同等のtonic
             "la_exc": 2.08,       # SBI V2 calibrated (score=0.881)
             "ba_exc": 4.0,
-            "cel_som": 0.92,      # SBI V2 calibrated
-            "cel_pkcd": 1.15,     # SBI V2 calibrated
+            "cel_som": 0.80,      # target 5-25Hz (reduced from 0.92)
+            "cel_pkcd": 0.50,     # target 0-5Hz during CS (needs strong SOM+ suppression)
             "cem": 3.5,           # baseline 2-5Hz
             "itc": 3.0,
             "pl": 4.0,            # Courtin 2014
