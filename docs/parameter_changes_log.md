@@ -229,7 +229,7 @@
   - Grace et al. (2007) Trends Neurosci 30:220-227. DOI: 10.1016/j.tins.2007.03.006
     - VTA DA tonic firing is maintained by tonic excitatory input from PPTg and LDT
     - During aversive states, this excitatory input is withdrawn
-  - Tian & Ushimaru (2015) Neuron 87(6):1164-1178. DOI: 10.1016/j.neuron.2015.08.028
+  - Tian & Ushimaru (2015) Neuron 87(6):1164-1178. DOI: 10.1016/j.neuron.2015.08.028 [UNVERIFIED: author names may be inaccurate, DOI not confirmed via CrossRef due to SSL]
     - DA pause requires both inhibitory (RMTg GABA) and excitatory (PPTg withdrawal) components
     - Silencing PPTg alone can reduce DA tonic firing
   - Schultz (1997) Science 275:1593-1599. DOI: 10.1126/science.275.5306.1593

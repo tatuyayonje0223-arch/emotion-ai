@@ -528,6 +528,9 @@ class EmotionBrainV2:
             overrides["habenula"] = hab_drive
 
             # ── PPTg/LDT excitatory withdrawal → VTA DA pause ──
+            # NOTE: PHENOMENOLOGICAL APPROXIMATION. PPTg is not modeled as a
+            # spiking population. The withdrawal is implemented as a drive override.
+            # Future: add explicit PPTg population with LHb→PPTg inhibition.
             # Grace et al. (2007) Trends Neurosci: VTA DA tonic firing is maintained
             #   by tonic excitatory input from PPTg and LDT. During aversive/loss states,
             #   this excitatory drive is withdrawn.
@@ -549,6 +552,8 @@ class EmotionBrainV2:
                 overrides["vta_da_lat"] = vta_withdrawal
 
             # ── Prefrontal excitatory withdrawal → DR 5-HT suppression ──
+            # NOTE: PHENOMENOLOGICAL APPROXIMATION. PFC→DR projection is not modeled
+            # as explicit synapses. Future: add PFC→DR excitatory connections.
             # Aghajanian & Marek (1999) Neuropharmacology 38:289-297:
             #   PFC provides tonic glutamatergic input to DRN 5-HT neurons.
             #   During learned helplessness/depression, PFC hypoactivity reduces

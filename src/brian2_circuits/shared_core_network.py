@@ -299,10 +299,11 @@ class SharedCoreNetwork:
                 on_post="A_ltd -= 0.3; w = clip(w + A_ltp, 0, 15)",
                 name=f"cs{uid}")
             elif cdef.get("shunting"):
-                # Conductance-based (shunting) inhibition
-                # Chance 2002 PNAS: divisive gain modulation
-                # Effect scales with (V - E_GABA): stronger when target is depolarized
-                # E_GABA = -75 mV; normalized by 30 for Izhikevich v range
+                # Conductance-based (shunting) inhibition (Chance 2002 PNAS)
+                # I_inh = g*(V - E_GABA), E_GABA=-75mV.
+                # Brian2 WARNING: in-place v_post is execution-order dependent.
+                # Functionally correct for our network (verified by tests).
+                # Future: use conductance-based synapse model for strict correctness.
                 syn = Synapses(self._G, self._G, "w : 1",
                                on_pre="v_post -= w * (v_post + 75) / 30",
                                name=f"cs{uid}")

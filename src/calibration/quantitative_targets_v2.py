@@ -48,6 +48,7 @@ FEAR_TARGETS = [
     # CeL SOM+ CS: typical 12Hz, ±30% = 8.4-15.6
     FiringRateTarget("cel_som", "cs_evoked", 8, 16, "Ciocchi 2010 Nature", typical_hz=12.0),
     # CeL PKCd+ CS: typical 0.5Hz (suppressed), max 2Hz
+    # NOTE: range/typical ratio is wide (4.0) because typical≈0. Any rate ≤2Hz is acceptable.
     FiringRateTarget("cel_pkcd", "cs_evoked", 0, 2, "Ciocchi 2010 Nature (decrease)", typical_hz=0.5),
     # CeM fear: typical 15Hz, ±30% = 10.5-19.5
     FiringRateTarget("cem", "fear_expression", 10, 20, "Ciocchi 2010; Duvarci & Pare 2014", typical_hz=15.0),
@@ -97,6 +98,7 @@ SEEKING_TARGETS = [
     # DA phasic burst: typical 25Hz (Schultz), ±30% = 17.5-32.5
     FiringRateTarget("vta_da_lat", "phasic_burst", 17, 33, "Schultz 1997; calibrated=25Hz", typical_hz=25.0),
     # DA pause: typical 0Hz (complete suppression), max 1Hz
+    # NOTE: range/typical ratio is wide (inf) because typical=0. Achieved via PPTg withdrawal (phenomenological).
     FiringRateTarget("vta_da_lat", "pause", 0, 1, "Schultz 1997 (negative RPE)", typical_hz=0.0),
     # NAc shell D1 reward: typical 12Hz, ±30% = 8.4-15.6
     FiringRateTarget("nac_shell_d1", "reward", 8, 16, "Roitman 2005", typical_hz=12.0),
