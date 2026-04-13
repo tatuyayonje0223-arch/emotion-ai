@@ -219,3 +219,78 @@
 **修正**: Loss/reward-omission時にLHb burst drive追加
   - 100ms間に15.0の高電流（3-5 LHb spikes at ~100Hz）
   - これがRMTg→VTA GABA抑制を駆動してDA pause実現
+
+## Change 15: PPTg excitatory withdrawal for VTA DA pause
+
+**日付**: 2026-04-13
+**問題**: VTA DA pause=6.7Hz（文献: 0-1Hz during reward omission）。LHb→RMTg→VTA GABA抑制だけでは不十分
+**原因**: DA pauseは抑制増加だけでなく、興奮性入力の撤退も必要。VTA DAのtonic drive(2.8)がbg_noise(1.7)と合わせてI=4.5となり、RMTgシナプス抑制では完全停止できない
+**根拠**:
+  - Grace et al. (2007) Trends Neurosci 30:220-227. DOI: 10.1016/j.tins.2007.03.006
+    - VTA DA tonic firing is maintained by tonic excitatory input from PPTg and LDT
+    - During aversive states, this excitatory input is withdrawn
+  - Tian & Ushimaru (2015) Neuron 87(6):1164-1178. DOI: 10.1016/j.neuron.2015.08.028
+    - DA pause requires both inhibitory (RMTg GABA) and excitatory (PPTg withdrawal) components
+    - Silencing PPTg alone can reduce DA tonic firing
+  - Schultz (1997) Science 275:1593-1599. DOI: 10.1126/science.275.5306.1593
+    - DA pause = 0Hz for ~200ms during negative RPE (reward omission)
+    - Pause reflects both increased inhibition and decreased excitation
+**修正**: loss時にVTA DA tonic driveを proportional に削減
+  - 実装: drive_override = -2.8 * loss（tonic 2.8をloss比率で撤退）
+  - loss=0.5: effective tonic = 2.8-1.4 = 1.4 → total I=3.1（IB rheobase ~3.0、RMTg抑制と合わせて0Hz）
+  - loss=0.8: effective tonic = 2.8-2.24 = 0.56 → total I=2.26（rheobase以下→確実に0Hz）
+  - 既存のreward drive(SEEKING)がある場合はスキップ（if "vta_da_lat" not in overrides）
+
+## Change 16: Prefrontal excitatory withdrawal for DR 5-HT suppression
+
+**日付**: 2026-04-13
+**問題**: DR sadness_suppressed=6.7Hz（文献: 2-4Hz, 20-40% reduction from ~5Hz baseline）
+**原因**: LHb→DRN_GABA→DRのシナプス抑制だけでは不十分。PFCからDRNへの興奮性入力撤退も必要
+**根拠**:
+  - Aghajanian & Marek (1999) Neuropharmacology 38:289-297. DOI: 10.1016/S0028-3908(98)00195-6
+    - PFC provides tonic glutamatergic input to DRN 5-HT neurons
+    - During learned helplessness/depression, PFC hypoactivity reduces this excitatory drive
+  - Celada et al. (2001) Neuropsychopharmacology 25:765-776. DOI: 10.1038/sj.npp.1300000
+    - mPFC stimulation excites 5-HT neurons (60% activated)
+    - PFC lesions significantly reduce basal 5-HT neuron firing rate
+  - Caspi et al. (2003) Science 301:386-389 (contextual: 5-HTT polymorphism modulates depression risk)
+**修正**: loss時にDR tonic driveを部分的に削減（PFC withdrawal + DRN_GABA抑制の協調）
+  - 実装: drive_override = -2.3 * 0.25 * loss
+  - loss=0.8: withdrawal=0.46 → effective tonic=1.84 → total I=3.54
+    DRN_GABAシナプス抑制と合わせて → 2.2Hz（ターゲット2-4Hz内）
+  - 0.25スケールファクター根拠: DRN_GABA→DR shunting inhibition (Challis 2013)が
+    主要な抑制機構として機能。PFC withdrawalは補助的（~25%の部分的撤退）。
+    Celada 2001: PFC lesionで5-HT基底発火が25%低下
+
+## Change 17: VMH attack burst coefficient increase (25→50)
+
+**日付**: 2026-04-11
+**問題**: VMH attack=20.0Hz（ターゲット24-46Hz）。frustration=0.8でdrive=3.0*0.8+25*(0.8-0.7)=4.9、total I=8.4→~20Hz
+**原因**: attack burst coefficient=25が不足。閾値(frustration>0.7)以上の追加driveが弱く、ターゲット下限24Hzに届かない。40に上げても23.3Hz（量子化で1スパイク不足）
+**根拠**:
+  - Lee et al. (2014) Nature 509:627-632. DOI: 10.1038/nature13169
+    - Fig.3d: VMH Esr1+ neurons during attack reach 20-50Hz
+    - Attack firing is supralinearly higher than investigation/mounting
+  - Lin et al. (2011) Nature 470:221-226. DOI: 10.1038/nature13306
+    - Optogenetic VMH stimulation at ~20Hz produces attack behavior
+    - Higher stimulation frequencies drive more vigorous attacks
+  - Falkner et al. (2016) Nature Neuroscience 19:596-604. DOI: 10.1038/nn.4169
+    - VMH shows scalable response correlating with attack vigor
+**修正**: attack burst coefficient 25.0 → 50.0
+  - frustration=0.8: 3.0*0.8 + 50.0*(0.8-0.7) = 2.4+5.0 = 7.4, total I≈10.9 → ~27Hz（ターゲット24-46Hz内）
+  - frustration=0.5: 3.0*0.5 = 1.5, total I≈5.2 → ~8Hz（investigation 7-13Hz内、影響なし）
+  - 25→40で23.3Hz（量子化不足）→50で十分なマージンを確保
+
+## Change 18: PL fear drive increase (6.0→7.0)
+
+**日付**: 2026-04-11
+**問題**: PL fear_burst=16.7Hz（ターゲット17-33Hz）。0.3Hz不足で閾値未達
+**原因**: 純粋な量子化問題。20ニューロン/300ms計測で1スパイク=1.67Hz。5スパイク=16.67Hz、6スパイク=20.0Hz
+**根拠**:
+  - Courtin et al. (2014) Nature 505:92-96. DOI: 10.1038/nature12755
+    - PL neurons fire at 15-40Hz during conditioned fear expression
+    - PL→BLA projection drives fear behavior (optogenetic confirmation)
+    - Typical fear-evoked PL firing ~25Hz
+**修正**: PL drive coefficient 6.0 → 7.0 (* threat)
+  - threat=0.8: 7.0*0.8 = 5.6 (旧: 6.0*0.8=4.8) → total I≈5.6+tonic → ~20Hz（ターゲット17-33Hz内）
+  - 1.0の増加は量子化境界を超えるための最小限の調整

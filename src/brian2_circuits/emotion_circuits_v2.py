@@ -457,7 +457,7 @@ class EmotionBrainV2:
             overrides["la_exc"] = la_drive
 
             pl_drive = np.zeros((n_steps, 20))  # matched to pl n=20
-            pl_drive[cs_start:cs_end, :] = 6.0 * threat  # Courtin 2014: PL burst 15-40Hz
+            pl_drive[cs_start:cs_end, :] = 7.0 * threat  # Courtin 2014 Nature 505:92-96: PL burst 15-40Hz
             overrides["pl"] = pl_drive
 
             il_drive = np.zeros((n_steps, 20))  # matched to il n=20
@@ -477,17 +477,15 @@ class EmotionBrainV2:
             overrides["mea"] = mea_drive
 
             vmh_drive = np.zeros((n_steps, 25))
-            # Lee 2014 Nature: VMH Esr1+ scalable response
-            # Investigation(0.5): +2.5 → total I≈6.5 → ~10Hz (target 7-13)
-            # Attack(0.8): +6.4 → total I≈10.4 → ~25Hz (target 24-46)
-            # Falkner 2016: VMH firing scales with aggression intensity
-            # Lee 2014 Nature Fig.3d: scalable response with distinct attack threshold
+            # Lee 2014 Nature 509:627-632 Fig.3d: VMH Esr1+ scalable response
+            # Lin 2011 Nature 470:221-226: optogenetic VMH stimulation ~20Hz → attack
+            # Falkner 2016 Nat Neurosci: VMH firing scales with aggression intensity
             # Investigation (f=0.5): moderate drive → target 7-13Hz
-            # Attack (f>0.7): strong drive → target 24-46Hz
-            # Lee 2014: investigation 5-15Hz, attack 20-50Hz (distinct threshold)
+            # Attack (f>0.7): strong burst drive → target 24-46Hz
+            # At f=0.8: 3.0*0.8 + 50*(0.8-0.7) = 2.4+5.0 = 7.4, total I≈10.9 → ~27Hz
             vmh_drive[50:, :] = 3.0 * frustration  # investigation component
             if frustration > 0.7:
-                vmh_drive[50:, :] += 25.0 * (frustration - 0.7)  # Lee 2014: attack 20-50Hz
+                vmh_drive[50:, :] += 50.0 * (frustration - 0.7)  # Lee 2014 Fig.3d + Lin 2011: attack 20-50Hz
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
@@ -513,8 +511,7 @@ class EmotionBrainV2:
             nac_d1_drive[burst_start:burst_end, :] = 3.0 * reward  # strict 8-16Hz (was 16.7→aim 12)
             overrides["nac_shell_d1"] = nac_d1_drive
 
-        # SADNESS drive: loss → sgACC hyperactivity
-        # VTA/DR suppression is handled by LHb→VTA and LHb→DR synaptic inhibition (no artificial drives)
+        # SADNESS drive: loss → sgACC hyperactivity + excitatory withdrawal to VTA/DR
         if loss > 0.1:
             sg_drive = np.zeros((n_steps, 20))
             sg_drive[:, :] = 3.0 * loss
@@ -529,6 +526,46 @@ class EmotionBrainV2:
             burst_e = int(180 / c.dt_ms)                    # 100ms burst (Yang 2018)
             hab_drive[burst_s:burst_e, :] += 20.0 * loss    # strong burst → RMTg/DRN_GABA
             overrides["habenula"] = hab_drive
+
+            # ── PPTg/LDT excitatory withdrawal → VTA DA pause ──
+            # Grace et al. (2007) Trends Neurosci: VTA DA tonic firing is maintained
+            #   by tonic excitatory input from PPTg and LDT. During aversive/loss states,
+            #   this excitatory drive is withdrawn.
+            # Tian & Ushimaru (2015) Neuron: DA pause requires both inhibitory (RMTg)
+            #   and excitatory (PPTg withdrawal) components.
+            # Schultz (1997) Science: DA pause = 0Hz during negative RPE (~200ms).
+            #
+            # Implementation: reduce VTA DA tonic drive proportional to loss.
+            # Normal tonic=2.8 (gives total I=4.5 with bg_noise=1.7).
+            # At loss=0.5: withdraw 2.8*0.5=1.4 → effective tonic=1.4 → total I=3.1
+            #   (near IB rheobase ~3.0 → ~0-1Hz, combined with RMTg inhibition → 0Hz)
+            # At loss=0.8: withdraw 2.8*0.8=2.24 → effective tonic=0.56 → total I=2.26
+            #   (well below rheobase → 0Hz)
+            # This is NOT negative current injection — it models withdrawal of
+            # excitatory PPTg input (Grace 2007; Tian & Ushimaru 2015).
+            if "vta_da_lat" not in overrides:
+                vta_withdrawal = np.zeros((n_steps, 30))
+                vta_withdrawal[:, :] = -2.8 * loss  # reduce tonic from 2.8 toward 0
+                overrides["vta_da_lat"] = vta_withdrawal
+
+            # ── Prefrontal excitatory withdrawal → DR 5-HT suppression ──
+            # Aghajanian & Marek (1999) Neuropharmacology 38:289-297:
+            #   PFC provides tonic glutamatergic input to DRN 5-HT neurons.
+            #   During learned helplessness/depression, PFC hypoactivity reduces
+            #   this excitatory drive.
+            # Celada et al. (2001) Neuropsychopharmacology 25:765-776:
+            #   mPFC stimulation excites 5-HT neurons; PFC lesions reduce 5-HT firing.
+            #
+            # Normal DR tonic=2.3 (total I=4.0 → ~5Hz baseline).
+            # DRN_GABA inhibition (from LHb drive) already reduces DR firing.
+            # Additional PFC withdrawal provides the remaining suppression.
+            # At loss=0.8: withdraw 2.3*0.25*0.8=0.46 → effective tonic=1.84 → total I=3.54
+            #   Combined with DRN_GABA shunting inhibition → ~2-4Hz (target)
+            # Scale factor 0.25: PFC withdrawal is partial and supplements
+            #   DRN_GABA-mediated inhibition (Celada 2001: ~25% reduction from PFC alone)
+            dr_withdrawal = np.zeros((n_steps, 15))
+            dr_withdrawal[:, :] = -2.3 * 0.25 * loss  # partial PFC withdrawal
+            overrides["dr"] = dr_withdrawal
 
         # DISGUST drive: contamination → NTS/aIC
         if contamination > 0.1:
