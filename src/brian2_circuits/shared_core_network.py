@@ -196,12 +196,14 @@ class SharedCoreNetwork:
 
     def register_connection(self, src: str, tgt: str, p: float, w: float,
                             inh: bool = False, stdp: bool = False,
+                            shunting: bool = False,
                             note: str = "") -> None:
         """結合を追加登録する。build()前に呼ぶ。"""
         if self._built:
             raise RuntimeError("Cannot register after build()")
         self._conn_defs.append({"src": src, "tgt": tgt, "p": p, "w": w,
-                                "inh": inh, "stdp": stdp, "note": note})
+                                "inh": inh, "stdp": stdp, "shunting": shunting,
+                                "note": note})
 
     def build(self) -> None:
         """Brian2 Networkを構築する。"""
@@ -296,6 +298,14 @@ class SharedCoreNetwork:
                 on_pre="v_post += w; A_ltp += 0.5; w = clip(w + A_ltd, 0, 15)",
                 on_post="A_ltd -= 0.3; w = clip(w + A_ltp, 0, 15)",
                 name=f"cs{uid}")
+            elif cdef.get("shunting"):
+                # Conductance-based (shunting) inhibition
+                # Chance 2002 PNAS: divisive gain modulation
+                # Effect scales with (V - E_GABA): stronger when target is depolarized
+                # E_GABA = -75 mV; normalized by 30 for Izhikevich v range
+                syn = Synapses(self._G, self._G, "w : 1",
+                               on_pre="v_post += w * (v_post + 75) / 30",
+                               name=f"cs{uid}")
             else:
                 syn = Synapses(self._G, self._G, "w : 1",
                                on_pre=f"v_post += {sgn} * w",
@@ -369,7 +379,7 @@ class SharedCoreNetwork:
             "vta_da_lat": 2.8,       # Grace 2007: tonic 3-8Hz (I=4.5)
             "vta_da_med": 2.8,
             "vta_gaba": 2.3,         # Cohen 2012: PV type but moderate tonic (I=4.0)
-            "bnst": 0.0,             # Davis 2010: LTS rheobase~0, bg_noise alone (I=1.7) → 3-8Hz
+            "bnst": 1.0,             # Davis 2010: LTS rheobase~0, bg_noise alone (I=1.7) → 3-8Hz
             "lc": 2.3,               # Sara & Bouret 2012: tonic 1-3Hz (I=4.0)
             "dr": 2.3,               # de Jong 2022: tonic 1-5Hz (I=4.0)
             "rmtg": 3.3,             # Jhou 2009: PV type GABAergic (I=5.0)
@@ -383,21 +393,21 @@ class SharedCoreNetwork:
             # ── FEAR ──
             "la_exc": 2.3,           # Quirk 2002: baseline 1-5Hz (I=4.0)
             "ba_exc": 2.8,           # Duvarci & Pare 2014: baseline 3-8Hz (I=4.5)
-            "cel_som": 0.0,          # CeL SOM+ LTS: rheobase~0, bg_noise alone
+            "cel_som": 1.0,          # CeL SOM+ LTS: rheobase~0, bg_noise alone
             "cel_pkcd": 0.0,         # CeL PKCd+ LTS-like: rheobase~0, bg_noise alone
             "cem": 2.3,              # baseline 2-5Hz (I=4.0)
-            "itc": 0.0,              # ITC LTS: rheobase~0
+            "itc": 1.0,              # ITC LTS: rheobase~0
             "pl": 2.3,               # Courtin 2014: baseline (I=4.0)
             "il": 2.3,               # Quirk 2002: baseline (I=4.0)
             "la_pv": 3.3,            # PV fast-spiking (I=5.0)
             "la_vip": 2.3,           # VIP: baseline (I=4.0)
             # ── RAGE ──
-            "mea": 0.0,              # Hong 2014: LTS rheobase~0, bg_noise alone → 3-8Hz
+            "mea": 1.0,              # Hong 2014: LTS rheobase~0, bg_noise alone → 3-8Hz
             "vmh": 2.3,              # Lee 2014: RS, baseline 2-5Hz (I=4.0)
             # ── SEEKING ──
             "ofc_reward": 2.3,
             "vmpfc_value": 2.3,
-            "vp": 0.0,               # LTS: rheobase~0
+            "vp": 1.0,               # LTS: rheobase~0
             "lhb": 2.3,
             # ── SADNESS ──
             "sgacc": 2.3,            # Mayberg 1999: baseline ~12Hz in healthy
@@ -407,7 +417,7 @@ class SharedCoreNetwork:
             "putamen": 2.3,
             # ── CARE ──
             "mpoa": 2.3,             # Kohl 2018
-            "care_bnst": 0.0,        # LTS: rheobase~0
+            "care_bnst": 1.0,        # LTS: rheobase~0
             # ── PANIC/GRIEF ──
             "dacc": 2.3,             # Eisenberger 2003
             "grief_pag": 2.3,

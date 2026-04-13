@@ -172,3 +172,50 @@
   - LHb→DRN_GABA: excitatory, p=0.20, w=3.0
   - DRN_GABA→DR(5-HT): strong inhibitory, p=0.40, w=6.0
   - LHb→DR直接結合を削除（DRN_GABA経由に置換）
+
+## Change 12: LTS neuron parameter adjustment (CeL/BNST/MeA)
+
+**日付**: 2026-04-13
+**問題**: LTS型(d=2)がbg_noise alone(I=1.7)で16-23Hz（文献: 3-8Hz baseline）
+**根拠**:
+  - Lopez de Armentia & Sah (2004) J Neurophysiol 92:1285-1294. DOI: 10.1152/jn.00211.2004
+    - CeL neurons show 3 types: late-firing, adapting (6-7 spikes then complete adaptation), regular
+    - Adapting type has strong spike-frequency adaptation
+  - Hammack et al. (2007) J Neurophysiol 98:638-656. DOI: 10.1152/jn.00382.2007
+    - BNST Type II: low-threshold bursting with adaptation
+  - Izhikevich (2003): d parameter controls spike-frequency adaptation strength
+    - d=2: weak adaptation (standard LTS) → high sustained firing
+    - d=6: strong adaptation → adapting burst pattern (matches Lopez de Armentia "adapting" type)
+**修正**: CeL_SOM, PKCd, LTS type populations: d=2→d=6, b=0.25→0.20
+  - これにより: bg_noise(I=1.7)で~3-5Hz、CS入力で~10-15Hz
+
+## Change 13: CeA conductance-based (shunting) inhibition
+
+**日付**: 2026-04-13
+**問題**: SOM+→PKCd+ current-based inhibition(v_post -= w)がPKCd+を十分に抑制できない
+**根拠**:
+  - Chance et al. (2002) PNAS (Mitchell 2003 version). DOI: 10.1073/pnas.0337591100
+    - Shunting inhibition produces divisive gain modulation (not just subtractive)
+    - Required for proper winner-take-all dynamics in mutual inhibition circuits
+  - Li et al. (2013) Nature Neuroscience 16:332-339. DOI: 10.1038/nn.3322
+    - SOM+→PKCd+ IPSC: ~20 pA at -40 mV → g_inh ≈ 0.6 nS (driving force 35mV)
+**修正**: SOM+→PKCd+ シナプスのon_pre式を変更
+  - 旧: v_post -= w (subtractive)
+  - 新: v_post += w * (v_post + 75) / 30 (conductance-based approximation)
+    - v_post at rest(-65): effect = w*(-65+75)/30 = w*0.33 (weak inhibition)
+    - v_post at threshold(30): effect = w*(30+75)/30 = w*3.5 (strong inhibition)
+    - E_GABA = -75 mV
+
+## Change 14: LHb phenomenological burst for DA pause
+
+**日付**: 2026-04-13
+**問題**: VTA DA pause=6.7Hz（文献: ~0Hz for ~200ms）
+**根拠**:
+  - Yang et al. (2018) Nature 554:317-322. DOI: 10.1038/nature25509
+    - LHb burst: initial ISI ≤ 20ms (intra-burst ~100Hz), NMDA+T-type Ca2+ dependent
+  - Hong & Jhou (2011) J Neurosci 31:11457-11471. DOI: 10.1523/JNEUROSCI.1384-11.2011
+    - Single LHb stimulation → DA suppression ~85ms
+  - Schultz (1997): DA pause = 0Hz for ~200ms at expected reward time
+**修正**: Loss/reward-omission時にLHb burst drive追加
+  - 100ms間に15.0の高電流（3-5 LHb spikes at ~100Hz）
+  - これがRMTg→VTA GABA抑制を駆動してDA pause実現

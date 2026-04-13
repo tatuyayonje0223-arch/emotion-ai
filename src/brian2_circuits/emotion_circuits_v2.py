@@ -47,10 +47,11 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
     core.register_connection("la_exc", "cel_som", 0.15, 2.0, stdp=True, note="LA→CeL SOM+; YAML p=0.15-0.20")
     core.register_connection("ba_exc", "cel_som", 0.10, 1.5, note="BA→CeL SOM+; YAML p=0.05-0.10")
-    # w/sqrt(N*p) scaling correction: N=20,p=0.70→実効w=w_base/sqrt(14)≈w_base/3.74
-    # Target effective w=8.0 (Ciocchi 2010) → w_base=8.0*3.74≈30 (van Rossum 2000)
-    core.register_connection("cel_som", "cel_pkcd", 0.70, 30.0, inh=True,
-                             note="w=30→effective≈8.0 after /sqrt(N*p); Ciocchi 2010; van Rossum 2000")
+    # Conductance-based (shunting) inhibition for CeA disinhibition
+    # Li 2013 Nat Neurosci: IPSC ~20pA at -40mV → g≈0.6nS
+    # Chance 2002 PNAS: shunting inhibition produces divisive gain modulation
+    core.register_connection("cel_som", "cel_pkcd", 0.70, 8.0, inh=True, shunting=True,
+                             note="Shunting inh; Li 2013; Chance 2002; Ciocchi 2010")
     core.register_connection("cel_pkcd", "cel_som", 0.3, 3.0, inh=True)
     core.register_connection("cel_pkcd", "cem", 0.3, 1.5, inh=True, note="tonic inhibition of CeM")
     core.register_connection("cel_som", "cem", 0.6, 8.0, note="CeA disinhibition pathway")
@@ -514,7 +515,13 @@ class EmotionBrainV2:
             overrides["sgacc"] = sg_drive
 
             hab_drive = np.zeros((n_steps, 15))
-            hab_drive[:, :] = 5.0 * loss  # habenula activation drives LHb→VTA/DR inhibition
+            # Yang 2018 Nature: LHb burst firing during reward omission/loss
+            # Burst: 3-5 spikes at ~100Hz (ISI<20ms) for ~50-100ms
+            # Sustained component + burst component
+            hab_drive[:, :] = 5.0 * loss                    # tonic component
+            burst_s = int(100 / c.dt_ms)
+            burst_e = int(150 / c.dt_ms)                    # 50ms burst window
+            hab_drive[burst_s:burst_e, :] += 15.0 * loss    # burst: +15 → ~100Hz peak
             overrides["habenula"] = hab_drive
 
         # DISGUST drive: contamination → NTS/aIC

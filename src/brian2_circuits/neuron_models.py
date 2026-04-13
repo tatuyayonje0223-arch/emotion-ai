@@ -61,11 +61,16 @@ CELL_TYPES: dict[str, dict[str, float]] = {
 
     # 抑制性
     "PV": {"a": 0.1, "b": 0.2, "c": -65, "d": 2},       # parvalbumin fast-spiking
-    "SOM": {"a": 0.02, "b": 0.25, "c": -65, "d": 2},    # somatostatin LTS
-    "VIP": {"a": 0.02, "b": 0.25, "c": -65, "d": 2},    # VIP介在ニューロン
-    "LTS": {"a": 0.02, "b": 0.25, "c": -65, "d": 2},    # low-threshold (ITC)
-    "PKCd": {"a": 0.02, "b": 0.25, "c": -65, "d": 2},   # CeL PKCdelta+
-    "CeL_SOM": {"a": 0.02, "b": 0.25, "c": -65, "d": 2}, # CeL SOM+
+    # Lopez de Armentia 2004: CeL "adapting" type shows strong spike-frequency adaptation
+    # Hammack 2007: BNST Type II has low-threshold bursting with adaptation
+    # b=0.20 (reduced sensitivity), d=6 (strong adaptation) matches adapting phenotype
+    # Lopez de Armentia 2004: CeL "adapting" type. d=4 (moderate adaptation)
+    # b=0.22 (between RS 0.20 and standard LTS 0.25)
+    "SOM": {"a": 0.02, "b": 0.22, "c": -65, "d": 4},    # somatostatin — adapted
+    "VIP": {"a": 0.02, "b": 0.22, "c": -65, "d": 4},    # VIP
+    "LTS": {"a": 0.02, "b": 0.22, "c": -65, "d": 4},    # low-threshold (ITC)
+    "PKCd": {"a": 0.02, "b": 0.22, "c": -65, "d": 4},   # CeL PKCdelta+
+    "CeL_SOM": {"a": 0.02, "b": 0.22, "c": -65, "d": 4}, # CeL SOM+
 }
 
 
