@@ -37,7 +37,7 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_population("cel_pkcd", 15, "PKCd")
     core.register_population("cem", 15, "RS")
     core.register_population("itc", 10, "LTS")
-    core.register_population("pl", 15, "RS")
+    core.register_population("pl", 20, "RS")  # increased for rate resolution (Courtin 2014)
     core.register_population("il", 20, "RS")  # 15→20 for finer rate resolution
 
     # Intra-amygdala connections (Duvarci & Pare 2014; Ciocchi 2010)
@@ -456,7 +456,7 @@ class EmotionBrainV2:
                 la_drive[cs_start:cs_end, :] += 10.0 * pain
             overrides["la_exc"] = la_drive
 
-            pl_drive = np.zeros((n_steps, 15))
+            pl_drive = np.zeros((n_steps, 20))  # matched to pl n=20
             pl_drive[cs_start:cs_end, :] = 5.0 * threat  # strict target 17-33Hz
             overrides["pl"] = pl_drive
 
@@ -481,7 +481,12 @@ class EmotionBrainV2:
             # Investigation(0.5): +2.5 → total I≈6.5 → ~10Hz (target 7-13)
             # Attack(0.8): +6.4 → total I≈10.4 → ~25Hz (target 24-46)
             # Falkner 2016: VMH firing scales with aggression intensity
-            vmh_drive[50:, :] = 10.0 * (frustration ** 1.3)  # mild supralinear: Lee 2014 scalable response
+            # Lee 2014 Nature Fig.3d: scalable response with distinct attack threshold
+            # Investigation (f=0.5): moderate drive → target 7-13Hz
+            # Attack (f>0.7): strong drive → target 24-46Hz
+            vmh_drive[50:, :] = 3.0 * frustration
+            if frustration > 0.7:
+                vmh_drive[50:, :] += 6.0 * (frustration - 0.7)  # attack burst
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
@@ -515,13 +520,13 @@ class EmotionBrainV2:
             overrides["sgacc"] = sg_drive
 
             hab_drive = np.zeros((n_steps, 15))
-            # Yang 2018 Nature: LHb burst firing during reward omission/loss
-            # Burst: 3-5 spikes at ~100Hz (ISI<20ms) for ~50-100ms
-            # Sustained component + burst component
-            hab_drive[:, :] = 5.0 * loss                    # tonic component
-            burst_s = int(100 / c.dt_ms)
-            burst_e = int(150 / c.dt_ms)                    # 50ms burst window
-            hab_drive[burst_s:burst_e, :] += 15.0 * loss    # burst: +15 → ~100Hz peak
+            # Yang 2018 Nature: LHb burst during reward omission
+            # Hong 2011 J Neurosci: single LHb stim → DA suppression ~85ms
+            # Extended burst window 100ms for sustained RMTg/DRN_GABA activation
+            hab_drive[:, :] = 2.0 * loss                    # moderate tonic (target 10-20Hz total)
+            burst_s = int(80 / c.dt_ms)
+            burst_e = int(180 / c.dt_ms)                    # 100ms burst (Yang 2018)
+            hab_drive[burst_s:burst_e, :] += 20.0 * loss    # strong burst → RMTg/DRN_GABA
             overrides["habenula"] = hab_drive
 
         # DISGUST drive: contamination → NTS/aIC
@@ -541,7 +546,8 @@ class EmotionBrainV2:
             overrides["mpoa"] = mpoa_drive
 
             oxt_drive = np.zeros((n_steps, 10))
-            oxt_drive[50:, :] = 1.5 * social + 1.0 * attachment_need  # target 3-20Hz
+            # Bhatt 2019 Neuron: OXT neurons fire in bursts, not sustained tonic
+            oxt_drive[50:, :] = 0.5 * social + 0.3 * attachment_need
             overrides["pvn_oxt"] = oxt_drive
 
         # PANIC/GRIEF drive: loss + isolation → dACC, BNST (reduced)

@@ -386,12 +386,12 @@ class SharedCoreNetwork:
             "drn_gaba": 3.3,         # Challis 2013: PV type GABAergic (I=5.0)
             "aic": 2.3,              # Craig 2009: baseline (I=4.0)
             "pvn_crh": 2.3,
-            "pvn_oxt": 2.3,
+            "pvn_oxt": 1.5,           # Bhatt 2019: OXT burst, reduce tonic for IB type
             "nac_shell_d1": 2.3,
             "nac_shell_d2": 2.3,
             "nac_core_d1": 2.3,
             # ── FEAR ──
-            "la_exc": 2.3,           # Quirk 2002: baseline 1-5Hz (I=4.0)
+            "la_exc": 2.0,           # Quirk 2002: baseline 1-5Hz; Izhikevich 2003 rheobase=3.0, I=3.7
             "ba_exc": 2.8,           # Duvarci & Pare 2014: baseline 3-8Hz (I=4.5)
             "cel_som": 1.0,          # CeL SOM+ LTS: rheobase~0, bg_noise alone
             "cel_pkcd": 0.0,         # CeL PKCd+ LTS-like: rheobase~0, bg_noise alone
@@ -402,8 +402,8 @@ class SharedCoreNetwork:
             "la_pv": 3.3,            # PV fast-spiking (I=5.0)
             "la_vip": 2.3,           # VIP: baseline (I=4.0)
             # ── RAGE ──
-            "mea": 1.0,              # Hong 2014: LTS rheobase~0, bg_noise alone → 3-8Hz
-            "vmh": 2.3,              # Lee 2014: RS, baseline 2-5Hz (I=4.0)
+            "mea": 0.8,              # Hong 2014: LTS rheobase~0, bg_noise alone → 3-8Hz
+            "vmh": 2.0,              # Lee 2014: baseline 2-5Hz; I=3.7 for rheobase proximity
             # ── SEEKING ──
             "ofc_reward": 2.3,
             "vmpfc_value": 2.3,
