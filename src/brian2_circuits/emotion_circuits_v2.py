@@ -114,11 +114,12 @@ def register_seeking_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("nac_shell_d1", "vp", 0.20, 4.0, inh=True,
                              note="NAc→VP GABA disinhibition; Berridge 2009")
 
-    # LHb → VTA (negative RPE via RMTg; Matsumoto & Hikosaka 2007)
-    core.register_connection("lhb", "vta_da_lat", 0.15, 4.0, inh=True,
-                             note="LHb→VTA inhibition (via RMTg); negative RPE")
-    core.register_connection("lhb", "dr", 0.10, 2.0, inh=True,
-                             note="LHb→raphe 5-HT inhibition")
+    # LHb → RMTg → VTA (negative RPE; Jhou 2009; Matsumoto & Hikosaka 2007)
+    core.register_connection("lhb", "rmtg", 0.20, 3.0,
+                             note="LHb(Glu)→RMTg: negative RPE relay; Jhou 2009")
+    # LHb → DRN_GABA → DR (Challis 2013)
+    core.register_connection("lhb", "drn_gaba", 0.15, 2.0,
+                             note="LHb→DRN GABA; Challis 2013")
 
 
 def register_sadness_circuit(core: SharedCoreNetwork) -> None:
@@ -135,14 +136,16 @@ def register_sadness_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("sgacc", "nac_shell_d2", 0.10, 2.0, note="sgACC→NAc anhedonia")
     core.register_connection("sgacc", "bnst", 0.10, 1.5)
 
-    # Habenula → VTA/DR: disynaptic pathway LHb(Glu)→RMTg(GABA)→VTA(DA)
-    # Matsumoto & Hikosaka 2007 Nature 447:1111; Yang 2018 Nature 554:317
-    # Strong inhibition sufficient for complete DA pause during reward omission
-    core.register_connection("habenula", "vta_da_lat", 0.25, 8.0, inh=True,
-                             note="LHb→VTA: disynaptic via RMTg; Matsumoto & Hikosaka 2007; Yang 2018")
-    # Matsumoto & Hikosaka 2009 J Neurosci: LHb→DRN inhibition
-    core.register_connection("habenula", "dr", 0.25, 8.0, inh=True,
-                             note="LHb→DR: Matsumoto & Hikosaka 2009 J Neurosci")
+    # Habenula → RMTg → VTA DA (disynaptic pause pathway)
+    # Jhou 2009 J Neurosci; Yang 2018 Nature; Barrot 2012 TINS
+    core.register_connection("habenula", "rmtg", 0.20, 3.0,
+                             note="LHb(Glu)→RMTg: Jhou 2009; Yang 2018")
+    # RMTg→VTA is in shared_core internal connections
+
+    # Habenula → DRN_GABA → DR 5-HT (disynaptic suppression)
+    # Challis 2013 J Neurosci; Varga 2001
+    core.register_connection("habenula", "drn_gaba", 0.20, 3.0,
+                             note="LHb(Glu)→DRN GABA: Challis 2013")
 
     # sgACC → aIC (interoceptive sadness; Craig 2009)
     core.register_connection("sgacc", "aic", 0.10, 1.5, note="sgACC→insula interoception")

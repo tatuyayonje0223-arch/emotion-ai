@@ -122,3 +122,53 @@
   - frustration=0.5: 10*0.5^1.3 ≈ 4.1 → total I≈6.4 → ~10Hz
   - frustration=0.8: 10*0.8^1.3 ≈ 7.3 → total I≈9.6 → ~22Hz
   - これはLee 2014 Fig.3dのsupralinear responseに基づく（恣意的な非線形ではない）
+
+## Change 9: LTS tonic=0 (bg_noise alone)
+
+**日付**: 2026-04-13
+**問題**: LTS populations (BNST, MeA, ITC, CeL_SOM, CeL_PKCd, VP, care_BNST) がtonic=1.1で15-35Hz（文献: 3-8Hz）
+**根拠**: Izhikevich (2003) IEEE Trans Neural Networks
+  - LTS型: a=0.02, b=0.25, c=-65, d=2
+  - At rest: u=0.25*(-65)=-16.25, dv/dt=0.25+I → rheobase≈0
+  - I=1.7 (bg_noise alone): ~5-10Hz (weak adaptation d=2)
+  - I=2.8 (tonic=1.1+bg=1.7): ~15-25Hz (過剰)
+**修正**: 全LTS populations tonic=0.0 → I=bg_noise=1.7のみで駆動
+
+## Change 10: RMTg GABAergic relay population (VTA DA pause)
+
+**日付**: 2026-04-13
+**問題**: VTA DA pause=6.7Hz（文献: ~0Hz during reward omission）
+  - LHb→VTA直接抑制(p=0.25, w=8.0)では完全停止に不足
+  - 実際のDA pauseは disynaptic: LHb(Glu)→RMTg(GABA)→VTA(DA)
+**根拠**:
+  - Jhou et al. (2009) J Neurosci 29:8145-8155. DOI: 10.1523/JNEUROSCI.1049-09.2009
+    - RMTg (rostromedial tegmental nucleus) = principal GABAergic afferent to VTA DA
+    - RMTg neurons activated by aversive stimuli, inhibit DA neurons
+  - Barrot et al. (2012) Trends Neurosci 35:681-690. DOI: 10.1016/j.tins.2012.06.007
+    - "Braking dopamine systems: a new GABA master structure"
+    - RMTg provides tonic GABAergic brake on DA activity
+  - Yang et al. (2018) Nature 554:317: LHb burst → RMTg → DA pause
+**修正**:
+  - RMTg population追加 (10 neurons, PV type — GABAergic)
+  - LHb→RMTg: excitatory (Glu), p=0.20, w=3.0
+  - RMTg→VTA_DA_lat: strong inhibitory (GABA), p=0.30, w=6.0
+  - LHb→VTA直接結合を削除（disynapticに置換）
+
+## Change 11: DRN internal GABA interneurons (DR suppression)
+
+**日付**: 2026-04-13
+**問題**: DR sadness_suppressed=8.0Hz（文献: 2-4Hz, 20-40% reduction from baseline）
+  - LHb→DR直接抑制では不足
+  - 実際のDRN 5-HT抑制はDRN内部GABAergic介在ニューロンが媒介
+**根拠**:
+  - Challis et al. (2013) J Neurosci 33:18531-18539. DOI: 10.1523/JNEUROSCI.2145-13.2013
+    - DRN GABA neurons mediate social defeat avoidance
+    - DRN GABA interneurons directly inhibit 5-HT neurons
+  - Varga et al. (2001) J Neurosci 21:9406-9413. DOI: 10.1523/JNEUROSCI.21-23-09406.2001
+    - ~40% of DRN neurons are non-serotonergic (mainly GABAergic)
+    - GABA interneurons fire at higher rates and inhibit 5-HT neurons
+**修正**:
+  - DRN_GABA population追加 (10 neurons, PV type)
+  - LHb→DRN_GABA: excitatory, p=0.20, w=3.0
+  - DRN_GABA→DR(5-HT): strong inhibitory, p=0.40, w=6.0
+  - LHb→DR直接結合を削除（DRN_GABA経由に置換）

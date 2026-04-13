@@ -72,6 +72,8 @@ class SharedCoreConfig:
     n_lc: int = 15
     n_dr: int = 15
     n_aic: int = 20
+    n_rmtg: int = 10    # Jhou 2009: RMTg GABAergic relay for DA pause
+    n_drn_gaba: int = 10  # Challis 2013: DRN internal GABA interneurons
 
 
 @dataclass
@@ -123,6 +125,10 @@ class SharedCoreNetwork:
             PopulationDef("lc", self.cfg.n_lc, "NE_neuron"),
             PopulationDef("dr", self.cfg.n_dr, "5HT_neuron"),
             PopulationDef("aic", self.cfg.n_aic, "RS"),
+            # Jhou 2009 J Neurosci: RMTg = principal GABAergic afferent to VTA DA
+            PopulationDef("rmtg", self.cfg.n_rmtg, "PV"),
+            # Challis 2013 J Neurosci: DRN GABA interneurons inhibit 5-HT neurons
+            PopulationDef("drn_gaba", self.cfg.n_drn_gaba, "PV"),
         ]
 
         # 情動固有領域 (register_populationで追加)
@@ -163,6 +169,16 @@ class SharedCoreNetwork:
                                 "note": "5-HT→insula; de Jong 2022 Neuron"})
         self._conn_defs.append({"src": "dr", "tgt": "dlpag", "p": 0.10, "w": 2.0, "inh": True,
                                 "note": "5-HT inhibits aggression; de Boer 2009"})
+
+        # RMTg: GABAergic relay for DA pause (Jhou 2009 J Neurosci; Barrot 2012 TINS)
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_lat", "p": 0.30, "w": 6.0, "inh": True,
+                                "note": "RMTg→VTA DA: principal GABAergic brake; Jhou 2009"})
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 4.0, "inh": True,
+                                "note": "RMTg→VTA DA medial"})
+
+        # DRN_GABA: internal inhibition of 5-HT (Challis 2013; Varga 2001)
+        self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 6.0, "inh": True,
+                                "note": "DRN GABA→5-HT: ~40% of DRN neurons are GABAergic; Varga 2001"})
 
         # BNST → PVN (HPA activation)
         self._conn_defs.append({"src": "bnst", "tgt": "pvn_crh", "p": 0.15, "w": 2.5,
@@ -356,6 +372,8 @@ class SharedCoreNetwork:
             "bnst": 0.0,             # Davis 2010: LTS rheobase~0, bg_noise alone (I=1.7) → 3-8Hz
             "lc": 2.3,               # Sara & Bouret 2012: tonic 1-3Hz (I=4.0)
             "dr": 2.3,               # de Jong 2022: tonic 1-5Hz (I=4.0)
+            "rmtg": 3.3,             # Jhou 2009: PV type GABAergic (I=5.0)
+            "drn_gaba": 3.3,         # Challis 2013: PV type GABAergic (I=5.0)
             "aic": 2.3,              # Craig 2009: baseline (I=4.0)
             "pvn_crh": 2.3,
             "pvn_oxt": 2.3,
