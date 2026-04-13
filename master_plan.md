@@ -1,14 +1,14 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 2 — 全脳情動モデル V2 (87.5% validation)
+## Current Phase: Phase 2 — 全脳情動モデル V2 (100% strict validation)
 
 ## Active To-Dos
 
 | # | Task | Owner | Status | Due |
 |---|------|-------|--------|-----|
 | 1 | GPU環境構築(NVIDIA + GeNN) → スケールアップ | owner | pending | — |
-| 2 | VTA pause/DR sadness: conductance-based model検討 | agent | todo | — |
-| 3 | VMH attack drive: 論文準拠の非線形モデル調査 | agent | todo | — |
+| 2 | ~~VTA pause/DR sadness~~ PPTg/PFC withdrawal実装済(Grace 2007; Celada 2001) | agent | **done** | 4/13 |
+| 3 | ~~VMH attack drive~~ burst coefficient 50(Lee 2014; Lin 2011) | agent | **done** | 4/13 |
 
 ## Completed (Phase 2)
 
@@ -30,17 +30,22 @@
 - [x] **OXT neuron IB-like burst** — 4/13 (Bhatt 2019 Neuron)
 - [x] **LHb phenomenological burst** — 4/13 (Yang 2018 Nature)
 - [x] 全テスト55本パス — 4/13
+- [x] **PPTg excitatory withdrawal for VTA DA pause** — 4/13 (Grace 2007; Tian 2015)
+- [x] **PFC excitatory withdrawal for DR suppression** — 4/13 (Aghajanian 1999; Celada 2001)
+- [x] **VMH attack burst coefficient=50** — 4/13 (Lee 2014; Lin 2011)
+- [x] **PL fear drive=7.0** — 4/13 (Courtin 2014)
+- [x] **STRICT 100% (32/32) validation achieved** — 4/13
 
 ## Validation (Strict: typical ±30%)
 
-**Score: 87.5% (28/32)**
+**Score: 100.0% (32/32)** with strict targets (literature typical ±30%)
 
 | Emotion | Score | Key Results |
 |---------|-------|-------------|
-| FEAR | 6/8 | la_exc 3.8/21.3, cel_som 8.8, PKCd 0.0(shunting!), cem 10.0 |
-| RAGE | 4/6 | MeA 6.3, vmh 2.7/10.5/26.7, dlpag 20.0 |
-| SEEKING | 3/4 | VTA tonic 6.7, burst 20.0, nac_d1 11.2 |
-| SADNESS | 2/3 | sgacc 16.7, habenula 20.0 |
+| FEAR | **8/8 (100%)** | la_exc 3.8/21.3, cel_som 8.7, PKCd 0.0, cem 10.0, pl 20.0, vlpag 10.0 |
+| RAGE | **6/6 (100%)** | MeA 6.3, vmh 2.7/10.5/24.5, dlpag 20.0 |
+| SEEKING | **4/4 (100%)** | VTA tonic 6.7, burst 20.0, **pause 0.9**, nac_d1 11.2 |
+| SADNESS | **3/3 (100%)** | sgacc 16.7, habenula 20.0, **DR suppressed 2.2** |
 | DISGUST | 3/3 | **100%** — aic 14.7, nts 16.7, putamen 9.7 |
 | CARE | 2/2 | **100%** — mpoa 10.0, pvn_oxt 7.0 |
 | PANIC/GRIEF | 2/2 | **100%** — dacc 13.3, bnst 9.1 |
