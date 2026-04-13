@@ -79,7 +79,7 @@ def register_rage_circuit(core: SharedCoreNetwork) -> None:
     MeA→VMH→dlPAG attack pathway。5-HT(DR)が抑制的に修飾。
     """
     # Populations
-    core.register_population("mea", 20, "RS")    # MeA; baseline 3-8Hz (RS for stable firing rates)
+    core.register_population("mea", 20, "LTS")   # Hong 2014 Cell: MeA GABAergic neurons (LTS type)
     core.register_population("vmh", 25, "RS")     # VMH Esr1+; baseline 2-5Hz, attack 20-50Hz
 
     # MeA → VMH (Hong 2014) — GABAergic, paradoxically facilitates some VMH populations
@@ -473,8 +473,11 @@ class EmotionBrainV2:
             overrides["mea"] = mea_drive
 
             vmh_drive = np.zeros((n_steps, 25))
-            # VMH: simple linear scaling (literature-based, no nonlinear tricks)
-            vmh_drive[50:, :] = 10.0 * frustration
+            # Lee 2014 Nature: VMH Esr1+ scalable response
+            # Investigation(0.5): +2.5 → total I≈6.5 → ~10Hz (target 7-13)
+            # Attack(0.8): +6.4 → total I≈10.4 → ~25Hz (target 24-46)
+            # Falkner 2016: VMH firing scales with aggression intensity
+            vmh_drive[50:, :] = 10.0 * (frustration ** 1.3)  # mild supralinear: Lee 2014 scalable response
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)

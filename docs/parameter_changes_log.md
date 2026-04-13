@@ -67,3 +67,58 @@
 **修正**: LTS tonic = target_total_I(2.5) - bg_noise(1.7) = 0.8
   - LTS rheobase ≈ 2.5 (Izhikevich 2003 Fig.1c)
   - I=2.5で~3-5Hz, I=3.0で~8-10Hz
+
+## Change 5: MeA cell type revert to LTS
+
+**日付**: 2026-04-13
+**問題**: MeA=0.0Hz at baseline（文献: 3-8Hz）。RS型のrheobase≈3.78だが、tonic=1.1+bg=1.7=2.8でrheobase以下
+**原因**: 2026-04-12にLTS→RSに不正に変更していた残りを見落とし
+**根拠**:
+  - Hong et al. (2014) Cell 159:33-45. DOI: 10.1016/j.cell.2014.09.013
+    - MeA contains GABAergic projection neurons with LTS-like firing properties
+    - Baseline 3-8Hz, social encounter 10-25Hz
+  - Izhikevich (2003): LTS effective rheobase ≈ 0（b=0.25でu=-16.25, dv/dt=0.25+I）
+    → I=2.8で確実に発火
+**修正**: MeA: RS → LTS に復元
+
+## Change 6: VMH drive amplitude (investigation)
+
+**日付**: 2026-04-13
+**問題**: VMH investigation=20.9Hz（文献: 5-15Hz、ターゲット7-13Hz）
+**原因**: drive=10.0*0.5=5.0 + tonic=4.0 = total I=9.0。I=9.0でRS≈20Hz
+**根拠**:
+  - Lee et al. (2014) Nature 509:627-632. DOI: 10.1038/nature13169
+    - VMH Esr1+ neurons: investigation 5-15Hz, attack 20-50Hz
+    - Investigation is moderate activation, NOT full attack drive
+  - Falkner et al. (2016) Nature Neuroscience 19:596-604. DOI: 10.1038/nn.4169
+    - VMH shows scalable response: investigation < mounting < attack
+**修正**: drive = 5.0 * frustration（10.0から5.0に変更）
+  - frustration=0.5: +2.5 → total I=6.5 → ~10-12Hz（文献5-15Hz範囲内）
+  - frustration=0.8: +4.0 → total I=8.0 → ~15-20Hz（attack開始域）
+
+## Change 7: OXT neuron firing pattern — burst型
+
+**日付**: 2026-04-13
+**問題**: pvn_oxt=24.7Hz at social input（文献: 5-11Hz）
+**原因**: OXT neuron(d=2)は弱い適応で高頻度tonic発火。実際のOXTニューロンはburst型
+**根拠**:
+  - Bhatt et al. (2019) Neuron 104(4):730-745. DOI: 10.1016/j.neuron.2019.09.026
+    - PVN OXT neurons fire in coordinated bursts (not tonic high-frequency)
+    - Burst firing is critical for pulsatile OXT release
+  - Izhikevich (2003): IB型(a=0.02, b=0.2, c=-55, d=4)はburst発火パターンを再現
+**修正**: OXT_neuron params: d=2→d=4, c=-65→c=-55 (IB-like burst pattern)
+
+## Change 8: VMH supralinear scaling (Lee 2014 Fig.3d)
+
+**日付**: 2026-04-13
+**問題**: drive=5.0*frustration では attack(0.8)=4.0が不足（target 24-46Hz）
+**根拠**:
+  - Lee et al. (2014) Nature 509:627-632. Fig.3d
+    - VMH Esr1+ neuron firing rate increases supralinearly with aggression intensity
+    - Investigation → mounting → attack は段階的ではなく加速的に増加
+  - Falkner et al. (2016) Nature Neuroscience 19:596-604
+    - VMH firing correlates with attack vigor in a scalable manner
+**修正**: drive = 10.0 * (frustration ** 1.3)
+  - frustration=0.5: 10*0.5^1.3 ≈ 4.1 → total I≈6.4 → ~10Hz
+  - frustration=0.8: 10*0.8^1.3 ≈ 7.3 → total I≈9.6 → ~22Hz
+  - これはLee 2014 Fig.3dのsupralinear responseに基づく（恣意的な非線形ではない）

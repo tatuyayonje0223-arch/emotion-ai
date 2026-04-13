@@ -41,7 +41,7 @@ from src.brian2_circuits.neuron_models import IZH_TIMED_EQS, CELL_TYPES
 # ─── 追加セルタイプ（neuron_models.pyに将来追加予定）─────────────
 EXTENDED_CELL_TYPES: dict[str, dict[str, float]] = {
     **CELL_TYPES,
-    "OXT_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 2},  # original spec; d=2
+    "OXT_neuron": {"a": 0.02, "b": 0.2, "c": -55, "d": 4},  # Bhatt 2019 Neuron: OXT burst firing → IB-like
     "CRH_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},
     "5HT_neuron": {"a": 0.02, "b": 0.2, "c": -65, "d": 8},
     "NE_neuron":  {"a": 0.02, "b": 0.2, "c": -65, "d": 10},
@@ -353,7 +353,7 @@ class SharedCoreNetwork:
             "vta_da_lat": 2.8,       # Grace 2007: tonic 3-8Hz (I=4.5)
             "vta_da_med": 2.8,
             "vta_gaba": 2.3,         # Cohen 2012: PV type but moderate tonic (I=4.0)
-            "bnst": 1.1,             # Davis 2010: LTS, baseline 3-5Hz (I=2.8)
+            "bnst": 0.0,             # Davis 2010: LTS rheobase~0, bg_noise alone (I=1.7) → 3-8Hz
             "lc": 2.3,               # Sara & Bouret 2012: tonic 1-3Hz (I=4.0)
             "dr": 2.3,               # de Jong 2022: tonic 1-5Hz (I=4.0)
             "aic": 2.3,              # Craig 2009: baseline (I=4.0)
@@ -365,21 +365,21 @@ class SharedCoreNetwork:
             # ── FEAR ──
             "la_exc": 2.3,           # Quirk 2002: baseline 1-5Hz (I=4.0)
             "ba_exc": 2.8,           # Duvarci & Pare 2014: baseline 3-8Hz (I=4.5)
-            "cel_som": 1.1,          # CeL SOM+ is LTS type (I=2.8)
-            "cel_pkcd": 1.1,         # CeL PKCd+ is LTS-like (I=2.8) — baseline ~5Hz (Ciocchi 2010)
+            "cel_som": 0.0,          # CeL SOM+ LTS: rheobase~0, bg_noise alone
+            "cel_pkcd": 0.0,         # CeL PKCd+ LTS-like: rheobase~0, bg_noise alone
             "cem": 2.3,              # baseline 2-5Hz (I=4.0)
-            "itc": 1.1,              # ITC is LTS (I=2.8)
+            "itc": 0.0,              # ITC LTS: rheobase~0
             "pl": 2.3,               # Courtin 2014: baseline (I=4.0)
             "il": 2.3,               # Quirk 2002: baseline (I=4.0)
             "la_pv": 3.3,            # PV fast-spiking (I=5.0)
             "la_vip": 2.3,           # VIP: baseline (I=4.0)
             # ── RAGE ──
-            "mea": 1.1,              # Hong 2014: LTS type, baseline 3-8Hz (I=2.8)
+            "mea": 0.0,              # Hong 2014: LTS rheobase~0, bg_noise alone → 3-8Hz
             "vmh": 2.3,              # Lee 2014: RS, baseline 2-5Hz (I=4.0)
             # ── SEEKING ──
             "ofc_reward": 2.3,
             "vmpfc_value": 2.3,
-            "vp": 1.1,               # LTS type
+            "vp": 0.0,               # LTS: rheobase~0
             "lhb": 2.3,
             # ── SADNESS ──
             "sgacc": 2.3,            # Mayberg 1999: baseline ~12Hz in healthy
@@ -389,7 +389,7 @@ class SharedCoreNetwork:
             "putamen": 2.3,
             # ── CARE ──
             "mpoa": 2.3,             # Kohl 2018
-            "care_bnst": 1.1,        # LTS type
+            "care_bnst": 0.0,        # LTS: rheobase~0
             # ── PANIC/GRIEF ──
             "dacc": 2.3,             # Eisenberger 2003
             "grief_pag": 2.3,
