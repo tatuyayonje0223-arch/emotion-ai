@@ -403,7 +403,7 @@ class SharedCoreNetwork:
             "la_vip": 2.3,           # VIP: baseline (I=4.0)
             # ── RAGE ──
             "mea": 0.8,              # Hong 2014: LTS rheobase~0, bg_noise alone → 3-8Hz
-            "vmh": 2.0,              # Lee 2014: baseline 2-5Hz; I=3.7 for rheobase proximity
+            "vmh": 1.8,              # Lee 2014: baseline 2-5Hz; I=3.5
             # ── SEEKING ──
             "ofc_reward": 2.3,
             "vmpfc_value": 2.3,
@@ -411,7 +411,7 @@ class SharedCoreNetwork:
             "lhb": 2.3,
             # ── SADNESS ──
             "sgacc": 2.3,            # Mayberg 1999: baseline ~12Hz in healthy
-            "habenula": 2.3,
+            "habenula": 2.0,         # Matsumoto 2007: baseline, target 10-20Hz with loss drive
             # ── DISGUST ──
             "nts_disgust": 2.3,
             "putamen": 2.3,

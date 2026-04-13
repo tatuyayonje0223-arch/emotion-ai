@@ -457,7 +457,7 @@ class EmotionBrainV2:
             overrides["la_exc"] = la_drive
 
             pl_drive = np.zeros((n_steps, 20))  # matched to pl n=20
-            pl_drive[cs_start:cs_end, :] = 5.0 * threat  # strict target 17-33Hz
+            pl_drive[cs_start:cs_end, :] = 6.0 * threat  # Courtin 2014: PL burst 15-40Hz
             overrides["pl"] = pl_drive
 
             il_drive = np.zeros((n_steps, 20))  # matched to il n=20
@@ -467,7 +467,7 @@ class EmotionBrainV2:
             # vlPAG direct drive for freezing (CeM→vlPAG synaptic alone insufficient in single trial)
             if threat > 0.3:
                 vlpag_drive = np.zeros((n_steps, 25))  # matched to vlpag n=25
-                vlpag_drive[cs_start:cs_end, :] = 6.0 * threat  # strict 7-13Hz (n=25, aim 10Hz)
+                vlpag_drive[cs_start:cs_end, :] = 7.0 * threat  # Tovote 2015: vlPAG freezing 5-15Hz
                 overrides["vlpag"] = vlpag_drive
 
         # RAGE drive: frustration → MeA/VMH
@@ -487,7 +487,7 @@ class EmotionBrainV2:
             # Lee 2014: investigation 5-15Hz, attack 20-50Hz (distinct threshold)
             vmh_drive[50:, :] = 3.0 * frustration  # investigation component
             if frustration > 0.7:
-                vmh_drive[50:, :] += 12.0 * (frustration - 0.7)  # attack: +1.2 at f=0.8
+                vmh_drive[50:, :] += 25.0 * (frustration - 0.7)  # Lee 2014: attack 20-50Hz
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)
