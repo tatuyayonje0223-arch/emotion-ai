@@ -484,9 +484,10 @@ class EmotionBrainV2:
             # Lee 2014 Nature Fig.3d: scalable response with distinct attack threshold
             # Investigation (f=0.5): moderate drive → target 7-13Hz
             # Attack (f>0.7): strong drive → target 24-46Hz
-            vmh_drive[50:, :] = 3.0 * frustration
+            # Lee 2014: investigation 5-15Hz, attack 20-50Hz (distinct threshold)
+            vmh_drive[50:, :] = 3.0 * frustration  # investigation component
             if frustration > 0.7:
-                vmh_drive[50:, :] += 6.0 * (frustration - 0.7)  # attack burst
+                vmh_drive[50:, :] += 12.0 * (frustration - 0.7)  # attack: +1.2 at f=0.8
             overrides["vmh"] = vmh_drive
 
             # dlPAG attack drive (VMH→dlPAG alone insufficient, add direct drive)

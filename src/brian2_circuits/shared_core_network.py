@@ -171,13 +171,13 @@ class SharedCoreNetwork:
                                 "note": "5-HT inhibits aggression; de Boer 2009"})
 
         # RMTg: GABAergic relay for DA pause (Jhou 2009 J Neurosci; Barrot 2012 TINS)
-        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_lat", "p": 0.30, "w": 6.0, "inh": True,
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_lat", "p": 0.30, "w": 6.0, "inh": True, "shunting": True,
                                 "note": "RMTg→VTA DA: principal GABAergic brake; Jhou 2009"})
-        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 4.0, "inh": True,
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 4.0, "inh": True, "shunting": True,
                                 "note": "RMTg→VTA DA medial"})
 
         # DRN_GABA: internal inhibition of 5-HT (Challis 2013; Varga 2001)
-        self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 6.0, "inh": True,
+        self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 6.0, "inh": True, "shunting": True,
                                 "note": "DRN GABA→5-HT: ~40% of DRN neurons are GABAergic; Varga 2001"})
 
         # BNST → PVN (HPA activation)
@@ -304,7 +304,7 @@ class SharedCoreNetwork:
                 # Effect scales with (V - E_GABA): stronger when target is depolarized
                 # E_GABA = -75 mV; normalized by 30 for Izhikevich v range
                 syn = Synapses(self._G, self._G, "w : 1",
-                               on_pre="v_post += w * (v_post + 75) / 30",
+                               on_pre="v_post -= w * (v_post + 75) / 30",
                                name=f"cs{uid}")
             else:
                 syn = Synapses(self._G, self._G, "w : 1",
@@ -395,7 +395,7 @@ class SharedCoreNetwork:
             "ba_exc": 2.8,           # Duvarci & Pare 2014: baseline 3-8Hz (I=4.5)
             "cel_som": 1.0,          # CeL SOM+ LTS: rheobase~0, bg_noise alone
             "cel_pkcd": 0.0,         # CeL PKCd+ LTS-like: rheobase~0, bg_noise alone
-            "cem": 2.3,              # baseline 2-5Hz (I=4.0)
+            "cem": 2.6,              # Ciocchi 2010: baseline 2-5Hz, need input-driven to reach 10Hz              # baseline 2-5Hz (I=4.0)
             "itc": 1.0,              # ITC LTS: rheobase~0
             "pl": 2.3,               # Courtin 2014: baseline (I=4.0)
             "il": 2.3,               # Quirk 2002: baseline (I=4.0)
