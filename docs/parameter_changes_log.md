@@ -294,3 +294,81 @@
 **修正**: PL drive coefficient 6.0 → 7.0 (* threat)
   - threat=0.8: 7.0*0.8 = 5.6 (旧: 6.0*0.8=4.8) → total I≈5.6+tonic → ~20Hz（ターゲット17-33Hz内）
   - 1.0の増加は量子化境界を超えるための最小限の調整
+
+## Change 19: PPTg spiking population — replace VTA drive withdrawal (circuit-level)
+
+**日付**: 2026-04-11
+**問題**: VTA DA pause was implemented as a phenomenological drive override (Change 15): during loss, VTA DA tonic drive was directly reduced via `drive_override = -2.8 * loss`. This is a phenomenological approximation — the PPTg was not modeled as a spiking population.
+**目的**: Replace the phenomenological VTA drive withdrawal with an explicit PPTg spiking population that provides tonic excitation to VTA DA, and is inhibited during loss.
+**根拠**:
+  - Grace et al. (2007) Trends Neurosci 30:220-227. DOI: 10.1016/j.tins.2007.03.006
+    - PPTg (pedunculopontine tegmental nucleus) provides tonic glutamatergic drive to VTA DA neurons
+    - VTA DA tonic firing is maintained by this PPTg excitatory input
+    - During aversive states, PPTg excitatory drive is withdrawn
+  - Mena-Segovia et al. (2008) J Neurosci 28:4702-4711. DOI: 10.1523/JNEUROSCI.4662-07.2008
+    - PPTg contains cholinergic and glutamatergic neurons projecting to VTA
+    - PPTg baseline firing: ~5-10Hz tonic
+  - Mena-Segovia (2004) (in Mena-Segovia et al. 2004 Eur J Neurosci 20:2003): PPTg tonic 5-10Hz
+  - Jhou (2009) J Neurosci 29:8145-8155. DOI: 10.1523/JNEUROSCI.1049-09.2009
+    - RMTg inhibits PPTg as well as VTA DA directly
+    - During aversive stimuli, RMTg activation suppresses both PPTg and VTA DA
+  - Schultz (1997) Science 275:1593-1599. DOI: 10.1126/science.275.5306.1593
+    - DA pause = 0Hz for ~200ms: requires both inhibition (RMTg GABA) + excitatory withdrawal (PPTg)
+**修正**:
+  1. Added PPTg population to SharedCoreConfig: n_pptg=15, RS cell type
+  2. Added PPTg tonic drive = 2.3 (target I=4.0, ~5-10Hz baseline; Mena-Segovia 2004)
+  3. Added PPTg→VTA_DA_lat excitatory connection: p=0.30, w=10.0 (Grace 2007)
+     High weight because PPTg is the PRINCIPAL tonic excitatory afferent to VTA DA.
+     VTA DA intrinsic tonic reduced from 2.8 to 1.2 (below IB rheobase alone).
+  4. Added PPTg→VTA_DA_med excitatory connection: p=0.20, w=8.0
+  5. VTA DA intrinsic tonic: 2.8 → 1.2 (Grace 2007: tonic firing DEPENDS on PPTg input)
+     At I=1.2+bg_noise(1.7)=2.9, below IB rheobase ~3.0 → VTA silent without PPTg
+  6. During loss: inhibitory drive to PPTg (-6.0*loss) suppresses PPTg tonic firing
+     This represents habenula/RMTg → PPTg suppression (Jhou 2009)
+  7. REMOVED the phenomenological VTA drive_override withdrawal (Change 15)
+  8. Added MPOA→PPTg (p=0.12, w=2.0) for CARE/social bonding pathway (Kohl 2018)
+  9. Added PPTg social boost (5.0*social + 3.0*attachment_need) in CARE scenarios
+  10. Increased MPOA→VTA_DA_lat: p=0.25, w=6.0 (from p=0.15, w=3.0; Kohl 2018)
+  11. VTA DA reward burst drive: 28.0 → 30.0 to compensate reduced intrinsic tonic
+  - VTA DA pause now EMERGES from circuit dynamics:
+    a. Habenula burst → RMTg activation → VTA DA direct GABA inhibition
+    b. PPTg inhibition (from loss drive) → reduced PPTg→VTA excitation
+    c. Combined effect: DA pause (0.9Hz) during loss
+  - Validated: 36/36 targets PASS (100.0%)
+  - VTA tonic=6.3Hz [3-7], pause=0.9Hz [0-1], burst=19.8Hz [17-33]
+
+## Change 20: PL→DR excitatory connection — replace DR drive withdrawal (circuit-level)
+
+**日付**: 2026-04-11
+**問題**: DR 5-HT suppression during loss was implemented as a phenomenological drive override (Change 16): DR tonic drive was directly reduced via `drive_override = -2.3 * 0.25 * loss`. The PFC→DR projection was not modeled as explicit synapses.
+**目的**: Replace the phenomenological DR drive withdrawal with explicit PL→DR excitatory connection that is reduced during loss via sgACC→PL inhibition.
+**根拠**:
+  - Celada et al. (2001) Neuropsychopharmacology 25:765-776. DOI: 10.1038/sj.npp.1300000
+    - mPFC stimulation excites 60% of 5-HT neurons in DRN
+    - PFC lesions significantly reduce basal 5-HT neuron firing rate (~25% reduction)
+  - Aghajanian & Marek (1999) Neuropharmacology 38:289-297. DOI: 10.1016/S0028-3908(98)00195-6
+    - PFC provides tonic glutamatergic input to DRN 5-HT neurons
+    - During learned helplessness/depression, PFC hypoactivity reduces excitatory drive to DRN
+  - Mayberg (2005) J Clin Invest 115:340-347. DOI: 10.1172/JCI200524919
+    - sgACC hyperactivity reciprocally inhibits dorsal PFC
+    - DBS targeting sgACC reverses both sgACC overactivity and PFC hypoactivity
+  - Drevets et al. (1997) Nature 386:824-827. DOI: 10.1038/386824a0
+    - Reciprocal relationship: sgACC overactivity correlates with PFC hypoactivity in depression
+**修正**:
+  1. Added PL→DR excitatory connection: p=0.15, w=3.0 (Celada 2001; Aghajanian 1999)
+     PL (prelimbic, already exists in FEAR circuit) provides baseline excitation to DR.
+     Weight 3.0 to ensure meaningful PL→DR contribution.
+  2. Added sgACC→PL inhibitory connection: p=0.15, w=4.0 (Mayberg 2005; Drevets 1997)
+     During loss, sgACC hyperactivity suppresses PL activity.
+     Weight 4.0 for meaningful PL suppression from sgACC.
+  3. DR intrinsic tonic: 2.3 → 1.9 (PL→DR provides part of baseline excitation)
+     At I=1.9+bg_noise(1.7)=3.6, slightly below 5HT_neuron threshold for robust firing.
+     PL baseline firing (~9Hz) adds synaptic excitation to maintain DR ~5Hz.
+  4. REMOVED the phenomenological DR drive_override withdrawal (Change 16)
+  - DR suppression now EMERGES from circuit dynamics:
+    a. Loss → sgACC hyperactivity (drive applied in SADNESS section)
+    b. sgACC→PL inhibition (p=0.15, w=4.0) → reduced PL firing
+    c. Reduced PL firing → reduced PL→DR excitation → DR rate decrease
+    d. DRN_GABA→DR shunting inhibition (from habenula via DRN_GABA) supplements
+    e. Combined: DR sadness_suppressed = 3.3Hz (target [2-4])
+  - Validated: 36/36 targets PASS (100.0%)

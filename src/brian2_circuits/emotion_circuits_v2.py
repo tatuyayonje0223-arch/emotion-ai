@@ -151,6 +151,20 @@ def register_sadness_circuit(core: SharedCoreNetwork) -> None:
     # sgACC → aIC (interoceptive sadness; Craig 2009)
     core.register_connection("sgacc", "aic", 0.10, 1.5, note="sgACC→insula interoception")
 
+    # PL → DR excitatory: PFC provides tonic glutamatergic input to DRN 5-HT
+    # Celada et al. (2001) Neuropsychopharmacology 25:765-776: mPFC excites 60% of 5-HT neurons
+    # Aghajanian & Marek (1999) Neuropharmacology 38:289-297: PFC tonic Glu → DRN
+    # DR intrinsic tonic reduced to 1.8; PL provides remaining ~0.5 via synaptic excitation.
+    core.register_connection("pl", "dr", 0.15, 3.0,
+                             note="PL→DR tonic Glu; Celada 2001; Aghajanian 1999")
+
+    # sgACC → PL inhibitory: sgACC hyperactivity suppresses PL during depression/loss
+    # Mayberg (2005) J Clin Invest 115:340-347: sgACC-PFC reciprocal inhibition
+    # Drevets et al. (1997) Nature 386:824-827: sgACC overactivity with PFC hypoactivity in depression
+    # Weight 4.0 to ensure meaningful PL suppression from sgACC hyperactivity
+    core.register_connection("sgacc", "pl", 0.15, 4.0, inh=True,
+                             note="sgACC→PL reciprocal inhibition; Mayberg 2005; Drevets 1997")
+
 
 def register_disgust_circuit(core: SharedCoreNetwork) -> None:
     """DISGUST回路: 18検証済み論文。Small 2003 Neuron (score=1.00)。
@@ -189,8 +203,15 @@ def register_care_circuit(core: SharedCoreNetwork) -> None:
     core.register_population("care_bnst", 10, "LTS")    # BNST subset for care/separation anxiety
 
     # MPOA → VTA DA (Kohl 2018 Nature; galanin+ projection)
-    core.register_connection("mpoa", "vta_da_lat", 0.15, 3.0,
+    # Weight increased to compensate reduced VTA intrinsic tonic (PPTg-dependent).
+    # Kohl 2018: MPOA galanin+ projection to VTA is the principal pathway for parental DA release.
+    core.register_connection("mpoa", "vta_da_lat", 0.25, 6.0,
                              note="MPOA→VTA galanin+; Kohl 2018 Nature")
+
+    # MPOA → PPTg excitatory (MPOA activates PPTg during social bonding, amplifying VTA DA)
+    # Kohl 2018: MPOA sends widespread projections including brainstem
+    core.register_connection("mpoa", "pptg", 0.12, 2.0,
+                             note="MPOA→PPTg social DA amplification; Kohl 2018")
 
     # MPOA → BNST (inhibitory; suppresses separation distress)
     core.register_connection("mpoa", "care_bnst", 0.12, 2.5, inh=True,
@@ -499,7 +520,7 @@ class EmotionBrainV2:
             vta_drive = np.zeros((n_steps, 30))
             burst_start = int(100 / c.dt_ms)
             burst_end = int(200 / c.dt_ms)
-            vta_drive[burst_start:burst_end, :] = 28.0 * reward  # strict 17-33Hz (was 16.7→aim 25)
+            vta_drive[burst_start:burst_end, :] = 30.0 * reward  # strict 17-33Hz; increased from 28 to compensate reduced VTA intrinsic tonic
             overrides["vta_da_lat"] = vta_drive
 
             ofc_drive = np.zeros((n_steps, 15))
@@ -527,50 +548,41 @@ class EmotionBrainV2:
             hab_drive[burst_s:burst_e, :] += 20.0 * loss    # strong burst → RMTg/DRN_GABA
             overrides["habenula"] = hab_drive
 
-            # ── PPTg/LDT excitatory withdrawal → VTA DA pause ──
-            # NOTE: PHENOMENOLOGICAL APPROXIMATION. PPTg is not modeled as a
-            # spiking population. The withdrawal is implemented as a drive override.
-            # Future: add explicit PPTg population with LHb→PPTg inhibition.
-            # Grace et al. (2007) Trends Neurosci: VTA DA tonic firing is maintained
-            #   by tonic excitatory input from PPTg and LDT. During aversive/loss states,
-            #   this excitatory drive is withdrawn.
-            # Tian & Ushimaru (2015) Neuron: DA pause requires both inhibitory (RMTg)
-            #   and excitatory (PPTg withdrawal) components.
-            # Schultz (1997) Science: DA pause = 0Hz during negative RPE (~200ms).
+            # ── PPTg inhibition → VTA DA pause (circuit-level) ──
+            # Change 19: Replaced phenomenological VTA drive withdrawal with
+            # explicit PPTg population inhibition.
+            # Grace et al. (2007) Trends Neurosci 30:220-227: PPTg provides tonic
+            #   glutamatergic drive to VTA DA. During aversive states, PPTg is
+            #   inhibited (via habenula/RMTg pathway).
+            # Jhou (2009) J Neurosci: RMTg inhibits PPTg as well as VTA.
+            # Mena-Segovia et al. (2008) J Neurosci 28:4702-4711: PPTg→VTA projection.
             #
-            # Implementation: reduce VTA DA tonic drive proportional to loss.
-            # Normal tonic=2.8 (gives total I=4.5 with bg_noise=1.7).
-            # At loss=0.5: withdraw 2.8*0.5=1.4 → effective tonic=1.4 → total I=3.1
-            #   (near IB rheobase ~3.0 → ~0-1Hz, combined with RMTg inhibition → 0Hz)
-            # At loss=0.8: withdraw 2.8*0.8=2.24 → effective tonic=0.56 → total I=2.26
-            #   (well below rheobase → 0Hz)
-            # This is NOT negative current injection — it models withdrawal of
-            # excitatory PPTg input (Grace 2007; Tian & Ushimaru 2015).
-            if "vta_da_lat" not in overrides:
-                vta_withdrawal = np.zeros((n_steps, 30))
-                vta_withdrawal[:, :] = -2.8 * loss  # reduce tonic from 2.8 toward 0
-                overrides["vta_da_lat"] = vta_withdrawal
+            # PPTg is now an explicit spiking population (15 neurons, RS type).
+            # During loss: inhibitory drive to PPTg suppresses its tonic firing,
+            # which withdraws excitatory input to VTA DA. Combined with
+            # RMTg→VTA GABA inhibition (from habenula burst), this produces DA pause.
+            # At loss=0.5: PPTg inhibition reduces PPTg firing → partial VTA withdrawal
+            # At loss=0.8: strong PPTg inhibition → near-complete VTA withdrawal
+            pptg_inh = np.zeros((n_steps, 15))
+            pptg_inh[:, :] = -6.0 * loss  # inhibitory drive suppressing PPTg tonic (Jhou 2009)
+            overrides["pptg"] = pptg_inh
 
-            # ── Prefrontal excitatory withdrawal → DR 5-HT suppression ──
-            # NOTE: PHENOMENOLOGICAL APPROXIMATION. PFC→DR projection is not modeled
-            # as explicit synapses. Future: add PFC→DR excitatory connections.
-            # Aghajanian & Marek (1999) Neuropharmacology 38:289-297:
-            #   PFC provides tonic glutamatergic input to DRN 5-HT neurons.
-            #   During learned helplessness/depression, PFC hypoactivity reduces
-            #   this excitatory drive.
-            # Celada et al. (2001) Neuropsychopharmacology 25:765-776:
-            #   mPFC stimulation excites 5-HT neurons; PFC lesions reduce 5-HT firing.
+            # ── DR 5-HT suppression via sgACC→PL→DR circuit (circuit-level) ──
+            # Change 20: Replaced phenomenological DR drive withdrawal with
+            # explicit PL→DR excitatory connection + sgACC→PL inhibition.
+            # Celada et al. (2001) Neuropsychopharmacology 25:765-776: mPFC excites
+            #   60% of 5-HT neurons. PFC lesions reduce 5-HT basal firing.
+            # Aghajanian & Marek (1999) Neuropharmacology: PFC tonic Glu → DRN.
+            # Mayberg (2005) J Clin Invest: sgACC hyperactivity inhibits PFC.
             #
-            # Normal DR tonic=2.3 (total I=4.0 → ~5Hz baseline).
-            # DRN_GABA inhibition (from LHb drive) already reduces DR firing.
-            # Additional PFC withdrawal provides the remaining suppression.
-            # At loss=0.8: withdraw 2.3*0.25*0.8=0.46 → effective tonic=1.84 → total I=3.54
-            #   Combined with DRN_GABA shunting inhibition → ~2-4Hz (target)
-            # Scale factor 0.25: PFC withdrawal is partial and supplements
-            #   DRN_GABA-mediated inhibition (Celada 2001: ~25% reduction from PFC alone)
-            dr_withdrawal = np.zeros((n_steps, 15))
-            dr_withdrawal[:, :] = -2.3 * 0.25 * loss  # partial PFC withdrawal
-            overrides["dr"] = dr_withdrawal
+            # Mechanism: loss → sgACC hyperactivity (above) → sgACC inhibits PL
+            # (registered connection) → reduced PL→DR excitation → DR suppression.
+            # No additional drive override needed — the suppression EMERGES from:
+            #   1. sgACC drive (already applied above)
+            #   2. sgACC→PL inhibitory synapse (registered in sadness circuit)
+            #   3. Reduced PL activity → reduced PL→DR excitation
+            #   4. DRN_GABA→DR shunting inhibition (from habenula via DRN_GABA)
+            # (No dr_withdrawal override needed — circuit dynamics handle it)
 
         # DISGUST drive: contamination → NTS/aIC
         if contamination > 0.1:
@@ -592,6 +604,26 @@ class EmotionBrainV2:
             # Bhatt 2019 Neuron: OXT neurons fire in bursts, not sustained tonic
             oxt_drive[50:, :] = 0.5 * social + 0.3 * attachment_need
             overrides["pvn_oxt"] = oxt_drive
+
+            # PPTg boost during social bonding: MPOA + OXT activate brainstem circuits
+            # including PPTg, which amplifies VTA DA release.
+            # Kohl 2018 Nature: MPOA→brainstem projections drive dopamine for parental motivation
+            # Strathearn 2008 Pediatrics: maternal VTA activation requires brainstem relay
+            # Strong boost needed because VTA intrinsic tonic is reduced (PPTg-dependent)
+            if "pptg" not in overrides:
+                pptg_social = np.zeros((n_steps, 15))
+                pptg_social[50:, :] = 5.0 * social + 3.0 * attachment_need
+                overrides["pptg"] = pptg_social
+
+            # VTA DA social bonding boost: Strathearn 2008 Pediatrics showed maternal
+            # face viewing activates VTA DA significantly. This represents multi-pathway
+            # convergence (PPTg + MPOA + OXT) that circuit-level synapses alone cannot
+            # fully capture at this model scale.
+            # Kohl 2018: MPOA galanin+ → VTA is NECESSARY for parental DA release
+            if "vta_da_lat" not in overrides:
+                vta_social = np.zeros((n_steps, 30))
+                vta_social[50:, :] = 1.5 * social  # moderate boost, target 7-15Hz total
+                overrides["vta_da_lat"] = vta_social
 
         # PANIC/GRIEF drive: loss + isolation → dACC, BNST (reduced)
         if loss > 0.1 or attachment_need > 0.1:

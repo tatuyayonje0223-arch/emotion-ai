@@ -15,13 +15,14 @@ class TestSharedCoreBasic:
     def test_shared_region_count(self):
         core = SharedCoreNetwork()
         core.build()
-        # 16 shared populations (14 + rmtg + drn_gaba)
+        # 17 shared populations (14 + rmtg + drn_gaba + pptg)
         shared_names = [
             "vlpag", "dlpag", "bnst", "pvn_crh", "pvn_oxt",
             "vta_da_lat", "vta_da_med", "vta_gaba",
             "nac_shell_d1", "nac_shell_d2", "nac_core_d1",
             "lc", "dr", "aic",
             "rmtg", "drn_gaba",  # Jhou 2009; Challis 2013
+            "pptg",  # Grace 2007; Mena-Segovia 2008
         ]
         for name in shared_names:
             assert name in core.population_names, f"{name} missing"
@@ -35,7 +36,8 @@ class TestSharedCoreBasic:
                     cfg.n_vta_da_lat + cfg.n_vta_da_med + cfg.n_vta_gaba +
                     cfg.n_nac_shell_d1 + cfg.n_nac_shell_d2 + cfg.n_nac_core_d1 +
                     cfg.n_lc + cfg.n_dr + cfg.n_aic +
-                    cfg.n_rmtg + cfg.n_drn_gaba)
+                    cfg.n_rmtg + cfg.n_drn_gaba +
+                    cfg.n_pptg)
         assert core.total_neurons == expected
 
     def test_register_population(self):

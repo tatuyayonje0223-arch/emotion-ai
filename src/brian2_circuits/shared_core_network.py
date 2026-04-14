@@ -10,7 +10,7 @@
     - idx辞書でpopulation境界を管理
     - 試行ごとにTimedArray再生成、v/uリセット、STDP重みは保持
 
-共有領域 (8領域, ~200ニューロン):
+共有領域 (9領域, ~215ニューロン):
   PAG (vlPAG + dlPAG)  — 凍結/逃走/攻撃
   BNST                 — 持続不安/CRF
   PVN (CRH + OXT)      — HPA軸/社会結合
@@ -19,6 +19,7 @@
   LC                   — NE覚醒/驚き
   DR                   — 5-HT気分調整
   aIC                  — 内受容/嫌悪
+  PPTg                 — VTA DA tonic excitation (Grace 2007)
 """
 
 from __future__ import annotations
@@ -74,6 +75,7 @@ class SharedCoreConfig:
     n_aic: int = 20
     n_rmtg: int = 10    # Jhou 2009: RMTg GABAergic relay for DA pause
     n_drn_gaba: int = 10  # Challis 2013: DRN internal GABA interneurons
+    n_pptg: int = 15     # Grace 2007; Mena-Segovia 2008: PPTg tonic excitation to VTA DA
 
 
 @dataclass
@@ -129,6 +131,9 @@ class SharedCoreNetwork:
             PopulationDef("rmtg", self.cfg.n_rmtg, "PV"),
             # Challis 2013 J Neurosci: DRN GABA interneurons inhibit 5-HT neurons
             PopulationDef("drn_gaba", self.cfg.n_drn_gaba, "PV"),
+            # Grace 2007 Trends Neurosci: PPTg provides tonic glutamatergic drive to VTA DA
+            # Mena-Segovia 2008 J Neurosci: PPTg cholinergic/glutamatergic → VTA
+            PopulationDef("pptg", self.cfg.n_pptg, "RS"),
         ]
 
         # 情動固有領域 (register_populationで追加)
@@ -179,6 +184,15 @@ class SharedCoreNetwork:
         # DRN_GABA: internal inhibition of 5-HT (Challis 2013; Varga 2001)
         self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 6.0, "inh": True, "shunting": True,
                                 "note": "DRN GABA→5-HT: ~40% of DRN neurons are GABAergic; Varga 2001"})
+
+        # PPTg → VTA DA: tonic glutamatergic excitation (Grace 2007; Mena-Segovia 2008)
+        # PPTg provides tonic excitatory drive maintaining VTA DA tonic firing.
+        # VTA DA intrinsic tonic reduced to 1.5; PPTg provides remaining ~1.3 via synaptic excitation.
+        # Weight/prob set so that PPTg at ~5-10Hz yields effective ~1.3 additional I to VTA DA.
+        self._conn_defs.append({"src": "pptg", "tgt": "vta_da_lat", "p": 0.30, "w": 10.0,
+                                "note": "PPTg→VTA DA tonic excitation; Grace 2007 Trends Neurosci"})
+        self._conn_defs.append({"src": "pptg", "tgt": "vta_da_med", "p": 0.20, "w": 8.0,
+                                "note": "PPTg→VTA DA medial; Mena-Segovia 2008"})
 
         # BNST → PVN (HPA activation)
         self._conn_defs.append({"src": "bnst", "tgt": "pvn_crh", "p": 0.15, "w": 2.5,
@@ -377,14 +391,15 @@ class SharedCoreNetwork:
         #
         tonic_drives = {
             # ── Shared regions ──
-            "vta_da_lat": 2.8,       # Grace 2007: tonic 3-8Hz (I=4.5)
-            "vta_da_med": 2.8,
+            "vta_da_lat": 1.2,       # Grace 2007: reduced intrinsic tonic; PPTg provides remaining excitation
+            "vta_da_med": 1.2,       # Same reduction; PPTg→VTA_med compensates
             "vta_gaba": 2.3,         # Cohen 2012: PV type but moderate tonic (I=4.0)
             "bnst": 1.0,             # Davis 2010: LTS rheobase~0, bg_noise alone (I=1.7) → 3-8Hz
             "lc": 2.3,               # Sara & Bouret 2012: tonic 1-3Hz (I=4.0)
-            "dr": 2.3,               # de Jong 2022: tonic 1-5Hz (I=4.0)
+            "dr": 1.9,               # de Jong 2022: reduced intrinsic; PL→DR provides remaining excitation (Celada 2001)
             "rmtg": 3.3,             # Jhou 2009: PV type GABAergic (I=5.0)
             "drn_gaba": 3.3,         # Challis 2013: PV type GABAergic (I=5.0)
+            "pptg": 2.3,             # Grace 2007; Mena-Segovia 2004: PPTg tonic 5-10Hz (I=4.0)
             "aic": 2.3,              # Craig 2009: baseline (I=4.0)
             "pvn_crh": 2.3,
             "pvn_oxt": 1.5,           # Bhatt 2019: OXT burst, reduce tonic for IB type

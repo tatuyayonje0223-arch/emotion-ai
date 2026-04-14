@@ -147,6 +147,8 @@ CARE_TARGETS = [
     FiringRateTarget("mpoa", "social_bonding", 7, 13, "Kohl 2018 Nature; Wu 2014 Nature", typical_hz=10.0),
     # PVN OXT: typical 8Hz, ±30% = 5.6-10.4
     FiringRateTarget("pvn_oxt", "social_bonding", 5, 11, "Kirsch 2005 J Neurosci", typical_hz=8.0),
+    # VTA DA should increase with social bonding (Strathearn 2008: infant cues activate VTA)
+    FiringRateTarget("vta_da_lat", "social_bonding", 7, 15, "Strathearn 2008 Pediatrics", typical_hz=10.0),
 ]
 
 # ═══════════════════════════════════════════════════════════
@@ -158,6 +160,8 @@ PANIC_GRIEF_TARGETS = [
     FiringRateTarget("dacc", "separation", 10, 20, "Eisenberger 2003 Science", typical_hz=15.0),
     # BNST: typical 10Hz, ±30% = 7-13
     FiringRateTarget("bnst", "separation", 7, 13, "Davis 2010; Bosch 2009", typical_hz=10.0),
+    # PVN CRH should increase during separation (Bosch 2009: CRF in BNST during loss)
+    FiringRateTarget("pvn_crh", "separation", 5, 15, "Bosch 2009 Neuropsychopharmacol", typical_hz=10.0),
 ]
 
 # ═══════════════════════════════════════════════════════════
@@ -167,6 +171,8 @@ PANIC_GRIEF_TARGETS = [
 PLAY_TARGETS = [
     # PFA: typical 10Hz, ±30% = 7-13
     FiringRateTarget("pfa_thalamus", "social_play", 7, 13, "Siviy & Panksepp 2011", typical_hz=10.0),
+    # Play cortex should also activate (Siviy 2011: prefrontal cortex during play)
+    FiringRateTarget("play_cortex", "social_play", 5, 15, "Siviy & Panksepp 2011", typical_hz=10.0),
 ]
 
 # ═══════════════════════════════════════════════════════════
@@ -176,6 +182,8 @@ PLAY_TARGETS = [
 LUST_TARGETS = [
     # MPOA: typical 12Hz, ±30% = 8.4-15.6
     FiringRateTarget("lust_mpoa", "sexual_arousal", 8, 16, "Dominguez & Hull 2005", typical_hz=12.0),
+    # VTA DA during sexual arousal (Dominguez & Hull 2005: DA release in MPOA increases)
+    FiringRateTarget("vta_da_lat", "sexual_arousal", 7, 15, "Dominguez & Hull 2005", typical_hz=10.0),
 ]
 
 # ═══════════════════════════════════════════════════════════
