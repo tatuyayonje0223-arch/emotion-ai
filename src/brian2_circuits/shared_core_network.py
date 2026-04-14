@@ -181,6 +181,11 @@ class SharedCoreNetwork:
         self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 4.0, "inh": True, "shunting": True,
                                 "note": "RMTg→VTA DA medial"})
 
+        # RMTg → PPTg: inhibits PPTg during aversive states (Jhou 2009)
+        # RMTg→PPTg: shunting inhibition for effective PPTg suppression (Jhou 2009)
+        self._conn_defs.append({"src": "rmtg", "tgt": "pptg", "p": 0.30, "w": 8.0, "inh": True, "shunting": True,
+                                "note": "RMTg→PPTg GABA shunting; Jhou 2009: RMTg inhibits PPTg"})
+
         # DRN_GABA: internal inhibition of 5-HT (Challis 2013; Varga 2001)
         self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 6.0, "inh": True, "shunting": True,
                                 "note": "DRN GABA→5-HT: ~40% of DRN neurons are GABAergic; Varga 2001"})

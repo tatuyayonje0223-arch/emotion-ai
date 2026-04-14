@@ -208,10 +208,10 @@ def register_care_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("mpoa", "vta_da_lat", 0.25, 6.0,
                              note="MPOA→VTA galanin+; Kohl 2018 Nature")
 
-    # MPOA → PPTg excitatory (MPOA activates PPTg during social bonding, amplifying VTA DA)
-    # Kohl 2018: MPOA sends widespread projections including brainstem
+    # MPOA → PPTg: SPECULATIVE. MPOA→VTA is primary (Kohl 2018).
+    # Direct MPOA→PPTg not strongly documented. Included as plausible brainstem pathway.
     core.register_connection("mpoa", "pptg", 0.12, 2.0,
-                             note="MPOA→PPTg social DA amplification; Kohl 2018")
+                             note="SPECULATIVE: MPOA→PPTg; Kohl 2018 shows brainstem projections")
 
     # MPOA → BNST (inhibitory; suppresses separation distress)
     core.register_connection("mpoa", "care_bnst", 0.12, 2.5, inh=True,
@@ -559,13 +559,10 @@ class EmotionBrainV2:
             #
             # PPTg is now an explicit spiking population (15 neurons, RS type).
             # During loss: inhibitory drive to PPTg suppresses its tonic firing,
-            # which withdraws excitatory input to VTA DA. Combined with
-            # RMTg→VTA GABA inhibition (from habenula burst), this produces DA pause.
-            # At loss=0.5: PPTg inhibition reduces PPTg firing → partial VTA withdrawal
-            # At loss=0.8: strong PPTg inhibition → near-complete VTA withdrawal
-            pptg_inh = np.zeros((n_steps, 15))
-            pptg_inh[:, :] = -6.0 * loss  # inhibitory drive suppressing PPTg tonic (Jhou 2009)
-            overrides["pptg"] = pptg_inh
+            # PPTg inhibition is now handled by RMTg→PPTg circuit connection
+            # (SharedCoreNetwork._init_shared_connections, Jhou 2009).
+            # Habenula burst → RMTg activation → RMTg inhibits both VTA DA and PPTg.
+            # No drive override needed — circuit dynamics handle it.
 
             # ── DR 5-HT suppression via sgACC→PL→DR circuit (circuit-level) ──
             # Change 20: Replaced phenomenological DR drive withdrawal with
@@ -610,6 +607,8 @@ class EmotionBrainV2:
             # Kohl 2018 Nature: MPOA→brainstem projections drive dopamine for parental motivation
             # Strathearn 2008 Pediatrics: maternal VTA activation requires brainstem relay
             # Strong boost needed because VTA intrinsic tonic is reduced (PPTg-dependent)
+            # SPECULATIVE: PPTg social drive. PPTg is mainly locomotion/arousal
+            # (Mena-Segovia 2004). Social→PPTg pathway not well-documented.
             if "pptg" not in overrides:
                 pptg_social = np.zeros((n_steps, 15))
                 pptg_social[50:, :] = 5.0 * social + 3.0 * attachment_need

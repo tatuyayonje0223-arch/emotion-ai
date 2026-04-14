@@ -286,14 +286,18 @@ class EmotionLLMBridgeV2:
 
 
 def _fallback_response_v2(result: IntegratedResultV2) -> str:
-    """V2 LLM不可時の定型応答。"""
+    """V2 LLM不可時の定型応答。全10情動対応。"""
     dominant = result.emotion_state.get("dominant_emotion", "none")
-    if dominant == "FEAR":
-        return "状況を把握しています。落ち着いて対処しましょう。"
-    if dominant == "SEEKING":
-        return "良い方向に進んでいますね。"
-    if dominant == "SADNESS":
-        return "大変な状況ですね。一緒に考えましょう。"
-    if dominant == "CARE":
-        return "温かい気持ちですね。"
-    return "承知しました。"
+    responses = {
+        "FEAR": "状況を把握しています。落ち着いて対処しましょう。",
+        "RAGE": "強い感情が生じている状態です。少し時間を置きましょう。",
+        "SEEKING": "良い方向に進んでいますね。",
+        "SADNESS": "大変な状況ですね。一緒に考えましょう。",
+        "DISGUST": "不快な状況ですね。距離を置くのも一つの方法です。",
+        "CARE": "温かい気持ちですね。",
+        "PANIC_GRIEF": "つらい気持ちは自然なことです。",
+        "PLAY": "楽しい時間ですね。",
+        "LUST": "承知しました。",
+        "SURPRISE": "予想外の展開ですね。状況を整理しましょう。",
+    }
+    return responses.get(dominant, "承知しました。")
