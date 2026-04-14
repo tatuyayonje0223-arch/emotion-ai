@@ -7,8 +7,8 @@
 | # | Task | Owner | Status | Due |
 |---|------|-------|--------|-----|
 | 1 | GPU環境構築(NVIDIA + GeNN) → スケールアップ | owner | pending | — |
-| 2 | ~~VTA pause/DR sadness~~ PPTg/PFC withdrawal実装済(Grace 2007; Celada 2001) | agent | **done** | 4/13 |
-| 3 | ~~VMH attack drive~~ burst coefficient 50(Lee 2014; Lin 2011) | agent | **done** | 4/13 |
+| 2 | ~~VTA/DR~~ PPTg circuit + PFC→DR circuit-level(Grace 2007; Celada 2001; Mena-Segovia 2008) | agent | **done** | 4/14 |
+| 3 | ~~VMH attack~~ + PL fear + Phase B targets expanded | agent | **done** | 4/14 |
 
 ## Completed (Phase 2)
 
@@ -17,7 +17,7 @@
 - [x] DOI補完: 36/45件発見 + 7件年/著者修正 — 4/11
 - [x] 文献パラメータDB + 独立監査(5R/CRIT=0) — 4/11
 - [x] Shared Core Network: 16共有領域(+RMTg/DRN_GABA) — 4/11-4/13
-- [x] 全10回路スパイキング化: 685→~740 neurons/46 populations — 4/11-4/12
+- [x] 全10回路スパイキング化: 685→~760 neurons/47 populations — 4/11-4/12
 - [x] IntegratedBrainV2: neuromod/sleep/safety/policy統合 — 4/11
 - [x] GitHub公開: tatuyayonje0223-arch/emotion-ai — 4/11
 - [x] SBI較正(ABC rejection score=0.881) — 4/11
@@ -35,6 +35,12 @@
 - [x] **VMH attack burst coefficient=50** — 4/13 (Lee 2014; Lin 2011)
 - [x] **PL fear drive=7.0** — 4/13 (Courtin 2014)
 - [x] **STRICT 100% (32/32) validation achieved** — 4/13
+- [x] **PPTg spiking population** — 4/14 (Grace 2007; Mena-Segovia 2008)
+- [x] **PL→DR + sgACC→PL circuit connections** — 4/14 (Celada 2001; Mayberg 2005)
+- [x] **Phenomenological approximations eliminated** — 4/14
+- [x] **Phase B targets expanded** (CARE VTA, PANIC CRH, PLAY cortex, LUST VTA) — 4/14
+- [x] **STRICT 100% (36/36) all circuit-level** — 4/14
+- [x] 全テスト93本パス(V2 55 + V1 38) — 4/14
 
 ## Validation (Strict: typical ±30%)
 
@@ -74,7 +80,7 @@
 | PLAY | PFA, play_cortex | 30 |
 | LUST | lust_MPOA, lust_hypo | 20 |
 | SURPRISE | surprise_amyg, surprise_PFC | 25 |
-| **Total** | **46 populations** | **~740** |
+| **Total** | **47 populations** | **~760** |
 
 ## Literature Foundation
 

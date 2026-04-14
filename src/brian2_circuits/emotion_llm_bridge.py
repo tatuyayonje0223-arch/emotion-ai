@@ -179,3 +179,121 @@ def _fallback_response(result: IntegratedResult) -> str:
     if tone == "cautious":
         return "慎重に考えてみましょう。"
     return "承知しました。"
+
+
+class EmotionLLMBridgeV2:
+    """IntegratedBrainV2 + LLM の統合。10情動が反映された応答生成。"""
+
+    def __init__(self, provider: LLMProvider | None = None):
+        if not _HAS_V2:
+            raise ImportError("IntegratedBrainV2 not available")
+        self._brain = IntegratedBrainV2()
+        self._provider = provider or get_best_provider()
+        self._conversation: list[dict[str, str]] = []
+
+    def _describe_v2_state(self, result: IntegratedResultV2) -> str:
+        """V2の10情動状態を人間が読める説明に変換。"""
+        emotions = result.emotion_state.get("emotions", {})
+        parts = []
+
+        # 支配的情動
+        dominant = result.emotion_state.get("dominant_emotion", "none")
+        if dominant != "none":
+            parts.append(f"支配的情動: {dominant}")
+
+        # 活性度が高い情動をリスト
+        active = [(k, v) for k, v in emotions.items() if v > 0.1]
+        active.sort(key=lambda x: x[1], reverse=True)
+        if active:
+            emo_str = ", ".join(f"{k}={v:.2f}" for k, v in active[:3])
+            parts.append(f"活性: {emo_str}")
+
+        # valence/arousal
+        readout = result.readout
+        if readout.valence > 0.3:
+            parts.append("ポジティブ")
+        elif readout.valence < -0.3:
+            parts.append("ネガティブ")
+        if readout.arousal > 0.6:
+            parts.append("高覚醒")
+
+        return "、".join(parts) if parts else "通常の安定状態"
+
+    def chat(self, user_input: str) -> dict:
+        """テキスト入力→V2脳処理→LLM応答生成。"""
+        brain_result = self._brain.process(user_input)
+
+        if brain_result.blocked:
+            return {
+                "user_input": user_input,
+                "llm_response": "[安全フィルタによりブロック]",
+                "emotion_state": {},
+                "model_used": "blocked",
+            }
+
+        state_desc = self._describe_v2_state(brain_result)
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+            state_description=state_desc,
+            tone=brain_result.policy.tone,
+            intervention=brain_result.policy.intervention_level,
+        )
+
+        user_prompt = ""
+        if self._conversation:
+            recent = self._conversation[-6:]
+            user_prompt += "【直前の対話】\n"
+            for msg in recent:
+                role = "ユーザー" if msg["role"] == "user" else "AI"
+                user_prompt += f"  {role}: {msg['content'][:100]}\n"
+            user_prompt += "\n"
+        user_prompt += f"【ユーザー】\n{user_input}"
+
+        try:
+            response = self._provider.generate(system_prompt, user_prompt)
+            llm_text = response.raw_text
+            model = self._provider.name
+        except Exception:
+            llm_text = _fallback_response_v2(brain_result)
+            model = "fallback"
+
+        safety = check_anthropomorphic_claims(llm_text)
+        if not safety.passed:
+            llm_text = "[安全フィルタ: 擬人化表現を検出]"
+
+        self._conversation.append({"role": "user", "content": user_input})
+        self._conversation.append({"role": "assistant", "content": llm_text})
+
+        return {
+            "user_input": user_input,
+            "llm_response": llm_text,
+            "emotion_state": brain_result.emotion_state,
+            "readout": {
+                "valence": brain_result.readout.valence,
+                "arousal": brain_result.readout.arousal,
+                "threat_load": brain_result.readout.threat_load,
+            },
+            "neuromodulation": brain_result.neuromodulation,
+            "spiking_neurons": brain_result.spiking_neurons,
+            "model_used": model,
+        }
+
+    def sleep(self, n_cycles: int = 1) -> list[dict]:
+        return self._brain.sleep(n_cycles)
+
+    def reset(self) -> None:
+        self._brain.reset()
+        self._conversation.clear()
+
+
+def _fallback_response_v2(result: IntegratedResultV2) -> str:
+    """V2 LLM不可時の定型応答。"""
+    dominant = result.emotion_state.get("dominant_emotion", "none")
+    if dominant == "FEAR":
+        return "状況を把握しています。落ち着いて対処しましょう。"
+    if dominant == "SEEKING":
+        return "良い方向に進んでいますね。"
+    if dominant == "SADNESS":
+        return "大変な状況ですね。一緒に考えましょう。"
+    if dominant == "CARE":
+        return "温かい気持ちですね。"
+    return "承知しました。"
