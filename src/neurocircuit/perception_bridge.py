@@ -60,8 +60,10 @@ def perception_to_sensory(signal: PerceptionSignal, raw_text: str = "") -> Senso
     social_count = sum(1 for w in social_words if w in raw_text.lower())
     social = min(1.0, social_count * 0.2 + abs(sentiment) * 0.1)
 
-    # novelty: 覚醒度ベース
+    # novelty: 覚醒度ベース（脅威時は低下: Pessoa 2009 Nat Rev Neurosci — threat narrows attention）
     novelty = min(1.0, arousal * 0.8 * confidence)
+    if threat > 0.3:
+        novelty *= (1.0 - threat * 0.5)  # threat suppresses novelty processing
 
     # pain: 強いネガティブ + 脅威
     pain = 0.0

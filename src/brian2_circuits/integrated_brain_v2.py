@@ -94,8 +94,8 @@ class IntegratedBrainV2:
                 social=sensory.social_signal,
                 novelty=sensory.novelty_signal,
                 pain=sensory.pain_input,
-                loss=max(0, sensory.threat_signal * 0.3 - sensory.reward_signal * 0.5),
-                frustration=max(0, sensory.pain_input * 0.5 + sensory.threat_signal * 0.3 - sensory.reward_signal * 0.3),
+                loss=max(0, sensory.pain_input * 0.3 - sensory.reward_signal * 0.3),  # loss from pain, not threat
+                frustration=max(0, sensory.pain_input * 0.3 + sensory.threat_signal * 0.1 - sensory.reward_signal * 0.3),
                 contamination=max(0, sensory.pain_input * 0.3 - sensory.reward_signal * 0.5),
                 attachment_need=sensory.social_signal * 0.5,
             )

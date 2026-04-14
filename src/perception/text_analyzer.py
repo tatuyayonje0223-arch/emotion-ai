@@ -36,8 +36,11 @@ _THREAT_WORDS = {
     "脅威", "危険", "攻撃", "批判", "失う", "死", "終わり", "崩壊",
     "殺", "暴力", "事故", "災害", "地震", "火事", "戦争", "逃げ",
     "怒鳴", "殴", "刺", "銃", "爆発", "恐ろしい", "脅す",
+    "怖い", "怖", "恐怖", "助けて", "助け", "やばい", "逃げろ", "パニック",
+    "不安", "心配", "恐ろしい", "震え", "泣き", "叫び",
     "threat", "danger", "attack", "lose", "death", "collapse", "destroy",
     "kill", "violence", "accident", "disaster", "war", "bomb", "weapon",
+    "scared", "afraid", "terrified", "help", "panic", "anxiety", "fear",
 }
 
 
@@ -79,10 +82,11 @@ def analyze_text(text: str) -> PerceptionSignal:
     arousal = min(1.0, base_arousal + arousal_boost)
 
     # 信頼度: テキスト長と感情語の存在に依存
-    if word_count < 3:
-        confidence = 0.2
-    elif total_emotional == 0:
-        confidence = 0.3
+    if total_emotional == 0:
+        confidence = 0.2 if word_count < 3 else 0.3
+    elif word_count < 3:
+        # 短文でも感情語があれば信頼度を上げる
+        confidence = min(0.7, 0.3 + total_emotional * 0.1)
     else:
         confidence = min(0.9, 0.4 + total_emotional * 0.1)
 
