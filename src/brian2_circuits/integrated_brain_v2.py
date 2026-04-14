@@ -87,17 +87,35 @@ class IntegratedBrainV2:
             )
 
         # 3. 10情動回路処理
+        # 10-emotion keyword analysis (always re-analyze for reliable features)
+        from src.perception.text_analyzer import analyze_text
+        sig = analyze_text(text)
+        feat = sig.features
+        conf = sig.confidence
+
+        sadness_hits = feat.get("sadness_hits", 0)
+        disgust_hits = feat.get("disgust_hits", 0)
+        rage_hits = feat.get("rage_hits", 0)
+        panic_hits = feat.get("panic_grief_hits", 0)
+        care_hits = feat.get("care_hits", 0)
+        play_hits = feat.get("play_hits", 0)
+        lust_hits = feat.get("lust_hits", 0)
+        surprise_hits = feat.get("surprise_hits", 0)
+
         try:
+            # Map 10 emotion keyword counts to EmotionBrainV2 input channels
+            # Scale: each keyword hit adds 0.3 intensity (enough to cross 0.1 threshold)
+            _s = lambda hits, scale=0.3: min(1.0, hits * scale)
             emotion = self._emotion_brain.process(
-                threat=sensory.threat_signal,
-                reward=sensory.reward_signal,
-                social=sensory.social_signal,
-                novelty=sensory.novelty_signal,
+                threat=max(sensory.threat_signal, _s(feat.get("fear_hits", 0))),
+                reward=max(sensory.reward_signal, _s(feat.get("seeking_hits", 0), 0.25)),
+                social=max(sensory.social_signal, _s(care_hits + play_hits, 0.2)),
+                novelty=max(sensory.novelty_signal, _s(surprise_hits, 0.3)),
                 pain=sensory.pain_input,
-                loss=max(0, sensory.pain_input * 0.3 - sensory.reward_signal * 0.3),  # loss from pain, not threat
-                frustration=max(0, sensory.pain_input * 0.3 + sensory.threat_signal * 0.1 - sensory.reward_signal * 0.3),
-                contamination=max(0, sensory.pain_input * 0.3 - sensory.reward_signal * 0.5),
-                attachment_need=sensory.social_signal * 0.5,
+                loss=_s(sadness_hits + panic_hits, 0.3),
+                frustration=_s(rage_hits, 0.35),
+                contamination=_s(disgust_hits, 0.4),
+                attachment_need=_s(care_hits + panic_hits + lust_hits, 0.2),
             )
         except Exception as e:
             # Brian2実行時エラーのフォールバック: 中立状態を返す
