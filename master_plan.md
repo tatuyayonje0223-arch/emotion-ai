@@ -1,14 +1,28 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 2 — 全脳情動モデル V2 (100% strict validation)
+## Current Phase: Phase 3 — Conductance-based inhibition + CeA expansion (100% strict validation)
 
 ## Active To-Dos
 
 | # | Task | Owner | Status | Due |
 |---|------|-------|--------|-----|
 | 1 | GPU環境構築(NVIDIA + GeNN) → スケールアップ | owner | pending | — |
-| 2 | ~~VTA/DR~~ PPTg circuit + PFC→DR circuit-level(Grace 2007; Celada 2001; Mena-Segovia 2008) | agent | **done** | 4/14 |
-| 3 | ~~VMH attack~~ + PL fear + Phase B targets expanded | agent | **done** | 4/14 |
+
+## Completed (Phase 3)
+
+- [x] **Conductance-based GABA_A inhibition (g_inh state variable)** — 4/15
+  - dg_inh/dt = -g_inh / (5*ms), I_inh = g_inh * clip(v+75, 0, 200)
+  - VTA DA pause: 0.9Hz → **0.3Hz** (true pause)
+  - DR suppression: 2.2Hz → **2.4Hz** (stable partial)
+  - clip() prevents E_GABA reversal instability in Izhikevich
+- [x] **CeA microcircuit expansion (PB + CeL_CRF+)** — 4/15
+  - PB (parabrachial): 8 neurons, nociceptor relay (Li 2013 Nat Neurosci)
+  - CeL_CRF+: 10 neurons, sustained anxiety (Pomrenze 2015)
+  - ~760→~778 neurons, 47→49 populations
+- [x] **README updated for V2/V3 achievements** — 4/15
+- [x] **Text analyzer keyword expansion (pain/threat)** — 4/15
+  - 496/496 tests pass (was 494/496)
+- [x] **STRICT 100% (36/36) maintained** — 4/15
 
 ## Completed (Phase 2)
 
@@ -44,33 +58,33 @@
 
 ## Validation (Strict: typical ±30%)
 
-**Score: 100.0% (32/32)** with strict targets (literature typical ±30%)
+**Score: 100.0% (36/36)** with strict targets (literature typical ±30%)
 
 | Emotion | Score | Key Results |
 |---------|-------|-------------|
-| FEAR | **8/8 (100%)** | la_exc 3.8/21.3, cel_som 8.7, PKCd 0.0, cem 10.0, pl 20.0, vlpag 10.0 |
-| RAGE | **6/6 (100%)** | MeA 6.3, vmh 2.7/10.5/24.5, dlpag 20.0 |
-| SEEKING | **4/4 (100%)** | VTA tonic 6.7, burst 20.0, **pause 0.9**, nac_d1 11.2 |
-| SADNESS | **3/3 (100%)** | sgacc 16.7, habenula 20.0, **DR suppressed 2.2** |
-| DISGUST | 3/3 | **100%** — aic 14.7, nts 16.7, putamen 9.7 |
-| CARE | 2/2 | **100%** — mpoa 10.0, pvn_oxt 7.0 |
-| PANIC/GRIEF | 2/2 | **100%** — dacc 13.3, bnst 9.1 |
-| PLAY | 1/1 | **100%** — pfa 10.0 |
-| LUST | 1/1 | **100%** — lust_mpoa 10.3 |
+| FEAR | **8/8 (100%)** | la_exc 4.2/21.2, cel_som 9.2, PKCd 0.0, cem 10.0, pl 19.7, vlpag 10.0 |
+| RAGE | **6/6 (100%)** | MeA 5.7/19.5, vmh 2.9/10.9/24.8, dlpag 20.0 |
+| SEEKING | **4/4 (100%)** | VTA tonic 6.0, burst 19.8, **pause 0.3**, nac_d1 10.5 |
+| SADNESS | **3/3 (100%)** | sgacc 16.7, habenula 20.0, **DR suppressed 2.4** |
+| DISGUST | 3/3 | **100%** — aic 15.3, nts 16.3, putamen 9.5 |
+| CARE | 3/3 | **100%** — mpoa 10.0, pvn_oxt 7.7, vta 8.4 |
+| PANIC/GRIEF | 3/3 | **100%** — dacc 13.3, bnst 9.8, pvn_crh 10.0 |
+| PLAY | 2/2 | **100%** — pfa 10.0, play_cortex 13.3 |
+| LUST | 2/2 | **100%** — lust_mpoa 10.0, vta 12.6 |
 | SURPRISE | 2/2 | **100%** — lc 10.0, surprise_amyg 10.0 |
 
-### Structural Limitations (4 FAIL, not fixable by parameter tuning)
-- pl fear: 16.7Hz (quantization, -0.3Hz)
-- vmh attack: 20.0Hz (drive insufficient for 24-46Hz)
-- **VTA DA pause: 6.7Hz** (Izhikevich current-based cannot achieve complete pause)
-- **DR sadness: 6.7Hz** (same structural limitation)
+### Former Structural Limitations — RESOLVED (4/15)
+- ~~VTA DA pause: 6.7Hz~~ → **0.3Hz** (conductance-based g_inh inhibition)
+- ~~DR sadness: 6.7Hz~~ → **2.4Hz** (conductance-based g_inh inhibition)
+- PL fear: 19.7Hz (within strict range [17-33])
+- VMH attack: 24.8Hz (within strict range [24-46])
 
-## Architecture V2
+## Architecture V3
 
 | Layer | Components | Neurons |
 |-------|-----------|---------|
-| Shared Core | PAG, BNST, PVN, VTA, NAc, LC, DR, aIC, **RMTg**, **DRN_GABA** | ~265 |
-| FEAR | LA, BA, CeL(SOM/PKCd), CeM, ITC, PL, IL, LA_PV, LA_VIP | ~200 |
+| Shared Core | PAG, BNST, PVN, VTA, NAc, LC, DR, aIC, **RMTg**, **DRN_GABA**, **PPTg** | ~265 |
+| FEAR | LA, BA, CeL(SOM/PKCd/**CRF**), CeM, ITC, **PB**, PL, IL, LA_PV, LA_VIP | ~218 |
 | RAGE | MeA, VMH | 45 |
 | SEEKING | OFC, vmPFC, VP, LHb | 50 |
 | SADNESS | sgACC, Habenula | 35 |
@@ -80,21 +94,21 @@
 | PLAY | PFA, play_cortex | 30 |
 | LUST | lust_MPOA, lust_hypo | 20 |
 | SURPRISE | surprise_amyg, surprise_PFC | 25 |
-| **Total** | **47 populations** | **~760** |
+| **Total** | **49 populations** | **~778** |
 
 ## Literature Foundation
 
-232 verified papers. 24 parameter changes with paper citations.
+232 verified papers. 23+ parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
-## Phase 3 — Next Steps
+## Phase 4 — Next Steps
 
 | Task | Requires | Priority |
 |------|----------|----------|
-| Conductance-based VTA/DR model | AdEx or HH neurons | P1 |
-| GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 |
-| Complete CeA microcircuit | Additional interneurons | P2 |
-| GitHub README update | — | P3 |
+| GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
+| Full AdEx neuron model migration | Replace Izhikevich entirely | P2 |
+| Complete CeA: VIP+/PV+ interneurons | Additional cell types | P3 |
+| Behavioral test battery | Scenario definitions | P3 |
 
 ## Completed (Phase 1)
 
