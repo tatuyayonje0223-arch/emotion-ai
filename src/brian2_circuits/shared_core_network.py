@@ -176,18 +176,22 @@ class SharedCoreNetwork:
                                 "note": "5-HT inhibits aggression; de Boer 2009"})
 
         # RMTg: GABAergic relay for DA pause (Jhou 2009 J Neurosci; Barrot 2012 TINS)
-        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_lat", "p": 0.30, "w": 6.0, "inh": True, "shunting": True,
+        # Conductance-based g_inh: RMTg baseline ~3-5Hz (tonic=1.0) → minimal baseline inhibition.
+        # During loss: habenula burst → RMTg ~25-30Hz → strong g_inh accumulation → DA pause.
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_lat", "p": 0.30, "w": 5.0, "inh": True, "shunting": True,
                                 "note": "RMTg→VTA DA: principal GABAergic brake; Jhou 2009"})
-        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 4.0, "inh": True, "shunting": True,
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 3.5, "inh": True, "shunting": True,
                                 "note": "RMTg→VTA DA medial"})
 
         # RMTg → PPTg: inhibits PPTg during aversive states (Jhou 2009)
-        # RMTg→PPTg: shunting inhibition for effective PPTg suppression (Jhou 2009)
-        self._conn_defs.append({"src": "rmtg", "tgt": "pptg", "p": 0.30, "w": 8.0, "inh": True, "shunting": True,
+        # Strong suppression removes PPTg tonic excitation to VTA (excitatory withdrawal pathway)
+        self._conn_defs.append({"src": "rmtg", "tgt": "pptg", "p": 0.30, "w": 4.0, "inh": True, "shunting": True,
                                 "note": "RMTg→PPTg GABA shunting; Jhou 2009: RMTg inhibits PPTg"})
 
         # DRN_GABA: internal inhibition of 5-HT (Challis 2013; Varga 2001)
-        self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 6.0, "inh": True, "shunting": True,
+        # Target: partial suppression to 2-4Hz during sadness (from ~6Hz baseline)
+        # Moderate weight: stronger than initial but less than RMTg→VTA (partial, not complete)
+        self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 3.0, "inh": True, "shunting": True,
                                 "note": "DRN GABA→5-HT: ~40% of DRN neurons are GABAergic; Varga 2001"})
 
         # PPTg → VTA DA: tonic glutamatergic excitation (Grace 2007; Mena-Segovia 2008)
@@ -318,13 +322,13 @@ class SharedCoreNetwork:
                 on_post="A_ltd -= 0.3; w = clip(w + A_ltp, 0, 15)",
                 name=f"cs{uid}")
             elif cdef.get("shunting"):
-                # Conductance-based (shunting) inhibition (Chance 2002 PNAS)
-                # I_inh = g*(V - E_GABA), E_GABA=-75mV.
-                # Brian2 WARNING: in-place v_post is execution-order dependent.
-                # Functionally correct for our network (verified by tests).
-                # Future: use conductance-based synapse model for strict correctness.
+                # True conductance-based (shunting) inhibition (Chance 2002 PNAS)
+                # Each pre-spike increments g_inh conductance (GABA_A).
+                # Continuous dynamics: dg_inh/dt = -g_inh/tau_g, I_inh = g_inh*(v+75)
+                # Replaces instantaneous v_post kick with proper conductance state.
+                # Bartos 2007 Nat Rev Neurosci: GABA_A tau ≈ 5ms
                 syn = Synapses(self._G, self._G, "w : 1",
-                               on_pre="v_post -= w * (v_post + 75) / 30",
+                               on_pre="g_inh_post += w",
                                name=f"cs{uid}")
             else:
                 syn = Synapses(self._G, self._G, "w : 1",
@@ -402,8 +406,8 @@ class SharedCoreNetwork:
             "bnst": 1.0,             # Davis 2010: LTS rheobase~0, bg_noise alone (I=1.7) → 3-8Hz
             "lc": 2.3,               # Sara & Bouret 2012: tonic 1-3Hz (I=4.0)
             "dr": 1.9,               # de Jong 2022: reduced intrinsic; PL→DR provides remaining excitation (Celada 2001)
-            "rmtg": 3.3,             # Jhou 2009: PV type GABAergic (I=5.0)
-            "drn_gaba": 3.3,         # Challis 2013: PV type GABAergic (I=5.0)
+            "rmtg": 1.8,             # Jhou 2009: PV rheobase≈3.0, I=3.5 → baseline ~5-8Hz
+            "drn_gaba": 1.8,         # Challis 2013: PV type, I=3.5 → baseline ~5-8Hz
             "pptg": 2.3,             # Grace 2007; Mena-Segovia 2004: PPTg tonic 5-10Hz (I=4.0)
             "aic": 2.3,              # Craig 2009: baseline (I=4.0)
             "pvn_crh": 2.3,
@@ -418,6 +422,8 @@ class SharedCoreNetwork:
             "cel_pkcd": 0.0,         # CeL PKCd+ LTS-like: rheobase~0, bg_noise alone
             "cem": 2.6,              # Ciocchi 2010: baseline 2-5Hz, need input-driven to reach 10Hz              # baseline 2-5Hz (I=4.0)
             "itc": 1.0,              # ITC LTS: rheobase~0
+            "pb": 2.3,               # Li 2013: parabrachial nociceptor relay (I=4.0)
+            "cel_crf": 0.5,          # CeL CRF+ LTS: low tonic, mainly input-driven (Pomrenze 2015)
             "pl": 2.3,               # Courtin 2014: baseline (I=4.0)
             "il": 2.3,               # Quirk 2002: baseline (I=4.0)
             "la_pv": 3.3,            # PV fast-spiking (I=5.0)
@@ -480,9 +486,10 @@ class SharedCoreNetwork:
         # 新TimedArray (Brian2キャッシュバグ回避)
         self._I_drive = TimedArray(drive, dt=c.dt_ms * ms)
 
-        # v/uリセット
+        # v/u/g_inhリセット
         self._G.v = -65 + noise_rng.normal(0, 2, self._total_n)
         self._G.u = 0.2 * self._G.v[:]
+        self._G.g_inh = 0  # conductance reset
 
         # スパイクモニターリセット
         self._mon.resize(0)

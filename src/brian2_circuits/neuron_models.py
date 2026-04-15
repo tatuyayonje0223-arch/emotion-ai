@@ -23,10 +23,16 @@ import numpy as np
 
 # === Izhikevich方程式テンプレート ===
 
-# TimedArray駆動版（v2回路で使用）
+# TimedArray駆動版（v2回路で使用）— conductance-based inhibition対応
+# g_inh: GABA_A conductance state variable (Chance 2002 PNAS)
+# True shunting inhibition: I_inh = g_inh * (v - E_GABA), E_GABA = -75mV
+# tau_g = 5ms (GABA_A decay; Bartos 2007 Nat Rev Neurosci)
+# clip(v+75, 0, 200): prevents reversal below E_GABA in Izhikevich model
+#   (real conductance reversal is physical but Izhikevich dynamics cause instability)
 IZH_TIMED_EQS = """
-    dv/dt = (0.04*v**2 + 5*v + 140 - u + I_drive(t, i)) / ms : 1
+    dv/dt = (0.04*v**2 + 5*v + 140 - u + I_drive(t, i) - g_inh*clip(v + 75, 0, 200)) / ms : 1
     du/dt = (a*(b*v - u)) / ms : 1
+    dg_inh/dt = -g_inh / (5*ms) : 1
     a : 1 (constant)
     b : 1 (constant)
     c : 1 (constant)

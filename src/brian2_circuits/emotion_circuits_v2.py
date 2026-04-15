@@ -40,6 +40,13 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_population("pl", 20, "RS")  # increased for rate resolution (Courtin 2014)
     core.register_population("il", 20, "RS")  # 15→20 for finer rate resolution
 
+    # P2 expansion: Parabrachial nucleus + CeL CRF+ neurons
+    # PB: direct nociceptor relay to CeA (Li 2013 Nat Neurosci 16:332-339)
+    core.register_population("pb", 8, "RS")
+    # CeL CRF+: CRF-expressing CeL neurons (Pomrenze 2015; Marchant 2007)
+    # Distinct from SOM+: drives sustained anxiety via BNST projection
+    core.register_population("cel_crf", 10, "LTS")
+
     # Intra-amygdala connections (Duvarci & Pare 2014; Ciocchi 2010)
     core.register_connection("la_exc", "la_pv", 0.3, 3.0)
     core.register_connection("la_pv", "la_exc", 0.4, 4.0, inh=True)
@@ -47,15 +54,33 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("la_exc", "ba_exc", 0.20, 3.0, stdp=True, note="LA→BA serial; STDP")
     core.register_connection("la_exc", "cel_som", 0.15, 2.0, stdp=True, note="LA→CeL SOM+; YAML p=0.15-0.20")
     core.register_connection("ba_exc", "cel_som", 0.10, 1.5, note="BA→CeL SOM+; YAML p=0.05-0.10")
-    # Conductance-based (shunting) inhibition for CeA disinhibition
+    # True conductance-based (shunting) inhibition for CeA disinhibition
     # Li 2013 Nat Neurosci: IPSC ~20pA at -40mV → g≈0.6nS
     # Chance 2002 PNAS: shunting inhibition produces divisive gain modulation
-    core.register_connection("cel_som", "cel_pkcd", 0.70, 8.0, inh=True, shunting=True,
+    # Weight recalibrated for continuous g_inh conductance model (was 8.0)
+    core.register_connection("cel_som", "cel_pkcd", 0.70, 1.6, inh=True, shunting=True,
                              note="Shunting inh; Li 2013; Chance 2002; Ciocchi 2010")
     core.register_connection("cel_pkcd", "cel_som", 0.3, 3.0, inh=True)
     core.register_connection("cel_pkcd", "cem", 0.3, 1.5, inh=True, note="tonic inhibition of CeM")
     core.register_connection("cel_som", "cem", 0.6, 8.0, note="CeA disinhibition pathway")
     core.register_connection("ba_exc", "cem", 0.25, 4.0)
+
+    # PB → CeA: nociceptor relay (Li 2013 Nat Neurosci 16:332-339)
+    # PB→CeL is the primary pain-to-fear bypass (avoids thalamic relay)
+    core.register_connection("pb", "cel_som", 0.20, 2.5,
+                             note="PB→CeL SOM+ nociceptor relay; Li 2013 Nat Neurosci")
+    core.register_connection("pb", "cel_crf", 0.15, 2.0,
+                             note="PB→CeL CRF+ pain; Li 2013")
+
+    # CeL_CRF connections (Pomrenze 2015; Marchant 2007)
+    core.register_connection("cel_crf", "bnst", 0.20, 3.0,
+                             note="CeL CRF+→BNST sustained anxiety; Pomrenze 2015")
+    core.register_connection("cel_crf", "cem", 0.15, 2.0,
+                             note="CeL CRF+→CeM amplifies fear output")
+    core.register_connection("cel_som", "cel_crf", 0.30, 2.5, inh=True,
+                             note="CeL SOM+→CRF+ inhibitory regulation")
+    core.register_connection("cel_crf", "pvn_crh", 0.12, 2.0,
+                             note="CeL CRF+→PVN HPA axis activation")
 
     # mPFC (Courtin 2014; Quirk 2002)
     core.register_connection("pl", "la_exc", 0.12, 2.0, note="PL drives fear expression")
@@ -468,7 +493,7 @@ class EmotionBrainV2:
         # ── Spiking drive construction ──
         overrides: dict[str, np.ndarray] = {}
 
-        # FEAR drive: threat → LA, pain → LA/CeA
+        # FEAR drive: threat → LA, pain → LA/CeA/PB
         if threat > 0.1 or pain > 0.1:
             la_drive = np.zeros((n_steps, 40))
             cs_start, cs_end = int(50 / c.dt_ms), int(250 / c.dt_ms)
@@ -476,6 +501,13 @@ class EmotionBrainV2:
             if pain > 0.1:
                 la_drive[cs_start:cs_end, :] += 10.0 * pain
             overrides["la_exc"] = la_drive
+
+            # PB: parabrachial nociceptor relay (Li 2013 Nat Neurosci)
+            # Direct pain pathway bypassing thalamic relay
+            if pain > 0.1:
+                pb_drive = np.zeros((n_steps, 8))
+                pb_drive[cs_start:cs_end, :] = 8.0 * pain
+                overrides["pb"] = pb_drive
 
             pl_drive = np.zeros((n_steps, 20))  # matched to pl n=20
             pl_drive[cs_start:cs_end, :] = 7.0 * threat  # Courtin 2014 Nature 505:92-96: PL burst 15-40Hz
@@ -547,6 +579,23 @@ class EmotionBrainV2:
             burst_e = int(180 / c.dt_ms)                    # 100ms burst (Yang 2018)
             hab_drive[burst_s:burst_e, :] += 20.0 * loss    # strong burst → RMTg/DRN_GABA
             overrides["habenula"] = hab_drive
+
+            # ── RMTg/DRN_GABA sustained drive during loss ──
+            # Schultz 1997: DA pause lasts 200-500ms (sustained, not transient)
+            # Jhou 2009: RMTg provides sustained GABAergic inhibition during aversive states
+            # Challis 2013: DRN_GABA sustains DR suppression during loss
+            # Continuous drive + burst ensures g_inh accumulation throughout trial
+            rmtg_drive = np.zeros((n_steps, 10))  # rmtg n=10
+            rmtg_drive[:, :] = 3.0 * loss                    # sustained component
+            rmtg_drive[burst_s:burst_e, :] += 5.0 * loss     # burst peak
+            overrides["rmtg"] = rmtg_drive
+
+            # DRN_GABA: gentle sustained drive for partial DR suppression
+            # Target: DR 2-4Hz (20-40% reduction from ~6Hz baseline)
+            # Conductance-based inhibition is strong → very light drive needed
+            drn_gaba_drive = np.zeros((n_steps, 10))  # drn_gaba n=10
+            drn_gaba_drive[:, :] = 0.5 * loss         # gentle sustained
+            overrides["drn_gaba"] = drn_gaba_drive
 
             # ── PPTg inhibition → VTA DA pause (circuit-level) ──
             # Change 19: Replaced phenomenological VTA drive withdrawal with

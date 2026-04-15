@@ -372,3 +372,65 @@
     d. DRN_GABA→DR shunting inhibition (from habenula via DRN_GABA) supplements
     e. Combined: DR sadness_suppressed = 3.3Hz (target [2-4])
   - Validated: 36/36 targets PASS (100.0%)
+
+---
+
+## Change 21: Conductance-based GABA_A inhibition (g_inh state variable)
+
+**日付**: 2026-04-15
+**問題**: Izhikevich instantaneous voltage-kick shunting inhibition cannot achieve true DA pause
+  - Previous shunting: `v_post -= w * (v_post + 75) / 30` (per-spike, transient)
+  - VTA DA pause was 0.9Hz (marginal) and DR suppression 2.2Hz (marginal)
+
+**論文**:
+  - Chance et al. (2002) PNAS: shunting inhibition theory
+  - Bartos et al. (2007) Nat Rev Neurosci: GABA_A tau ≈ 5ms
+
+**変更**:
+  1. Added `g_inh` conductance state variable to IZH_TIMED_EQS:
+     - `dg_inh/dt = -g_inh / (5*ms)` (GABA_A decay)
+     - `I_inh = g_inh * clip(v + 75, 0, 200)` (E_GABA = -75mV)
+     - clip() prevents reversal below E_GABA (Izhikevich dynamics instability)
+  2. Shunting synapses: `on_pre="g_inh_post += w"` (replaces instantaneous kick)
+  3. Recalibrated shunting weights for conductance model:
+     - RMTg→VTA DA lat: w=5.0, RMTg→VTA DA med: w=3.5
+     - RMTg→PPTg: w=4.0, DRN_GABA→DR: w=3.0
+     - CeL_SOM→CeL_PKCd: w=1.6
+  4. RMTg/DRN_GABA tonic drives: 3.3→1.8 (low baseline, habenula-driven)
+  5. Sustained RMTg/DRN_GABA drive during loss:
+     - RMTg: 3.0*loss sustained + 5.0*loss burst (Schultz 1997: pause 200-500ms)
+     - DRN_GABA: 0.5*loss sustained
+
+**結果**:
+  - VTA DA pause: 0.9Hz → **0.3Hz** (true pause)
+  - DR sadness: 2.2Hz → **2.4Hz** (stable partial suppression)
+  - 36/36 strict validation PASS (100.0%)
+
+---
+
+## Change 22: CeA microcircuit expansion (PB + CeL_CRF)
+
+**日付**: 2026-04-15
+
+**論文**:
+  - Li et al. (2013) Nat Neurosci 16:332-339: PB→CeA nociceptor relay
+  - Pomrenze et al. (2015): CeL CRF+ neurons and sustained anxiety
+  - Marchant et al. (2007): CRF in CeA modulates anxiety
+
+**変更**:
+  1. Added PB (parabrachial): 8 neurons, RS; PB→CeL_SOM/CRF
+  2. Added CeL_CRF: 10 neurons, LTS; CeL_CRF→BNST/CeM/PVN_CRH
+
+**結果**: ~760→~778 neurons, 47→49 populations, 36/36 PASS
+
+---
+
+## Change 23: Text analyzer keyword expansion
+
+**日付**: 2026-04-15
+
+**変更**:
+  - _FEAR_WORDS: +死/殺 (JP), +attack/death/destroy/kill/deadly/lethal (EN)
+  - _SADNESS_WORDS: +痛い/痛/苦しい/苦し (JP), +pain/suffer/ache/hurt (EN)
+
+**結果**: 496/496 tests pass (was 494/496)
