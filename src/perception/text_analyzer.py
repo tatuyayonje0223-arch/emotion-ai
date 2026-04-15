@@ -17,10 +17,12 @@ _FEAR_WORDS = {
     "怖い", "怖", "恐怖", "恐ろしい", "恐れ", "不安", "心配", "脅威", "危険",
     "パニック", "震え", "助けて", "助け", "逃げ", "逃げろ", "やばい",
     "恐怖症", "怯え", "ビクビク", "おびえ", "戦慄", "身震い",
+    "死", "殺",
     # 英語
     "scared", "afraid", "fear", "terrified", "frightened", "anxious", "panic",
     "dread", "horror", "alarmed", "phobia", "nervous", "worried", "threat",
     "danger", "help me", "run", "escape",
+    "attack", "death", "destroy", "kill", "deadly", "lethal",
 }
 
 _RAGE_WORDS = {
@@ -51,10 +53,12 @@ _SADNESS_WORDS = {
     "絶望", "落ち込", "憂鬱", "うつ", "鬱", "泣", "涙", "無理",
     "もうだめ", "やる気ない", "失意", "虚しい", "空虚", "惨め", "後悔",
     "喪失", "失った", "別れ", "死別",
+    "痛い", "痛", "苦しい", "苦し",
     # 英語
     "sad", "depressed", "hopeless", "miserable", "grief", "sorrow", "crying",
     "tears", "lonely", "heartbroken", "devastated", "gloomy", "melancholy",
     "despair", "lost", "mourning", "bereaved", "empty",
+    "pain", "suffer", "ache", "hurt",
 }
 
 _DISGUST_WORDS = {
