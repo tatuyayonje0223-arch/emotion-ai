@@ -52,8 +52,11 @@ DEFAULT_TAU_INH_MS = 5.0  # cortical GABA_A default (Bartos 2007)
 
 # === AdEx (Adaptive Exponential Integrate-and-Fire) 方程式テンプレート ===
 # Brette & Gerstner 2005 J Comput Neurosci; Naud et al. 2008 Biol Cybern
-# Dimensionless formulation matching Izhikevich voltage scale (-80 to +30)
-# Same g_inh conductance mechanism for backward-compatible shunting inhibition
+# DIMENSIONLESS formulation: tau_m=1ms matches Izhikevich implicit time scale.
+# g_L is an abstract leak coefficient (NOT true conductance = C/tau_m).
+# Parameters cannot be directly compared to Brette & Gerstner 2005 Table 1.
+# Same g_inh conductance mechanism for backward-compatible shunting inhibition.
+# Calibration: 9/16 quick targets PASS (iterative tuning in progress).
 ADEX_TIMED_EQS = """
     dv/dt = (-g_L*(v - E_L) + g_L*dT*exp(clip((v - V_T)/dT, -10, 10)) - w_adex + I_drive(t, i) - g_inh*clip(v + 75, 0, 200)) / tau_m : 1
     dw_adex/dt = (a_sub*(v - E_L) - w_adex) / tau_w : 1

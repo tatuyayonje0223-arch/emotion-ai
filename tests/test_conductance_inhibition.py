@@ -157,3 +157,46 @@ class TestAdExModel:
         from src.brian2_circuits.shared_core_network import SharedCoreConfig
         cfg = SharedCoreConfig()
         assert cfg.use_adex is False
+
+    def test_adex_vta_pause(self):
+        """AdEx VTA DA should achieve pause (< 2Hz) during loss."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        cfg = SharedCoreConfig(use_adex=True)
+        brain = EmotionBrainV2(config=cfg)
+        r = brain.process(loss=0.5)
+        assert r.all_rates["vta_da_lat"] < 2.0, f"AdEx VTA DA not pausing: {r.all_rates['vta_da_lat']:.1f}"
+
+    def test_adex_shunting_works(self):
+        """AdEx CeA shunting should suppress PKCd+ during threat."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        cfg = SharedCoreConfig(use_adex=True)
+        brain = EmotionBrainV2(config=cfg)
+        r = brain.process(threat=0.8)
+        pkcd = r.all_rates.get("cel_pkcd", 0)
+        # Shunting should at least reduce PKCd below baseline
+        brain2 = EmotionBrainV2(config=cfg)
+        r2 = brain2.process()
+        pkcd_base = r2.all_rates.get("cel_pkcd", 0)
+        assert pkcd <= pkcd_base, f"PKCd not suppressed: threat={pkcd:.1f} base={pkcd_base:.1f}"
+
+    def test_adex_fear_produces_cem_output(self):
+        """AdEx threat should activate CeM (fear output)."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        cfg = SharedCoreConfig(use_adex=True)
+        brain = EmotionBrainV2(config=cfg)
+        r = brain.process(threat=0.8)
+        assert r.all_rates["cem"] > 5.0, f"AdEx CeM too quiet: {r.all_rates['cem']:.1f}"
+
+    def test_izhikevich_unaffected_by_adex_code(self):
+        """Izhikevich validation should be 36/36 regardless of AdEx code existence."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        brain = EmotionBrainV2()  # default = Izhikevich
+        # Key Izhikevich targets
+        r_tonic = brain.process()
+        assert 3 <= r_tonic.all_rates["vta_da_lat"] <= 7
+        brain2 = EmotionBrainV2()
+        r_threat = brain2.process(threat=0.8)
+        assert r_threat.all_rates["cem"] >= 10

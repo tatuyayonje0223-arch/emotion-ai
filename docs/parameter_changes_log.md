@@ -527,3 +527,29 @@
      - vHPC receives both context and threat (anxiogenic integration)
 
 **結果**: ~794→~821 neurons, 51→53 populations
+
+---
+
+## Change 27: AdEx neuron model infrastructure
+
+**日付**: 2026-04-16
+
+**論文**:
+  - Brette & Gerstner (2005) J Comput Neurosci 18:193-213
+  - Naud et al. (2008) Biol Cybern 99:335-347
+
+**変更**:
+  1. ADEX_TIMED_EQS: dimensionless AdEx with tau_m=1ms (Izhikevich time scale)
+     - g_L is abstract leak coefficient (NOT true conductance)
+     - g_inh conductance mechanism shared with Izhikevich
+  2. ADEX_CELL_TYPES: 15 cell types mapped
+  3. SharedCoreConfig.use_adex flag for model selection
+  4. Drive scaling: 2.0x for AdEx (compensates linear leak vs Izh quadratic)
+  5. Shunting weight scaling: 2.0x for AdEx (preserves inh/exc balance)
+
+**較正状態** (9/16 quick targets):
+  PASS: cel_som, cem, pl, vlpag, VTA burst, VTA pause, nac, sgacc, aic
+  FAIL: la_base(high), pkcd(shunting), VTA tonic(low), dr(suppressed),
+        vmh/mpoa(high) — iterative tuning needed
+
+**結果**: Izhikevich (default) 36/36 100% unaffected
