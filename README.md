@@ -1,6 +1,6 @@
 # Emotion-Capable Brain-Inspired AI
 
-232検証済み論文に基づき、ヒトの10情動回路を~778スパイキングニューロンでモデル化するプロジェクト。
+232検証済み論文に基づき、ヒトの10情動回路を~794スパイキングニューロンでモデル化するプロジェクト。
 
 **注意**: これは「忠実な再現」ではなく「定性的な模倣の研究用モデル」です。
 
@@ -18,8 +18,8 @@ IntegratedBrainV2 (テキスト → 10情動 → readout → ポリシー)
 │   PAG(vl/dl) / BNST / PVN(CRH/OXT) / VTA(DA_lat/DA_med/GABA)
 │   NAc(shell_D1/D2, core_D1) / LC / DR / aIC
 │   RMTg (Jhou 2009) / DRN_GABA (Challis 2013) / PPTg (Grace 2007)
-├── 10 Spiking Emotion Circuits (49 populations, ~778 neurons)
-│   ├── FEAR: LA→BA→CeL(SOM+/PKCd+/CRF+ shunting)→CeM + PB + PL/IL
+├── 10 Spiking Emotion Circuits (51 populations, ~794 neurons)
+│   ├── FEAR: LA→BA→CeL(SOM+/PKCd+/CRF+/VIP+ shunting)→CeM + PB/PV + PL/IL
 │   ├── RAGE: MeA(LTS)→VMH→dlPAG + 5-HT(DR) inhibition
 │   ├── SEEKING: VTA DA RPE → NAc + OFC/vmPFC/VP/LHb→RMTg
 │   ├── SADNESS: sgACC → habenula → RMTg/DRN_GABA (disynaptic)
@@ -37,7 +37,7 @@ IntegratedBrainV2 (テキスト → 10情動 → readout → ポリシー)
 
 ### Key innovations
 - **Conductance-based (g_inh) shunting inhibition** (Chance 2002 PNAS; Bartos 2007): continuous GABA_A conductance state with 5ms decay — replaces instantaneous voltage kicks. Achieves true VTA DA pause (0.3 Hz) and DR suppression (2.4 Hz)
-- **CeA expanded microcircuit**: SOM+/PKCd+/CRF+ populations + PB nociceptor relay (Li 2013 Nat Neurosci; Pomrenze 2015)
+- **CeA expanded microcircuit**: SOM+/PKCd+/CRF+/VIP+/PV+ populations + PB nociceptor relay (Li 2013; McCullough 2018; Royer 2016; Pomrenze 2019)
 - **RMTg GABAergic relay** (Jhou 2009 J Neurosci): disynaptic LHb→RMTg→VTA DA pause pathway
 - **DRN internal GABA** (Challis 2013 J Neurosci): LHb→DRN_GABA→DR 5-HT suppression
 - **PPTg tonic excitation** (Grace 2007; Mena-Segovia 2008): explicit spiking population provides tonic drive to VTA DA. Loss → RMTg inhibition of PPTg → excitatory withdrawal

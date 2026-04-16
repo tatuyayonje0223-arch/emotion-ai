@@ -48,6 +48,11 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     # RS type: Haubensak 2010 reports CRF+ as late-firing/regular-spiking
     core.register_population("cel_crf", 10, "RS")
 
+    # CeL VIP+: disinhibition gain control (McCullough 2018 Nat Neurosci)
+    core.register_population("cel_vip", 8, "VIP")
+    # CeA PV+: fast feedforward inhibition (Royer 2016 Neuron)
+    core.register_population("cea_pv", 8, "PV")
+
     # Intra-amygdala connections (Duvarci & Pare 2014; Ciocchi 2010)
     core.register_connection("la_exc", "la_pv", 0.3, 3.0)
     core.register_connection("la_pv", "la_exc", 0.4, 4.0, inh=True)
@@ -84,6 +89,22 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
                              note="CeL SOM+→CRF+ inhibitory; inferred from Ciocchi 2010 topology")
     core.register_connection("cel_crf", "pvn_crh", 0.12, 2.0,
                              note="CeL CRF+→PVN HPA; Pomrenze 2019")
+
+    # CeL VIP+ connections (McCullough 2018 Nat Neurosci)
+    core.register_connection("cel_vip", "cel_som", 0.30, 3.0, inh=True,
+                             note="CeL VIP+→SOM+ disinhibition; McCullough 2018")
+    core.register_connection("cel_vip", "cel_pkcd", 0.25, 2.5, inh=True,
+                             note="CeL VIP+→PKCd+ gain control; McCullough 2018")
+    core.register_connection("ba_exc", "cel_vip", 0.10, 1.5,
+                             note="BA→CeL VIP+; McCullough 2018")
+
+    # CeA PV+ connections (Royer 2016 Neuron)
+    core.register_connection("cea_pv", "cem", 0.25, 3.0, inh=True,
+                             note="CeA PV+→CeM fast inhibition; Royer 2016")
+    core.register_connection("cea_pv", "cel_som", 0.20, 2.0, inh=True,
+                             note="CeA PV+→SOM+ recurrent; Royer 2016")
+    core.register_connection("la_exc", "cea_pv", 0.15, 2.0,
+                             note="LA→CeA PV+ feedforward; Royer 2016")
 
     # mPFC (Courtin 2014; Quirk 2002)
     core.register_connection("pl", "la_exc", 0.12, 2.0, note="PL drives fear expression")

@@ -91,7 +91,7 @@
 | Layer | Components | Neurons |
 |-------|-----------|---------|
 | Shared Core | PAG, BNST, PVN, VTA, NAc, LC, DR, aIC, **RMTg**, **DRN_GABA**, **PPTg** | ~265 |
-| FEAR | LA, BA, CeL(SOM/PKCd/**CRF**), CeM, ITC, **PB**, PL, IL, LA_PV, LA_VIP | ~218 |
+| FEAR | LA, BA, CeL(SOM/PKCd/**CRF/VIP**), CeM, ITC, **PB**, **CeA_PV**, PL, IL, LA_PV, LA_VIP | ~234 |
 | RAGE | MeA, VMH | 45 |
 | SEEKING | OFC, vmPFC, VP, LHb | 50 |
 | SADNESS | sgACC, Habenula | 35 |
@@ -101,7 +101,7 @@
 | PLAY | PFA, play_cortex | 30 |
 | LUST | lust_MPOA, lust_hypo | 20 |
 | SURPRISE | surprise_amyg, surprise_PFC | 25 |
-| **Total** | **49 populations** | **~778** |
+| **Total** | **51 populations** | **~794** |
 
 ## Literature Foundation
 
@@ -114,8 +114,8 @@ Full change log: docs/parameter_changes_log.md
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
 | Full AdEx neuron model migration | Replace Izhikevich entirely | P2 |
-| Complete CeA: VIP+/PV+ interneurons | Additional cell types | P3 |
-| Behavioral test battery | Scenario definitions | P3 |
+| ~~Complete CeA: VIP+/PV+ interneurons~~ | ~~Additional cell types~~ | **done** (4/16) |
+| ~~Behavioral test battery~~ | ~~Scenario definitions~~ | **done** (4/16) |
 
 ## Completed (Phase 1)
 

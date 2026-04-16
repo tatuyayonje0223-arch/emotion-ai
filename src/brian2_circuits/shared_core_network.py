@@ -436,6 +436,8 @@ class SharedCoreNetwork:
             "itc": 1.0,              # ITC LTS: rheobase~0
             "pb": 2.3,               # Li 2013: parabrachial nociceptor relay (I=4.0)
             "cel_crf": 0.5,          # CeL CRF+ LTS: low tonic, mainly input-driven (Pomrenze 2015)
+            "cel_vip": 1.0,          # VIP: low tonic, input-driven (McCullough 2018)
+            "cea_pv": 1.5,           # PV: moderate baseline for fast inhibition (Royer 2016)
             "pl": 2.3,               # Courtin 2014: baseline (I=4.0)
             "il": 2.3,               # Quirk 2002: baseline (I=4.0)
             "la_pv": 3.3,            # PV fast-spiking (I=5.0)

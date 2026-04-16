@@ -460,3 +460,33 @@
      RMTg→VTA DA: 5.0→2.5, DRN_GABA→DR: 3.0→1.5, RMTg→PPTg: 4.0→2.0
 
 **結果**: 36/36 strict validation PASS, 508 tests pass
+
+---
+
+## Change 25: CeA microcircuit expansion — VIP+ and PV+ interneurons
+
+**日付**: 2026-04-15
+
+**論文**:
+  - McCullough et al. (2018) Nat Neurosci: VIP+ interneurons in CeA provide higher-order disinhibition
+    - VIP+ inhibits both SOM+ ON cells and PKCd+ OFF cells
+    - Acts as "gain control" for the CeA disinhibition circuit
+    - Receives basal amygdala input
+  - Royer et al. (2016) Neuron: PV+ fast-spiking interneurons in CeA
+    - Provides fast feedforward inhibition and gamma synchronization
+    - Receives lateral amygdala feedforward input
+    - Fast inhibition of CeM output neurons
+
+**変更**:
+  1. Added CeL_VIP+ population: 8 neurons, VIP cell type (a=0.02, b=0.22, c=-65, d=4)
+     - CeL_VIP→CeL_SOM: p=0.30, w=3.0, inh=True (inhibits SOM+ ON cells)
+     - CeL_VIP→CeL_PKCd: p=0.25, w=2.5, inh=True (inhibits PKCd+ OFF cells)
+     - BA_exc→CeL_VIP: p=0.10, w=1.5 (receives basal amygdala input)
+     - Tonic drive: 1.0 (low tonic, input-driven)
+  2. Added CeA_PV+ population: 8 neurons, PV cell type (a=0.1, b=0.2, c=-65, d=2)
+     - CeA_PV→CeM: p=0.25, w=3.0, inh=True (fast inhibition of CeM output)
+     - CeA_PV→CeL_SOM: p=0.20, w=2.0, inh=True (recurrent inhibition)
+     - LA_exc→CeA_PV: p=0.15, w=2.0 (feedforward from lateral amygdala)
+     - Tonic drive: 1.5 (moderate baseline for fast inhibition)
+
+**結果**: ~778→~794 neurons, 49→51 populations
