@@ -14,7 +14,7 @@
 
 ```
 IntegratedBrainV2 (テキスト → 10情動 → readout → ポリシー)
-├── SharedCoreNetwork (17共有領域, ~265 neurons)
+├── SharedCoreNetwork (17共有領域, ~285 neurons)
 │   PAG(vl/dl) / BNST / PVN(CRH/OXT) / VTA(DA_lat/DA_med/GABA)
 │   NAc(shell_D1/D2, core_D1) / LC / DR / aIC
 │   RMTg (Jhou 2009) / DRN_GABA (Challis 2013) / PPTg (Grace 2007)

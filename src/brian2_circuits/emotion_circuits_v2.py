@@ -67,10 +67,12 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
 
     # PB → CeA: nociceptor relay (Li 2013 Nat Neurosci 16:332-339)
     # PB→CeL is the primary pain-to-fear bypass (avoids thalamic relay)
+    # NOTE: Li 2013 shows PB(CGRP+)→CeL generally, not subtype-specific.
+    # SOM+/CRF+ routing is a design assumption (reasonable but not directly tested).
     core.register_connection("pb", "cel_som", 0.20, 2.5,
-                             note="PB→CeL SOM+ nociceptor relay; Li 2013 Nat Neurosci")
+                             note="PB→CeL SOM+ nociceptor relay; Li 2013 (subtype assumed)")
     core.register_connection("pb", "cel_crf", 0.15, 2.0,
-                             note="PB→CeL CRF+ pain; Li 2013")
+                             note="PB→CeL CRF+ pain; Li 2013 (subtype assumed)")
 
     # CeL_CRF connections (Pomrenze 2015; Marchant 2007)
     core.register_connection("cel_crf", "bnst", 0.20, 3.0,
@@ -581,10 +583,14 @@ class EmotionBrainV2:
             overrides["habenula"] = hab_drive
 
             # ── RMTg/DRN_GABA sustained drive during loss ──
-            # Schultz 1997: DA pause lasts 200-500ms (sustained, not transient)
-            # Jhou 2009: RMTg provides sustained GABAergic inhibition during aversive states
-            # Challis 2013: DRN_GABA sustains DR suppression during loss
-            # Continuous drive + burst ensures g_inh accumulation throughout trial
+            # WHY drive override + synaptic (habenula→RMTg): habenula burst is 100ms
+            # (burst_s to burst_e), but DA pause lasts 200-500ms (Schultz 1997).
+            # Synaptic input alone drives RMTg only during burst window → insufficient
+            # g_inh accumulation over 300ms trial. Sustained override represents
+            # tonic habenula→RMTg excitation that is otherwise time-limited.
+            # KNOWN LIMITATION: this partially regresses from pure circuit emergence
+            # (Changes 19-20). Full resolution requires extended habenula burst or
+            # longer simulation window.
             rmtg_drive = np.zeros((n_steps, 10))  # rmtg n=10
             rmtg_drive[:, :] = 3.0 * loss                    # sustained component
             rmtg_drive[burst_s:burst_e, :] += 5.0 * loss     # burst peak

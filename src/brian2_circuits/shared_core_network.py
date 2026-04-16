@@ -10,7 +10,7 @@
     - idx辞書でpopulation境界を管理
     - 試行ごとにTimedArray再生成、v/uリセット、STDP重みは保持
 
-共有領域 (9領域, ~215ニューロン):
+共有領域 (17領域, ~285ニューロン):
   PAG (vlPAG + dlPAG)  — 凍結/逃走/攻撃
   BNST                 — 持続不安/CRF
   PVN (CRH + OXT)      — HPA軸/社会結合
@@ -19,6 +19,8 @@
   LC                   — NE覚醒/驚き
   DR                   — 5-HT気分調整
   aIC                  — 内受容/嫌悪
+  RMTg                 — GABAergic relay for DA pause (Jhou 2009)
+  DRN_GABA             — DRN internal GABA (Challis 2013)
   PPTg                 — VTA DA tonic excitation (Grace 2007)
 """
 
@@ -322,11 +324,12 @@ class SharedCoreNetwork:
                 on_post="A_ltd -= 0.3; w = clip(w + A_ltp, 0, 15)",
                 name=f"cs{uid}")
             elif cdef.get("shunting"):
-                # True conductance-based (shunting) inhibition (Chance 2002 PNAS)
-                # Each pre-spike increments g_inh conductance (GABA_A).
-                # Continuous dynamics: dg_inh/dt = -g_inh/tau_g, I_inh = g_inh*(v+75)
-                # Replaces instantaneous v_post kick with proper conductance state.
-                # Bartos 2007 Nat Rev Neurosci: GABA_A tau ≈ 5ms
+                # True conductance-based (shunting) inhibition
+                # (Mitchell & Silver 2003 PNAS; Bartos 2007 Nat Rev Neurosci)
+                # Each pre-spike increments g_inh conductance (GABA_A, tau=5ms).
+                # I_inh = g_inh * clip(v+75, 0, 200) in neuron equations.
+                # NOTE: `inh=True` flag is NOT used here — inhibition is via g_inh
+                # conductance (always positive), not via sign inversion of v_post.
                 syn = Synapses(self._G, self._G, "w : 1",
                                on_pre="g_inh_post += w",
                                name=f"cs{uid}")
