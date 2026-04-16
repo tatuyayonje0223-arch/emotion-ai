@@ -122,23 +122,24 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     # shared LC → LA (NE enables LTP; Tully 2007)
     core.register_connection("lc", "la_exc", 0.10, 1.5, note="NE→LA enables fear LTP")
 
-    # Hippocampal context memory (Maren 2001; Fanselow 2010)
-    core.register_population("dhpc", 15, "RS")   # dorsal HPC: context encoding
-    core.register_population("vhpc", 12, "RS")   # ventral HPC: anxiety modulation
+    # dHPC/vHPC are now shared populations (SharedCoreNetwork).
+    # Fear-specific connections only:
 
     # dHPC context→amygdala (Maren 2001; Kim & Fanselow 1992)
     core.register_connection("dhpc", "ba_exc", 0.15, 2.5, stdp=True,
                              note="dHPC→BA contextual fear conditioning; Maren 2001")
-    core.register_connection("dhpc", "la_exc", 0.10, 2.0,
-                             note="dHPC→LA contextual modulation; Maren 2001")
+    # dHPC→BA is the primary pathway; dHPC→LA is weakly supported (Maren 2001 cites BLA broadly)
+    core.register_connection("dhpc", "la_exc", 0.08, 1.5,
+                             note="dHPC→LA contextual modulation; inferred from Maren 2001 BLA")
 
-    # vHPC anxiety modulation (Adhikari 2010 Neuron; Fanselow 2010)
+    # vHPC anxiety modulation (Adhikari 2010 Neuron: vHPC→mPFC theta; Fanselow 2010)
+    # PL/IL subregion routing inferred from Quirk 2002 / Sierra-Mercado 2011
     core.register_connection("vhpc", "pl", 0.12, 2.0,
-                             note="vHPC→PL context-fear expression; Adhikari 2010")
+                             note="vHPC→PL context-fear; Adhikari 2010 + Quirk 2002 PL inference")
     core.register_connection("vhpc", "il", 0.15, 2.5,
-                             note="vHPC→IL extinction facilitation; Adhikari 2010")
+                             note="vHPC→IL extinction; Adhikari 2010 + Sierra-Mercado 2011 inference")
     core.register_connection("vhpc", "bnst", 0.10, 1.5,
-                             note="vHPC→BNST sustained contextual anxiety; Fanselow 2010")
+                             note="vHPC→BNST sustained anxiety; Jennings 2013 Nature")
 
 
 def register_rage_circuit(core: SharedCoreNetwork) -> None:
@@ -173,6 +174,10 @@ def register_seeking_circuit(core: SharedCoreNetwork) -> None:
     core.register_population("vmpfc_value", 15, "RS")   # Haber & Knutson 2010
     core.register_population("vp", 10, "LTS")           # Ventral pallidum; hedonic relay
     core.register_population("lhb", 10, "RS")           # Lateral habenula; negative RPE
+
+    # dHPC→VTA: contextual reward modulation (Floresco 2003; Gruber 2014)
+    core.register_connection("dhpc", "vta_da_lat", 0.10, 1.5,
+                             note="dHPC→VTA contextual reward; Floresco 2003 J Neurosci")
 
     # OFC/vmPFC → NAc (Haber & Knutson 2010)
     core.register_connection("ofc_reward", "nac_core_d1", 0.12, 2.0, note="OFC→NAc core; Rolls 2020")

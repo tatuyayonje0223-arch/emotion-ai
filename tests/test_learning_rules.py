@@ -10,19 +10,17 @@ from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
 class TestFearConditioning:
     """CS+US pairing should strengthen amygdala synapses (STDP)."""
 
-    def test_repeated_threat_increases_fear(self):
-        """Multiple threat presentations should increase fear response (sensitization)."""
+    def test_repeated_threat_maintains_fear(self):
+        """Multiple threat presentations should maintain or increase fear (STDP)."""
         brain = EmotionBrainV2()
-        # First trial
         s1 = brain.process(threat=0.8)
         fear1 = s1.fear
-        # After 3 more conditioning trials
         for _ in range(3):
             brain.process(threat=0.8)
         s5 = brain.process(threat=0.8)
         fear5 = s5.fear
-        # Fear should not decrease (STDP strengthens LA→CeL/BA)
-        assert fear5 >= fear1 * 0.8, f"Fear decreased: {fear1:.3f} → {fear5:.3f}"
+        # Fear should not decrease significantly (STDP strengthens LA→CeL/BA)
+        assert fear5 >= fear1 * 0.95, f"Fear decreased: {fear1:.3f} → {fear5:.3f}"
 
     def test_stdp_synapses_exist(self):
         """STDP synapses should be registered in the network."""
@@ -42,15 +40,14 @@ class TestFearConditioning:
 class TestExtinction:
     """Repeated CS-only (no US) should weaken fear response."""
 
-    def test_no_threat_reduces_fear_expression(self):
-        """After conditioning, presenting no threat should show less fear."""
+    def test_no_threat_gates_fear_to_zero(self):
+        """Without threat input, fear is gated to 0 regardless of STDP history."""
         brain = EmotionBrainV2()
         # Conditioning phase
         for _ in range(3):
             brain.process(threat=0.8)
-        # Extinction phase (no threat)
+        # No threat → input gate blocks fear output
         s_ext = brain.process(threat=0.0)
-        # Without threat input, fear should be gated to 0 (input-gated emotion)
         assert s_ext.fear == 0.0, f"Fear not gated without threat: {s_ext.fear:.3f}"
 
     def test_reduced_threat_produces_less_fear(self):

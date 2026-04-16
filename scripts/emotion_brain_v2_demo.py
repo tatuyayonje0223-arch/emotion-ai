@@ -66,7 +66,7 @@ def main():
 
     print("=" * 55)
     print("  EmotionBrainV2 — 10 Emotion Circuit Demo")
-    print("  232 verified papers | 794 spiking neurons | 51 populations")
+    print("  232 verified papers | 821 spiking neurons | 53 populations")
     print("=" * 55)
 
     brain = EmotionBrainV2()

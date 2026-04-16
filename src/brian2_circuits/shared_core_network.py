@@ -10,7 +10,7 @@
     - idx辞書でpopulation境界を管理
     - 試行ごとにTimedArray再生成、v/uリセット、STDP重みは保持
 
-共有領域 (17領域, ~285ニューロン):
+共有領域 (19領域, ~312ニューロン):
   PAG (vlPAG + dlPAG)  — 凍結/逃走/攻撃
   BNST                 — 持続不安/CRF
   PVN (CRH + OXT)      — HPA軸/社会結合
@@ -22,6 +22,8 @@
   RMTg                 — GABAergic relay for DA pause (Jhou 2009)
   DRN_GABA             — DRN internal GABA (Challis 2013)
   PPTg                 — VTA DA tonic excitation (Grace 2007)
+  dHPC                 — 文脈記憶 (Maren 2001)
+  vHPC                 — 不安調節 (Adhikari 2010)
 """
 
 from __future__ import annotations
@@ -78,6 +80,8 @@ class SharedCoreConfig:
     n_rmtg: int = 10    # Jhou 2009: RMTg GABAergic relay for DA pause
     n_drn_gaba: int = 10  # Challis 2013: DRN internal GABA interneurons
     n_pptg: int = 15     # Grace 2007; Mena-Segovia 2008: PPTg tonic excitation to VTA DA
+    n_dhpc: int = 15     # Maren 2001: dorsal hippocampus context encoding
+    n_vhpc: int = 12     # Adhikari 2010; Fanselow 2010: ventral hippocampus anxiety modulation
 
 
 @dataclass
@@ -136,6 +140,9 @@ class SharedCoreNetwork:
             # Grace 2007 Trends Neurosci: PPTg provides tonic glutamatergic drive to VTA DA
             # Mena-Segovia 2008 J Neurosci: PPTg cholinergic/glutamatergic → VTA
             PopulationDef("pptg", self.cfg.n_pptg, "RS"),
+            # Hippocampus: shared context memory (Maren 2001; Adhikari 2010; Fanselow 2010)
+            PopulationDef("dhpc", self.cfg.n_dhpc, "RS"),   # dorsal HPC: context encoding
+            PopulationDef("vhpc", self.cfg.n_vhpc, "RS"),   # ventral HPC: anxiety modulation
         ]
 
         # 情動固有領域 (register_populationで追加)

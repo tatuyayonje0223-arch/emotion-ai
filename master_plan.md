@@ -1,6 +1,6 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 4 complete — Full CeA microcircuit + behavioral tests (100% strict validation)
+## Current Phase: Phase 5 complete — HPC context + STDP validation (100% strict validation)
 
 ## Active To-Dos
 
