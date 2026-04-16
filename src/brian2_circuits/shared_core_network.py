@@ -294,11 +294,12 @@ class SharedCoreNetwork:
                 self._G.V_r[s:e] = ct["V_r"]
                 self._G.tau_w[s:e] = ct["tau_w_ms"] * ms
 
-                # VTA DA: slower adaptation for tonic/burst/pause dynamics
+                # VTA DA: g_L=0.2 (higher leak for tonic control), b_spike=3
                 if p.name == "vta_da_lat":
-                    self._G.a_sub[s:e] = 0.003
-                    self._G.b_spike[s:e] = 8
-                    self._G.tau_w[s:e] = 300 * ms
+                    self._G.g_L[s:e] = 0.2   # rheobase=4.0, controls tonic rate
+                    self._G.a_sub[s:e] = 0.005
+                    self._G.b_spike[s:e] = 3
+                    self._G.tau_w[s:e] = 200 * ms
                 elif p.name in ("vlpag", "dlpag"):
                     self._G.b_spike[s:e] = 8  # strong adaptation for PAG
         else:
@@ -368,6 +369,9 @@ class SharedCoreNetwork:
             uid = _uid[0]; _uid[0] += 1
             prob = cdef["p"]
             w_base = cdef["w"]
+            # AdEx: scale shunting weights to match drive scaling (preserve inh/exc balance)
+            if c.use_adex and cdef.get("shunting"):
+                w_base *= 2.0
 
             if cdef.get("stdp") and not cdef.get("inh"):
                 syn = Synapses(self._G, self._G, model="""
