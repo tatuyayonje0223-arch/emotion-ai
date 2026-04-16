@@ -490,3 +490,40 @@
      - Tonic drive: 1.5 (moderate baseline for fast inhibition)
 
 **結果**: ~778→~794 neurons, 49→51 populations
+
+---
+
+## Change 26: Hippocampal context memory populations (dHPC + vHPC)
+
+**日付**: 2026-04-15
+
+**論文**:
+  - Maren (2001) Annu Rev Neurosci 24:897-931. DOI: 10.1146/annurev.neuro.24.1.897
+    - dHPC is critical for contextual fear conditioning
+    - dHPC lesions abolish contextual but not cued fear (Kim & Fanselow 1992)
+    - dHPC→BLA projection mediates context-dependent fear memory retrieval
+  - Fanselow (2010) Genes Brain Behav 9:681-685. DOI: 10.1111/j.1601-183X.2010.00624.x
+    - Dorsal HPC encodes context representations
+    - Ventral HPC modulates anxiety and emotional behavior
+  - Adhikari et al. (2010) Neuron 65:257-269. DOI: 10.1016/j.neuron.2009.12.023
+    - vHPC→mPFC theta synchrony during anxiety
+    - vHPC activity in anxiogenic environments correlates with avoidance behavior
+  - Kim & Fanselow (1992) Science 256:675-677. DOI: 10.1126/science.1585183
+    - Hippocampal lesions abolish contextual fear conditioning
+    - Cued fear conditioning (tone-shock) is spared
+
+**変更**:
+  1. Added dHPC population: 15 neurons, RS cell type (dorsal hippocampus context encoding)
+     - dHPC→BA_exc: p=0.15, w=2.5, stdp=True (contextual fear conditioning; Maren 2001)
+     - dHPC→LA_exc: p=0.10, w=2.0 (contextual modulation; Maren 2001)
+     - Tonic drive: 2.3 (baseline context activity, I=4.0)
+  2. Added vHPC population: 12 neurons, RS cell type (ventral hippocampus anxiety modulation)
+     - vHPC→PL: p=0.12, w=2.0 (context-fear expression; Adhikari 2010)
+     - vHPC→IL: p=0.15, w=2.5 (extinction facilitation; Adhikari 2010)
+     - vHPC→BNST: p=0.10, w=1.5 (sustained contextual anxiety; Fanselow 2010)
+     - Tonic drive: 2.0 (moderate baseline, I=3.7)
+  3. Added `context` input parameter to process() (default 0.0)
+     - context > 0.1: drives dHPC (3.0*context) and vHPC (2.5*context + 1.5*threat)
+     - vHPC receives both context and threat (anxiogenic integration)
+
+**結果**: ~794→~821 neurons, 51→53 populations

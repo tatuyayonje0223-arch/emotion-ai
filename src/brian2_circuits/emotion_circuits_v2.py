@@ -122,6 +122,24 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     # shared LC → LA (NE enables LTP; Tully 2007)
     core.register_connection("lc", "la_exc", 0.10, 1.5, note="NE→LA enables fear LTP")
 
+    # Hippocampal context memory (Maren 2001; Fanselow 2010)
+    core.register_population("dhpc", 15, "RS")   # dorsal HPC: context encoding
+    core.register_population("vhpc", 12, "RS")   # ventral HPC: anxiety modulation
+
+    # dHPC context→amygdala (Maren 2001; Kim & Fanselow 1992)
+    core.register_connection("dhpc", "ba_exc", 0.15, 2.5, stdp=True,
+                             note="dHPC→BA contextual fear conditioning; Maren 2001")
+    core.register_connection("dhpc", "la_exc", 0.10, 2.0,
+                             note="dHPC→LA contextual modulation; Maren 2001")
+
+    # vHPC anxiety modulation (Adhikari 2010 Neuron; Fanselow 2010)
+    core.register_connection("vhpc", "pl", 0.12, 2.0,
+                             note="vHPC→PL context-fear expression; Adhikari 2010")
+    core.register_connection("vhpc", "il", 0.15, 2.5,
+                             note="vHPC→IL extinction facilitation; Adhikari 2010")
+    core.register_connection("vhpc", "bnst", 0.10, 1.5,
+                             note="vHPC→BNST sustained contextual anxiety; Fanselow 2010")
+
 
 def register_rage_circuit(core: SharedCoreNetwork) -> None:
     """RAGE回路: 25検証済み論文。Golden 2016 Nature (score=0.93)。
@@ -503,12 +521,14 @@ class EmotionBrainV2:
                 frustration: float = 0.0,
                 contamination: float = 0.0,
                 attachment_need: float = 0.0,
+                context: float = 0.0,
                 ) -> EmotionStateV2:
         """入力信号から10情動の活性度を計算する（全スパイキング）。"""
         _c = lambda v: max(0.0, min(1.0, float(v)))
         threat, reward, social = _c(threat), _c(reward), _c(social)
         novelty, pain, loss = _c(novelty), _c(pain), _c(loss)
         frustration, contamination, attachment_need = _c(frustration), _c(contamination), _c(attachment_need)
+        context = _c(context)
 
         self._step_count += 1
         c = self.cfg
@@ -546,6 +566,18 @@ class EmotionBrainV2:
                 vlpag_drive = np.zeros((n_steps, 25))  # matched to vlpag n=25
                 vlpag_drive[cs_start:cs_end, :] = 7.0 * threat  # Tovote 2015: vlPAG freezing 5-15Hz
                 overrides["vlpag"] = vlpag_drive
+
+        # CONTEXT drive: context → dHPC/vHPC (Maren 2001; Fanselow 2010)
+        # dHPC encodes context representations; projects to BLA for contextual fear
+        # vHPC modulates anxiety via mPFC/BNST; receives both context + threat
+        if context > 0.1:
+            dhpc_drive = np.zeros((n_steps, 15))
+            dhpc_drive[50:, :] = 3.0 * context
+            overrides["dhpc"] = dhpc_drive
+
+            vhpc_drive = np.zeros((n_steps, 12))
+            vhpc_drive[50:, :] = 2.5 * context + 1.5 * threat
+            overrides["vhpc"] = vhpc_drive
 
         # RAGE drive: frustration → MeA/VMH
         if frustration > 0.1:

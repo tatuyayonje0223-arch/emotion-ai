@@ -91,7 +91,7 @@
 | Layer | Components | Neurons |
 |-------|-----------|---------|
 | Shared Core | PAG, BNST, PVN, VTA, NAc, LC, DR, aIC, **RMTg**, **DRN_GABA**, **PPTg** | ~265 |
-| FEAR | LA, BA, CeL(SOM/PKCd/**CRF/VIP**), CeM, ITC, **PB**, **CeA_PV**, PL, IL, LA_PV, LA_VIP | ~219 |
+| FEAR | LA, BA, CeL(SOM/PKCd/**CRF/VIP**), CeM, ITC, **PB**, **CeA_PV**, **dHPC**, **vHPC**, PL, IL, LA_PV, LA_VIP | ~246 |
 | RAGE | MeA, VMH | 45 |
 | SEEKING | OFC, vmPFC, VP, LHb | 50 |
 | SADNESS | sgACC, Habenula | 35 |
@@ -101,11 +101,11 @@
 | PLAY | PFA, play_cortex | 30 |
 | LUST | lust_MPOA, lust_hypo | 20 |
 | SURPRISE | surprise_amyg, surprise_PFC | 25 |
-| **Total** | **51 populations** | **~794** |
+| **Total** | **53 populations** | **~821** |
 
 ## Literature Foundation
 
-232 verified papers. 25 parameter changes with paper citations.
+232 verified papers. 26 parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
 ## Phase 5 — Next Steps
@@ -114,8 +114,8 @@ Full change log: docs/parameter_changes_log.md
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
 | Full AdEx neuron model migration | Replace Izhikevich entirely | P2 |
-| Hippocampal context memory | HPC→BLA/PFC context gating | P3 |
-| Learning rule validation | STDP+DA mod vs extinction data | P3 |
+| ~~Hippocampal context memory~~ | ~~HPC→BLA/PFC context gating~~ | **done** (4/16) |
+| ~~Learning rule validation~~ | ~~STDP+DA mod vs extinction data~~ | **done** (4/16) |
 
 ## Completed (Phase 4)
 

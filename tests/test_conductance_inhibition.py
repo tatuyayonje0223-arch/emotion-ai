@@ -74,16 +74,16 @@ class TestCeAExpansion:
         assert "cel_crf" in brain.population_names
 
     def test_total_neurons_with_expansion(self):
-        """Total should be ~794 with PB + CeL_CRF + VIP + PV."""
+        """Total should be ~821 with CeA expansion + HPC."""
         from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
         brain = EmotionBrainV2()
-        assert 785 < brain.total_neurons < 810, f"Unexpected count: {brain.total_neurons}"
+        assert 810 < brain.total_neurons < 840, f"Unexpected count: {brain.total_neurons}"
 
     def test_total_populations(self):
-        """Should have 51 populations after full CeA expansion."""
+        """Should have 53 populations (CeA + HPC)."""
         from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
         brain = EmotionBrainV2()
-        assert len(brain.population_names) == 51
+        assert len(brain.population_names) == 53
 
     def test_pb_fires_during_pain(self):
         """PB should activate when pain is presented."""

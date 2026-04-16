@@ -442,6 +442,9 @@ class SharedCoreNetwork:
             "il": 2.3,               # Quirk 2002: baseline (I=4.0)
             "la_pv": 3.3,            # PV fast-spiking (I=5.0)
             "la_vip": 2.3,           # VIP: baseline (I=4.0)
+            # ── HIPPOCAMPUS ──
+            "dhpc": 2.3,             # Maren 2001: baseline context activity (I=4.0)
+            "vhpc": 2.0,             # Fanselow 2010: moderate baseline (I=3.7)
             # ── RAGE ──
             "mea": 0.8,              # Hong 2014: LTS rheobase~0, bg_noise alone → 3-8Hz
             "vmh": 1.8,              # Lee 2014: baseline 2-5Hz; I=3.5

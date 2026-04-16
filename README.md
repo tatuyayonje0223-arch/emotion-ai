@@ -1,6 +1,6 @@
 # Emotion-Capable Brain-Inspired AI
 
-232検証済み論文に基づき、ヒトの10情動回路を~794スパイキングニューロンでモデル化するプロジェクト。
+232検証済み論文に基づき、ヒトの10情動回路を~821スパイキングニューロンでモデル化するプロジェクト。
 
 **注意**: これは「忠実な再現」ではなく「定性的な模倣の研究用モデル」です。
 
@@ -18,8 +18,8 @@ IntegratedBrainV2 (テキスト → 10情動 → readout → ポリシー)
 │   PAG(vl/dl) / BNST / PVN(CRH/OXT) / VTA(DA_lat/DA_med/GABA)
 │   NAc(shell_D1/D2, core_D1) / LC / DR / aIC
 │   RMTg (Jhou 2009) / DRN_GABA (Challis 2013) / PPTg (Grace 2007)
-├── 10 Spiking Emotion Circuits (51 populations, ~794 neurons)
-│   ├── FEAR: LA→BA→CeL(SOM+/PKCd+/CRF+/VIP+ shunting)→CeM + PB/PV + PL/IL
+├── 10 Spiking Emotion Circuits (53 populations, ~821 neurons)
+│   ├── FEAR: LA→BA→CeL(SOM+/PKCd+/CRF+/VIP+)→CeM + PB/PV + dHPC/vHPC + PL/IL
 │   ├── RAGE: MeA(LTS)→VMH→dlPAG + 5-HT(DR) inhibition
 │   ├── SEEKING: VTA DA RPE → NAc + OFC/vmPFC/VP/LHb→RMTg
 │   ├── SADNESS: sgACC → habenula → RMTg/DRN_GABA (disynaptic)
@@ -73,7 +73,7 @@ Previous structural limitations (VTA DA pause at 6.7Hz, DR at 6.7Hz) resolved by
 
 232 verified papers across 10 emotions + brain connectome.
 DOI verification: 94% valid (CrossRef API). Content match: 70% (PubMed abstracts).
-25 parameter changes with paper citations logged.
+26 parameter changes with paper citations logged.
 
 | Emotion | Papers | Top Paper |
 |---------|--------|-----------|
