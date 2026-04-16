@@ -79,6 +79,7 @@ def analyze_reward_time_windows(cfg: RewardV2Config | None = None) -> TimeWindow
                      method="euler", name="tw_neurons")
     G.v = -65 + rng.normal(0, 2, total_n)
     G.u = 0.2 * G.v[:]
+    G.tau_inh = 5 * ms  # GABA_A default
     for name in idx:
         s, e = idx[name]
         if name in ("vta_da_lat", "vta_da_med"):

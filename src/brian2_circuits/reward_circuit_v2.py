@@ -122,6 +122,7 @@ class RewardCircuitV2:
                          method="euler", name="reward_neurons")
         G.v = -65 + rng.normal(0, 2, total_n)
         G.u = 0.2 * G.v[:]
+        G.tau_inh = 5 * ms  # GABA_A default
 
         # DA neurons [DAチューニング: a=0.01,d=10 → tonic=3.5Hz,burst=29.5Hz,ratio=8.4x]
         for name in ["vta_da_lat", "vta_da_med"]:

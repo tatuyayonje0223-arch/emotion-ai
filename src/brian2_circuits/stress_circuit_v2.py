@@ -105,6 +105,7 @@ class StressCircuitV2:
                          method="euler", name="stress_neurons")
         G.v = -65 + rng.normal(0, 2, total_n)
         G.u = 0.2 * G.v[:]
+        G.tau_inh = 5 * ms  # GABA_A default
         for name in idx:
             s, e = idx[name]
             G.a[s:e] = 0.02; G.b[s:e] = 0.2; G.c[s:e] = -65; G.d[s:e] = 8

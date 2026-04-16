@@ -87,6 +87,7 @@ class PersistentFearCircuit:
         rng = np.random.default_rng(12345)
         self._G.v = -65 + rng.normal(0, 2, self._total_n)
         self._G.u = 0.2 * self._G.v[:]
+        self._G.tau_inh = 5 * ms  # GABA_A default
 
         # パラメータ設定
         idx = self._idx

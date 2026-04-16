@@ -178,22 +178,20 @@ class SharedCoreNetwork:
                                 "note": "5-HT inhibits aggression; de Boer 2009"})
 
         # RMTg: GABAergic relay for DA pause (Jhou 2009 J Neurosci; Barrot 2012 TINS)
-        # Conductance-based g_inh: RMTg baseline ~3-5Hz (tonic=1.0) → minimal baseline inhibition.
-        # During loss: habenula burst → RMTg ~25-30Hz → strong g_inh accumulation → DA pause.
-        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_lat", "p": 0.30, "w": 5.0, "inh": True, "shunting": True,
+        # tau_inh=10ms (midbrain) doubles g_inh accumulation → weights halved vs 5ms model
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_lat", "p": 0.30, "w": 2.5, "inh": True, "shunting": True,
                                 "note": "RMTg→VTA DA: principal GABAergic brake; Jhou 2009"})
-        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 3.5, "inh": True, "shunting": True,
+        self._conn_defs.append({"src": "rmtg", "tgt": "vta_da_med", "p": 0.20, "w": 1.8, "inh": True, "shunting": True,
                                 "note": "RMTg→VTA DA medial"})
 
         # RMTg → PPTg: inhibits PPTg during aversive states (Jhou 2009)
-        # Strong suppression removes PPTg tonic excitation to VTA (excitatory withdrawal pathway)
-        self._conn_defs.append({"src": "rmtg", "tgt": "pptg", "p": 0.30, "w": 4.0, "inh": True, "shunting": True,
+        # PPTg tau_inh=10ms → halved weight vs 5ms model
+        self._conn_defs.append({"src": "rmtg", "tgt": "pptg", "p": 0.30, "w": 2.0, "inh": True, "shunting": True,
                                 "note": "RMTg→PPTg GABA shunting; Jhou 2009: RMTg inhibits PPTg"})
 
         # DRN_GABA: internal inhibition of 5-HT (Challis 2013; Varga 2001)
-        # Target: partial suppression to 2-4Hz during sadness (from ~6Hz baseline)
-        # Moderate weight: stronger than initial but less than RMTg→VTA (partial, not complete)
-        self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 3.0, "inh": True, "shunting": True,
+        # DR tau_inh=10ms → halved weight for partial suppression (2-4Hz target)
+        self._conn_defs.append({"src": "drn_gaba", "tgt": "dr", "p": 0.40, "w": 1.5, "inh": True, "shunting": True,
                                 "note": "DRN GABA→5-HT: ~40% of DRN neurons are GABAergic; Varga 2001"})
 
         # PPTg → VTA DA: tonic glutamatergic excitation (Grace 2007; Mena-Segovia 2008)
@@ -262,6 +260,8 @@ class SharedCoreNetwork:
         rng = np.random.default_rng(12345)
         self._G.v = -65 + rng.normal(0, 2, self._total_n)
         self._G.u = 0.2 * self._G.v[:]
+        # Conductance inhibition defaults
+        self._G.tau_inh = 5 * ms  # GABA_A default (cortical; Bartos 2007)
 
         # セルタイプ別パラメータ設定
         for p in all_pops:
@@ -293,6 +293,15 @@ class SharedCoreNetwork:
                 self._G.b[s:e] = ct["b"]
                 self._G.c[s:e] = ct["c"]
                 self._G.d[s:e] = ct["d"]
+
+        # ── Region-specific GABA_A parameters ──
+        # Midbrain: slower GABA_A kinetics (Tan et al. 2010 J Physiol)
+        for mname in ("vta_da_lat", "vta_da_med", "dr", "pptg"):
+            if mname in self._idx:
+                ms_, me_ = self._idx[mname]
+                self._G.tau_inh[ms_:me_] = 10 * ms  # 10ms midbrain GABA_A
+        # E_GABA: -75mV uniform (hardcoded in equations)
+        # Literature: -65 to -80mV range; -75 provides best calibration balance
 
         # Synapses
         self._synapses: list[Synapses] = []

@@ -434,3 +434,29 @@
   - _SADNESS_WORDS: +痛い/痛/苦しい/苦し (JP), +pain/suffer/ache/hurt (EN)
 
 **結果**: 496/496 tests pass (was 494/496)
+
+---
+
+## Change 24: Region-specific GABA_A kinetics + CeL_CRF cell type fix
+
+**日付**: 2026-04-16
+
+**論文**:
+  - Tan et al. (2010) J Physiol: midbrain GABA_A decay ~10ms (slower than cortical 5ms)
+  - Bartos et al. (2007) Nat Rev Neurosci: cortical GABA_A tau ≈ 5ms
+  - Haubensak et al. (2010) Nature: CeL CRF+ neurons are regular-spiking
+  - Pomrenze et al. (2019) Neuropsychopharmacol: CeA-CRF→BNST anxiogenic pathway
+
+**変更**:
+  1. tau_inh parameterized: per-neuron GABA_A decay constant (was fixed 5ms)
+     - Cortical/amygdala: 5ms (default)
+     - Midbrain (VTA DA, DR, PPTg): 10ms (slower GABA_A kinetics)
+  2. e_rev parameterized: per-neuron E_GABA reversal (default -75mV, uniform)
+  3. CeL_CRF cell type: LTS → RS (Haubensak 2010)
+  4. CeL_CRF citations updated: Pomrenze 2015 → Pomrenze 2019
+  5. CeL_SOM→CeL_CRF note: "inferred from Ciocchi 2010 topology"
+  6. PB→CeL notes: "subtype assumed" (Li 2013 doesn't distinguish SOM+/CRF+)
+  7. Shunting weights recalibrated for tau_inh=10ms (midbrain populations):
+     RMTg→VTA DA: 5.0→2.5, DRN_GABA→DR: 3.0→1.5, RMTg→PPTg: 4.0→2.0
+
+**結果**: 36/36 strict validation PASS, 508 tests pass

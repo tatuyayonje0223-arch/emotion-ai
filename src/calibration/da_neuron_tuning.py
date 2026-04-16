@@ -87,6 +87,7 @@ def test_da_params(params: DAParamSet, n_neurons: int = 20, duration_ms: float =
                      method="euler", name="da_test")
     G.v = -65 + rng.normal(0, 2, n_neurons)
     G.u = params.b * G.v[:]
+    G.tau_inh = 5 * ms  # GABA_A default
     G.a = params.a
     G.b = params.b
     G.c = params.c

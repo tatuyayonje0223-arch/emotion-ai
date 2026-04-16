@@ -25,19 +25,29 @@ import numpy as np
 
 # TimedArray駆動版（v2回路で使用）— conductance-based inhibition対応
 # g_inh: GABA_A conductance state variable (Mitchell & Silver 2003 PNAS; Chance 2002 Neuron)
-# True shunting inhibition: I_inh = g_inh * (v - E_GABA), E_GABA = -75mV
-# tau_g = 5ms (GABA_A decay; Bartos 2007 Nat Rev Neurosci)
-# clip(v+75, 0, 200): prevents reversal below E_GABA in Izhikevich model
-#   (real conductance reversal is physical but Izhikevich dynamics cause instability)
+# True shunting inhibition: I_inh = g_inh * (v - E_GABA)
+# e_rev: per-neuron E_GABA reversal potential (default -75mV for all regions)
+#   Literature range: -65 to -80mV depending on KCC2 expression
+#   -75mV provides optimal calibration across emotion circuits
+# tau_inh: per-neuron GABA_A decay time constant
+#   - Cortical/amygdala: 5ms (Bartos 2007 Nat Rev Neurosci)
+#   - Midbrain (VTA DA, DR, PPTg): 10ms (Tan et al. 2010 J Physiol)
+# clip(): prevents reversal below E_GABA (Izhikevich dynamics instability)
+# g_inh is mathematically non-negative: starts at 0, only receives positive
+#   increments (on_pre="g_inh_post += w"), exponential decay preserves sign.
 IZH_TIMED_EQS = """
     dv/dt = (0.04*v**2 + 5*v + 140 - u + I_drive(t, i) - g_inh*clip(v + 75, 0, 200)) / ms : 1
     du/dt = (a*(b*v - u)) / ms : 1
-    dg_inh/dt = -g_inh / (5*ms) : 1
+    dg_inh/dt = -g_inh / tau_inh : 1
     a : 1 (constant)
     b : 1 (constant)
     c : 1 (constant)
     d : 1 (constant)
+    tau_inh : second (constant)
 """
+
+# Default tau_inh value for backward compatibility
+DEFAULT_TAU_INH_MS = 5.0  # cortical GABA_A default (Bartos 2007)
 
 # Synaptic入力版（neuron_models.pyのcreate_populationで使用）
 IZHIKEVICH_EQS = """

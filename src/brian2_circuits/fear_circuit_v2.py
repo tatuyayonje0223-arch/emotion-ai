@@ -159,6 +159,7 @@ class FearCircuitV2:
             method="euler", name="all_neurons",
         )
         G.v = -65 + rng.normal(0, 2, total_n)
+        G.tau_inh = 5 * ms  # GABA_A default
 
         # 細胞タイプ別パラメータ設定
         def _set_params(start, end, a, b, c_val, d, _=0):

@@ -23,6 +23,13 @@
 - [x] **Text analyzer keyword expansion (pain/threat)** — 4/15
   - 496/496 tests pass (was 494/496)
 - [x] **STRICT 100% (36/36) maintained** — 4/15
+- [x] **Independent audit R1-R3: 12 tests added + CRITICAL/HIGH fixes** — 4/16
+- [x] **Region-specific GABA_A kinetics (tau_inh parameterization)** — 4/16
+  - Midbrain (VTA DA, DR, PPTg): tau_inh=10ms (Tan 2010)
+  - Cortical/amygdala: tau_inh=5ms (Bartos 2007)
+  - Shunting weights recalibrated for 10ms accumulation
+- [x] **CeL_CRF cell type: LTS→RS** (Haubensak 2010) — 4/16
+- [x] **Citations corrected** (Pomrenze 2019, Ciocchi 2010 topology) — 4/16
 
 ## Completed (Phase 2)
 
@@ -64,8 +71,8 @@
 |---------|-------|-------------|
 | FEAR | **8/8 (100%)** | la_exc 4.2/21.2, cel_som 9.2, PKCd 0.0, cem 10.0, pl 19.7, vlpag 10.0 |
 | RAGE | **6/6 (100%)** | MeA 5.7/19.5, vmh 2.9/10.9/24.8, dlpag 20.0 |
-| SEEKING | **4/4 (100%)** | VTA tonic 6.0, burst 19.8, **pause 0.3**, nac_d1 10.5 |
-| SADNESS | **3/3 (100%)** | sgacc 16.7, habenula 20.0, **DR suppressed 2.4** |
+| SEEKING | **4/4 (100%)** | VTA tonic 6.0, burst 19.8, **pause 0.0**, nac_d1 10.5 |
+| SADNESS | **3/3 (100%)** | sgacc 16.7, habenula 20.0, **DR suppressed 3.8** |
 | DISGUST | 3/3 | **100%** — aic 15.3, nts 16.3, putamen 9.5 |
 | CARE | 3/3 | **100%** — mpoa 10.0, pvn_oxt 7.7, vta 8.4 |
 | PANIC/GRIEF | 3/3 | **100%** — dacc 13.3, bnst 9.8, pvn_crh 10.0 |
@@ -98,7 +105,7 @@
 
 ## Literature Foundation
 
-232 verified papers. 23+ parameter changes with paper citations.
+232 verified papers. 24 parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
 ## Phase 4 — Next Steps

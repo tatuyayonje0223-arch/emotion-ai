@@ -43,9 +43,10 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     # P2 expansion: Parabrachial nucleus + CeL CRF+ neurons
     # PB: direct nociceptor relay to CeA (Li 2013 Nat Neurosci 16:332-339)
     core.register_population("pb", 8, "RS")
-    # CeL CRF+: CRF-expressing CeL neurons (Pomrenze 2015; Marchant 2007)
+    # CeL CRF+: CRF-expressing CeL neurons (Pomrenze 2019 Neuropsychopharmacol)
     # Distinct from SOM+: drives sustained anxiety via BNST projection
-    core.register_population("cel_crf", 10, "LTS")
+    # RS type: Haubensak 2010 reports CRF+ as late-firing/regular-spiking
+    core.register_population("cel_crf", 10, "RS")
 
     # Intra-amygdala connections (Duvarci & Pare 2014; Ciocchi 2010)
     core.register_connection("la_exc", "la_pv", 0.3, 3.0)
@@ -74,15 +75,15 @@ def register_fear_circuit(core: SharedCoreNetwork) -> None:
     core.register_connection("pb", "cel_crf", 0.15, 2.0,
                              note="PB→CeL CRF+ pain; Li 2013 (subtype assumed)")
 
-    # CeL_CRF connections (Pomrenze 2015; Marchant 2007)
+    # CeL_CRF connections
     core.register_connection("cel_crf", "bnst", 0.20, 3.0,
-                             note="CeL CRF+→BNST sustained anxiety; Pomrenze 2015")
+                             note="CeL CRF+→BNST anxiogenic; Pomrenze 2019 Neuropsychopharmacol")
     core.register_connection("cel_crf", "cem", 0.15, 2.0,
-                             note="CeL CRF+→CeM amplifies fear output")
+                             note="CeL CRF+→CeM amplifies fear output; Marchant 2007")
     core.register_connection("cel_som", "cel_crf", 0.30, 2.5, inh=True,
-                             note="CeL SOM+→CRF+ inhibitory regulation")
+                             note="CeL SOM+→CRF+ inhibitory; inferred from Ciocchi 2010 topology")
     core.register_connection("cel_crf", "pvn_crh", 0.12, 2.0,
-                             note="CeL CRF+→PVN HPA axis activation")
+                             note="CeL CRF+→PVN HPA; Pomrenze 2019")
 
     # mPFC (Courtin 2014; Quirk 2002)
     core.register_connection("pl", "la_exc", 0.12, 2.0, note="PL drives fear expression")
@@ -574,33 +575,26 @@ class EmotionBrainV2:
 
             hab_drive = np.zeros((n_steps, 15))
             # Yang 2018 Nature: LHb burst during reward omission
-            # Hong 2011 J Neurosci: single LHb stim → DA suppression ~85ms
-            # Extended burst window 100ms for sustained RMTg/DRN_GABA activation
-            hab_drive[:, :] = 2.0 * loss                    # moderate tonic (target 10-20Hz total)
+            # Schultz 1997 Science: DA pause ~150-300ms for negative RPE
+            hab_drive[:, :] = 2.0 * loss                    # moderate tonic
             burst_s = int(80 / c.dt_ms)
             burst_e = int(180 / c.dt_ms)                    # 100ms burst (Yang 2018)
             hab_drive[burst_s:burst_e, :] += 20.0 * loss    # strong burst → RMTg/DRN_GABA
             overrides["habenula"] = hab_drive
 
-            # ── RMTg/DRN_GABA sustained drive during loss ──
-            # WHY drive override + synaptic (habenula→RMTg): habenula burst is 100ms
-            # (burst_s to burst_e), but DA pause lasts 200-500ms (Schultz 1997).
-            # Synaptic input alone drives RMTg only during burst window → insufficient
-            # g_inh accumulation over 300ms trial. Sustained override represents
-            # tonic habenula→RMTg excitation that is otherwise time-limited.
-            # KNOWN LIMITATION: this partially regresses from pure circuit emergence
-            # (Changes 19-20). Full resolution requires extended habenula burst or
-            # longer simulation window.
-            rmtg_drive = np.zeros((n_steps, 10))  # rmtg n=10
-            rmtg_drive[:, :] = 3.0 * loss                    # sustained component
-            rmtg_drive[burst_s:burst_e, :] += 5.0 * loss     # burst peak
+            # RMTg sustained drive during loss (habenula synaptic + direct)
+            # tau_inh=10ms (midbrain) provides longer g_inh accumulation,
+            # but habenula burst alone covers only 100ms of 300ms trial.
+            # Sustained drive represents tonic habenula→RMTg excitation.
+            rmtg_drive = np.zeros((n_steps, 10))
+            rmtg_drive[:, :] = 3.0 * loss
+            rmtg_drive[burst_s:burst_e, :] += 5.0 * loss
             overrides["rmtg"] = rmtg_drive
 
-            # DRN_GABA: gentle sustained drive for partial DR suppression
-            # Target: DR 2-4Hz (20-40% reduction from ~6Hz baseline)
-            # Conductance-based inhibition is strong → very light drive needed
-            drn_gaba_drive = np.zeros((n_steps, 10))  # drn_gaba n=10
-            drn_gaba_drive[:, :] = 0.5 * loss         # gentle sustained
+            # DRN_GABA: gentle sustained for partial DR suppression (2-4Hz)
+            # tau_inh=10ms (midbrain) doubles accumulation → reduced drive
+            drn_gaba_drive = np.zeros((n_steps, 10))
+            drn_gaba_drive[:, :] = 0.35 * loss
             overrides["drn_gaba"] = drn_gaba_drive
 
             # ── PPTg inhibition → VTA DA pause (circuit-level) ──

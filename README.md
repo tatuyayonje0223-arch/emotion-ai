@@ -73,7 +73,7 @@ Previous structural limitations (VTA DA pause at 6.7Hz, DR at 6.7Hz) resolved by
 
 232 verified papers across 10 emotions + brain connectome.
 DOI verification: 94% valid (CrossRef API). Content match: 70% (PubMed abstracts).
-24+ parameter changes with paper citations logged.
+23 parameter changes with paper citations logged.
 
 | Emotion | Papers | Top Paper |
 |---------|--------|-----------|
