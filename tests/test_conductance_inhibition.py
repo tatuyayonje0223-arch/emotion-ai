@@ -127,3 +127,33 @@ class TestCeAExpansion:
         r = brain.process(threat=0.8)
         vip = r.all_rates.get("cel_vip", 0)
         assert vip >= 0, f"CeL VIP+ negative rate: {vip:.1f}"
+
+
+class TestAdExModel:
+    """AdEx (Adaptive Exponential) neuron model infrastructure tests."""
+
+    def test_adex_builds_and_runs(self):
+        """AdEx model should build and run without errors."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        cfg = SharedCoreConfig(use_adex=True)
+        brain = EmotionBrainV2(config=cfg)
+        r = brain.process(threat=0.5)
+        assert brain.total_neurons == 821
+        assert len(brain.population_names) == 53
+
+    def test_adex_produces_spikes(self):
+        """AdEx neurons should fire (non-zero rates)."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        cfg = SharedCoreConfig(use_adex=True)
+        brain = EmotionBrainV2(config=cfg)
+        r = brain.process(threat=0.8)
+        active = sum(1 for v in r.all_rates.values() if v > 0.5)
+        assert active > 20, f"Too few active populations: {active}"
+
+    def test_adex_default_is_izhikevich(self):
+        """Default config should use Izhikevich (use_adex=False)."""
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        cfg = SharedCoreConfig()
+        assert cfg.use_adex is False

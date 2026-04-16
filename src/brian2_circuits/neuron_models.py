@@ -49,6 +49,70 @@ IZH_TIMED_EQS = """
 # Default tau_inh value for backward compatibility
 DEFAULT_TAU_INH_MS = 5.0  # cortical GABA_A default (Bartos 2007)
 
+
+# === AdEx (Adaptive Exponential Integrate-and-Fire) 方程式テンプレート ===
+# Brette & Gerstner 2005 J Comput Neurosci; Naud et al. 2008 Biol Cybern
+# Dimensionless formulation matching Izhikevich voltage scale (-80 to +30)
+# Same g_inh conductance mechanism for backward-compatible shunting inhibition
+ADEX_TIMED_EQS = """
+    dv/dt = (-g_L*(v - E_L) + g_L*dT*exp(clip((v - V_T)/dT, -10, 10)) - w_adex + I_drive(t, i) - g_inh*clip(v + 75, 0, 200)) / tau_m : 1
+    dw_adex/dt = (a_sub*(v - E_L) - w_adex) / tau_w : 1
+    dg_inh/dt = -g_inh / tau_inh : 1
+    g_L : 1 (constant)
+    E_L : 1 (constant)
+    dT : 1 (constant)
+    V_T : 1 (constant)
+    tau_m : second (constant)
+    a_sub : 1 (constant)
+    b_spike : 1 (constant)
+    V_r : 1 (constant)
+    tau_w : second (constant)
+    tau_inh : second (constant)
+"""
+
+ADEX_THRESHOLD = "v >= V_T + 5*dT"
+ADEX_RESET = "v = V_r; w_adex += b_spike"
+
+# AdEx cell type parameters (Naud et al. 2008; Brette & Gerstner 2005)
+# Calibrated to match Izhikevich voltage scale and approximate firing patterns
+ADEX_CELL_TYPES: dict[str, dict[str, float]] = {
+    # Calibrated for Izhikevich drive scale (bg_noise=1.7, tonic~2.3)
+    # g_L=0.1: I_thresh ≈ g_L*(V_T-E_L) ≈ 0.1*20 = 2.0 → I=4.0 gives ~6.7Hz tonic
+    # tau_m=1ms: matches Izhikevich implicit time scale
+    # g_L, E_L, dT, V_T, tau_m(ms), a_sub, b_spike, V_r, tau_w(ms)
+    "RS":       {"g_L": 0.1, "E_L": -70, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 5,  "V_r": -58, "tau_w_ms": 200},
+    "IB":       {"g_L": 0.1, "E_L": -70, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                 "a_sub": 0.005, "b_spike": 3, "V_r": -55, "tau_w_ms": 300},
+    "PV":       {"g_L": 0.08, "E_L": -70, "dT": 1, "V_T": -50, "tau_m_ms": 0.5,
+                 "a_sub": 0.05, "b_spike": 2, "V_r": -58, "tau_w_ms": 50},
+    "LTS":      {"g_L": 0.08, "E_L": -70, "dT": 2, "V_T": -55, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 4, "V_r": -58, "tau_w_ms": 300},
+    "SOM":      {"g_L": 0.08, "E_L": -70, "dT": 2, "V_T": -55, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 4, "V_r": -58, "tau_w_ms": 300},
+    "CeL_SOM":  {"g_L": 0.08, "E_L": -70, "dT": 2, "V_T": -55, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 4, "V_r": -58, "tau_w_ms": 300},
+    "VIP":      {"g_L": 0.08, "E_L": -70, "dT": 2, "V_T": -55, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 4, "V_r": -58, "tau_w_ms": 300},
+    "PKCd":     {"g_L": 0.08, "E_L": -70, "dT": 2, "V_T": -55, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 4, "V_r": -58, "tau_w_ms": 300},
+    "D1_MSN":   {"g_L": 0.12, "E_L": -80, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 5, "V_r": -70, "tau_w_ms": 200},
+    "D2_MSN":   {"g_L": 0.12, "E_L": -80, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                 "a_sub": 0.01, "b_spike": 5, "V_r": -70, "tau_w_ms": 200},
+    "OXT_neuron": {"g_L": 0.1, "E_L": -70, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                   "a_sub": 0.005, "b_spike": 3, "V_r": -55, "tau_w_ms": 200},
+    "CRH_neuron": {"g_L": 0.1, "E_L": -70, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                   "a_sub": 0.01, "b_spike": 5, "V_r": -58, "tau_w_ms": 200},
+    "5HT_neuron": {"g_L": 0.1, "E_L": -70, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                   "a_sub": 0.01, "b_spike": 5, "V_r": -58, "tau_w_ms": 200},
+    "NE_neuron":  {"g_L": 0.1, "E_L": -70, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                   "a_sub": 0.01, "b_spike": 6, "V_r": -58, "tau_w_ms": 200},
+    "DA_medial":  {"g_L": 0.1, "E_L": -70, "dT": 2, "V_T": -50, "tau_m_ms": 1.0,
+                   "a_sub": 0.005, "b_spike": 6, "V_r": -58, "tau_w_ms": 300},
+}
+
+
 # Synaptic入力版（neuron_models.pyのcreate_populationで使用）
 IZHIKEVICH_EQS = """
     dv/dt = (0.04*v**2 + 5*v + 140 - u + I_syn + I_ext + I_noise) / ms : 1

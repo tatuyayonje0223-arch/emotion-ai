@@ -40,7 +40,10 @@ from brian2 import (
     TimedArray, ms, start_scope, defaultclock,
 )
 
-from src.brian2_circuits.neuron_models import IZH_TIMED_EQS, CELL_TYPES
+from src.brian2_circuits.neuron_models import (
+    IZH_TIMED_EQS, CELL_TYPES,
+    ADEX_TIMED_EQS, ADEX_THRESHOLD, ADEX_RESET, ADEX_CELL_TYPES,
+)
 
 
 # ─── 追加セルタイプ（neuron_models.pyに将来追加予定）─────────────
@@ -82,6 +85,9 @@ class SharedCoreConfig:
     n_pptg: int = 15     # Grace 2007; Mena-Segovia 2008: PPTg tonic excitation to VTA DA
     n_dhpc: int = 15     # Maren 2001: dorsal hippocampus context encoding
     n_vhpc: int = 12     # Adhikari 2010; Fanselow 2010: ventral hippocampus anxiety modulation
+
+    # Neuron model selection
+    use_adex: bool = False  # True: AdEx (Brette & Gerstner 2005), False: Izhikevich (default)
 
 
 @dataclass
@@ -258,48 +264,81 @@ class SharedCoreNetwork:
         drive = np.full((n_steps, self._total_n), c.bg_noise)
         self._I_drive = TimedArray(drive, dt=c.dt_ms * ms)
 
-        # NeuronGroup
-        self._G = NeuronGroup(
-            self._total_n, IZH_TIMED_EQS,
-            threshold="v >= 30", reset="v = c; u += d",
-            method="euler", name="core_neurons",
-        )
+        # NeuronGroup — model selection
         rng = np.random.default_rng(12345)
-        self._G.v = -65 + rng.normal(0, 2, self._total_n)
-        self._G.u = 0.2 * self._G.v[:]
-        # Conductance inhibition defaults
-        self._G.tau_inh = 5 * ms  # GABA_A default (cortical; Bartos 2007)
 
-        # セルタイプ別パラメータ設定
-        for p in all_pops:
-            s, e = self._idx[p.name]
-            ct = EXTENDED_CELL_TYPES.get(p.cell_type, CELL_TYPES.get(p.cell_type))
-            if ct is None:
-                raise ValueError(f"Unknown cell type: {p.cell_type}")
+        if c.use_adex:
+            # AdEx model (Brette & Gerstner 2005)
+            self._G = NeuronGroup(
+                self._total_n, ADEX_TIMED_EQS,
+                threshold=ADEX_THRESHOLD, reset=ADEX_RESET,
+                method="euler", name="core_neurons",
+            )
+            self._G.v = -65 + rng.normal(0, 2, self._total_n)
+            self._G.w_adex = 0
+            self._G.tau_inh = 5 * ms
 
-            # VTA DA lateral: 較正済みパラメータを使用 (da_neuron_tuning.py)
-            if p.name == "vta_da_lat":
-                self._G.a[s:e] = 0.01
-                self._G.b[s:e] = 0.2
-                self._G.c[s:e] = -65
-                self._G.d[s:e] = 10
-            # PAG: 高d値で連続発火を抑制（u recovery強化）
-            elif p.name in ("vlpag", "dlpag"):
-                self._G.a[s:e] = 0.02
-                self._G.b[s:e] = 0.2
-                self._G.c[s:e] = -65
-                self._G.d[s:e] = 12  # 高d = 強い適応 → 連続発火を抑制
-            # D1/D2-MSN: 閾値が高い（down-state）→ 追加電流が必要
-            elif p.cell_type in ("D1_MSN", "D2_MSN"):
-                self._G.a[s:e] = ct["a"]
-                self._G.b[s:e] = ct["b"]
-                self._G.c[s:e] = -80  # deeper reset for MSN down-state
-                self._G.d[s:e] = ct["d"]
-            else:
-                self._G.a[s:e] = ct["a"]
-                self._G.b[s:e] = ct["b"]
-                self._G.c[s:e] = ct["c"]
-                self._G.d[s:e] = ct["d"]
+            # AdEx per-population parameters
+            for p in all_pops:
+                s, e = self._idx[p.name]
+                ct = ADEX_CELL_TYPES.get(p.cell_type)
+                if ct is None:
+                    ct = ADEX_CELL_TYPES["RS"]  # fallback to RS
+                self._G.g_L[s:e] = ct["g_L"]
+                self._G.E_L[s:e] = ct["E_L"]
+                self._G.dT[s:e] = ct["dT"]
+                self._G.V_T[s:e] = ct["V_T"]
+                self._G.tau_m[s:e] = ct["tau_m_ms"] * ms
+                self._G.a_sub[s:e] = ct["a_sub"]
+                self._G.b_spike[s:e] = ct["b_spike"]
+                self._G.V_r[s:e] = ct["V_r"]
+                self._G.tau_w[s:e] = ct["tau_w_ms"] * ms
+
+                # VTA DA: slower adaptation for tonic/burst/pause dynamics
+                if p.name == "vta_da_lat":
+                    self._G.a_sub[s:e] = 0.003
+                    self._G.b_spike[s:e] = 8
+                    self._G.tau_w[s:e] = 300 * ms
+                elif p.name in ("vlpag", "dlpag"):
+                    self._G.b_spike[s:e] = 8  # strong adaptation for PAG
+        else:
+            # Izhikevich model (default)
+            self._G = NeuronGroup(
+                self._total_n, IZH_TIMED_EQS,
+                threshold="v >= 30", reset="v = c; u += d",
+                method="euler", name="core_neurons",
+            )
+            self._G.v = -65 + rng.normal(0, 2, self._total_n)
+            self._G.u = 0.2 * self._G.v[:]
+            self._G.tau_inh = 5 * ms
+
+            # Izhikevich per-population parameters
+            for p in all_pops:
+                s, e = self._idx[p.name]
+                ct = EXTENDED_CELL_TYPES.get(p.cell_type, CELL_TYPES.get(p.cell_type))
+                if ct is None:
+                    raise ValueError(f"Unknown cell type: {p.cell_type}")
+
+                if p.name == "vta_da_lat":
+                    self._G.a[s:e] = 0.01
+                    self._G.b[s:e] = 0.2
+                    self._G.c[s:e] = -65
+                    self._G.d[s:e] = 10
+                elif p.name in ("vlpag", "dlpag"):
+                    self._G.a[s:e] = 0.02
+                    self._G.b[s:e] = 0.2
+                    self._G.c[s:e] = -65
+                    self._G.d[s:e] = 12
+                elif p.cell_type in ("D1_MSN", "D2_MSN"):
+                    self._G.a[s:e] = ct["a"]
+                    self._G.b[s:e] = ct["b"]
+                    self._G.c[s:e] = -80
+                    self._G.d[s:e] = ct["d"]
+                else:
+                    self._G.a[s:e] = ct["a"]
+                    self._G.b[s:e] = ct["b"]
+                    self._G.c[s:e] = ct["c"]
+                    self._G.d[s:e] = ct["d"]
 
         # ── Region-specific GABA_A parameters ──
         # Midbrain: slower GABA_A kinetics (Tan et al. 2010 J Physiol)
@@ -510,9 +549,12 @@ class SharedCoreNetwork:
         # 新TimedArray (Brian2キャッシュバグ回避)
         self._I_drive = TimedArray(drive, dt=c.dt_ms * ms)
 
-        # v/u/g_inhリセット
+        # v/adaptation/g_inh リセット
         self._G.v = -65 + noise_rng.normal(0, 2, self._total_n)
-        self._G.u = 0.2 * self._G.v[:]
+        if c.use_adex:
+            self._G.w_adex = 0
+        else:
+            self._G.u = 0.2 * self._G.v[:]
         self._G.g_inh = 0  # conductance reset
 
         # スパイクモニターリセット
