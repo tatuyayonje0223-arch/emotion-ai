@@ -529,6 +529,11 @@ class SharedCoreNetwork:
                 actual_tonic = overrides.get(pop_name, tonic)
                 drive[:, ps:pe] += actual_tonic
 
+        # AdEx drive scaling: Izhikevich quadratic provides strong subthreshold
+        # excitability absent in AdEx linear leak. Scale drives to compensate.
+        if c.use_adex:
+            drive *= 2.0  # empirically calibrated for AdEx linear leak
+
         # PAG: input-driven only. bg_noise * 0.2 as before (no tonic drive)
         for pag_name in ["vlpag", "dlpag"]:
             if pag_name in self._idx:
@@ -536,15 +541,17 @@ class SharedCoreNetwork:
                 drive[:, ps:pe] = c.bg_noise * 0.2
 
         # 情動固有のドライブ上書き
+        adex_scale = 2.0 if c.use_adex else 1.0
         if drive_overrides:
             for pop_name, override in drive_overrides.items():
                 if pop_name in self._idx:
                     s, e = self._idx[pop_name]
                     n_pop = e - s
-                    if override.ndim == 1:
-                        drive[:, s:e] += override[:n_pop]
-                    elif override.ndim == 2:
-                        drive[:override.shape[0], s:s + min(n_pop, override.shape[1])] += override[:, :n_pop]
+                    scaled = override * adex_scale
+                    if scaled.ndim == 1:
+                        drive[:, s:e] += scaled[:n_pop]
+                    elif scaled.ndim == 2:
+                        drive[:scaled.shape[0], s:s + min(n_pop, scaled.shape[1])] += scaled[:, :n_pop]
 
         # 新TimedArray (Brian2キャッシュバグ回避)
         self._I_drive = TimedArray(drive, dt=c.dt_ms * ms)
