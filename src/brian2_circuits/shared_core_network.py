@@ -294,12 +294,12 @@ class SharedCoreNetwork:
                 self._G.V_r[s:e] = ct["V_r"]
                 self._G.tau_w[s:e] = ct["tau_w_ms"] * ms
 
-                # VTA DA: g_L=0.2 (higher leak for tonic control), b_spike=3
+                # VTA DA: strong adaptation for tonic ~5Hz (b=8, tw=100ms)
                 if p.name == "vta_da_lat":
-                    self._G.g_L[s:e] = 0.2   # rheobase=4.0, controls tonic rate
+                    self._G.g_L[s:e] = 0.2
                     self._G.a_sub[s:e] = 0.005
-                    self._G.b_spike[s:e] = 3
-                    self._G.tau_w[s:e] = 200 * ms
+                    self._G.b_spike[s:e] = 8
+                    self._G.tau_w[s:e] = 100 * ms
                 elif p.name in ("vlpag", "dlpag"):
                     self._G.b_spike[s:e] = 8  # strong adaptation for PAG
         else:
