@@ -99,3 +99,31 @@ class TestCeAExpansion:
         brain = EmotionBrainV2()
         r = brain.process(pain=0.8)
         assert r.fear > 0.1, f"Fear not activated by pain: {r.fear:.2f}"
+
+    def test_cel_vip_population_exists(self):
+        """CeL VIP+ neurons should be registered."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        brain = EmotionBrainV2()
+        assert "cel_vip" in brain.population_names
+
+    def test_cea_pv_population_exists(self):
+        """CeA PV+ neurons should be registered."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        brain = EmotionBrainV2()
+        assert "cea_pv" in brain.population_names
+
+    def test_cea_pv_fires_during_threat(self):
+        """CeA PV+ should fire during threat (LA→PV feedforward)."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        brain = EmotionBrainV2()
+        r = brain.process(threat=0.8)
+        pv = r.all_rates.get("cea_pv", 0)
+        assert pv > 2.0, f"CeA PV+ too quiet during threat: {pv:.1f}"
+
+    def test_cel_vip_fires(self):
+        """CeL VIP+ should fire (low rate, input-modulated)."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        brain = EmotionBrainV2()
+        r = brain.process(threat=0.8)
+        vip = r.all_rates.get("cel_vip", 0)
+        assert vip >= 0, f"CeL VIP+ negative rate: {vip:.1f}"

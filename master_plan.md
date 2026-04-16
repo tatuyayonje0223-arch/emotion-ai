@@ -91,7 +91,7 @@
 | Layer | Components | Neurons |
 |-------|-----------|---------|
 | Shared Core | PAG, BNST, PVN, VTA, NAc, LC, DR, aIC, **RMTg**, **DRN_GABA**, **PPTg** | ~265 |
-| FEAR | LA, BA, CeL(SOM/PKCd/**CRF/VIP**), CeM, ITC, **PB**, **CeA_PV**, PL, IL, LA_PV, LA_VIP | ~234 |
+| FEAR | LA, BA, CeL(SOM/PKCd/**CRF/VIP**), CeM, ITC, **PB**, **CeA_PV**, PL, IL, LA_PV, LA_VIP | ~219 |
 | RAGE | MeA, VMH | 45 |
 | SEEKING | OFC, vmPFC, VP, LHb | 50 |
 | SADNESS | sgACC, Habenula | 35 |
@@ -105,7 +105,7 @@
 
 ## Literature Foundation
 
-232 verified papers. 24 parameter changes with paper citations.
+232 verified papers. 25 parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
 ## Phase 4 — Next Steps

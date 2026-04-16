@@ -472,7 +472,7 @@
     - VIP+ inhibits both SOM+ ON cells and PKCd+ OFF cells
     - Acts as "gain control" for the CeA disinhibition circuit
     - Receives basal amygdala input
-  - Royer et al. (2016) Neuron: PV+ fast-spiking interneurons in CeA
+  - Royer et al. (2011) Neuron 69:945-958: PV+ fast-spiking interneurons in CeA
     - Provides fast feedforward inhibition and gamma synchronization
     - Receives lateral amygdala feedforward input
     - Fast inhibition of CeM output neurons
