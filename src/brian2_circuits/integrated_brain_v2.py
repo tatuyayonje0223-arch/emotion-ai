@@ -69,8 +69,13 @@ class IntegratedBrainV2:
         self._step = 0
         self._is_extinction_mode = False
 
-    def process(self, text: str) -> IntegratedResultV2:
-        """テキストを処理し、10情動の統合結果を返す。"""
+    def process(self, text: str, context: float = 0.0) -> IntegratedResultV2:
+        """テキストを処理し、10情動の統合結果を返す。
+
+        Args:
+            text: ユーザー入力テキスト
+            context: 文脈信号 (0-1)。dHPC/vHPCを駆動し文脈依存恐怖条件付けを支援。
+        """
         self._step += 1
 
         # 1. 知覚ブリッジ
@@ -116,6 +121,7 @@ class IntegratedBrainV2:
                 frustration=_s(rage_hits, 0.35),
                 contamination=_s(disgust_hits, 0.4),
                 attachment_need=_s(care_hits + panic_hits + lust_hits, 0.2),
+                context=max(0.0, min(1.0, float(context))),
             )
         except Exception as e:
             # Brian2実行時エラーのフォールバック: 中立状態を返す

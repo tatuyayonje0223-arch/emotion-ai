@@ -94,3 +94,64 @@ class TestCrossModalLearning:
         # Seeking should not increase from threat conditioning
         assert s_after.seeking <= seeking_base * 1.5, \
             f"Seeking increased from threat: {seeking_base:.3f} → {s_after.seeking:.3f}"
+
+
+class TestHippocampalContext:
+    """Hippocampal context memory (dHPC/vHPC) tests."""
+
+    def test_dhpc_population_exists(self):
+        """dHPC should be registered."""
+        brain = EmotionBrainV2()
+        assert "dhpc" in brain.population_names
+
+    def test_vhpc_population_exists(self):
+        """vHPC should be registered."""
+        brain = EmotionBrainV2()
+        assert "vhpc" in brain.population_names
+
+    def test_context_activates_dhpc(self):
+        """Context input should drive dHPC firing."""
+        brain = EmotionBrainV2()
+        r = brain.process(context=0.8)
+        dhpc = r.all_rates.get("dhpc", 0)
+        assert dhpc > 8.0, f"dHPC too quiet with context: {dhpc:.1f}"
+
+    def test_context_activates_vhpc_with_threat(self):
+        """Context + threat should drive vHPC (anxiety modulation)."""
+        brain = EmotionBrainV2()
+        r = brain.process(context=0.8, threat=0.5)
+        vhpc = r.all_rates.get("vhpc", 0)
+        assert vhpc > 8.0, f"vHPC too quiet with context+threat: {vhpc:.1f}"
+
+    def test_context_parameter_accepted(self):
+        """EmotionBrainV2.process() should accept context parameter."""
+        brain = EmotionBrainV2()
+        # Should not raise
+        r = brain.process(context=0.5)
+        assert r.spiking_neurons > 0
+
+
+class TestIntegratedPipeline:
+    """End-to-end: text → perception → brain → emotion state."""
+
+    def test_threat_text_produces_fear(self):
+        """Japanese threat text should produce fear via integrated pipeline."""
+        from src.brian2_circuits.integrated_brain_v2 import IntegratedBrainV2
+        brain = IntegratedBrainV2()
+        r = brain.process("危険だ！攻撃を受けている！逃げろ！")
+        emotions = r.emotion_state.get("emotions", {})
+        assert emotions.get("fear", 0) > 0.1, f"Fear not detected: {emotions}"
+
+    def test_positive_text_produces_seeking(self):
+        """Positive text should produce seeking/positive valence."""
+        from src.brian2_circuits.integrated_brain_v2 import IntegratedBrainV2
+        brain = IntegratedBrainV2()
+        r = brain.process("嬉しい！素晴らしい！成功した！")
+        assert r.readout.valence > 0, f"Valence not positive: {r.readout.valence}"
+
+    def test_context_parameter_in_integrated(self):
+        """IntegratedBrainV2 should accept context parameter."""
+        from src.brian2_circuits.integrated_brain_v2 import IntegratedBrainV2
+        brain = IntegratedBrainV2()
+        r = brain.process("怖い", context=0.8)
+        assert r.spiking_neurons > 0
