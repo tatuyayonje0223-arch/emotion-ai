@@ -298,7 +298,7 @@ class SharedCoreNetwork:
                 if p.name == "vta_da_lat":
                     self._G.g_L[s:e] = 0.2
                     self._G.a_sub[s:e] = 0.005
-                    self._G.b_spike[s:e] = 8
+                    self._G.b_spike[s:e] = 9  # balanced: tonic ~3Hz, burst ~32Hz, pause ~1Hz
                     self._G.tau_w[s:e] = 100 * ms
                 elif p.name in ("vlpag", "dlpag"):
                     self._G.b_spike[s:e] = 8  # strong adaptation for PAG
@@ -369,9 +369,6 @@ class SharedCoreNetwork:
             uid = _uid[0]; _uid[0] += 1
             prob = cdef["p"]
             w_base = cdef["w"]
-            # AdEx: scale shunting weights to match drive scaling (preserve inh/exc balance)
-            if c.use_adex and cdef.get("shunting"):
-                w_base *= 2.0
 
             if cdef.get("stdp") and not cdef.get("inh"):
                 syn = Synapses(self._G, self._G, model="""
@@ -525,6 +522,53 @@ class SharedCoreNetwork:
             "surprise_amygdala": 2.3, # Sara & Bouret 2012
             "surprise_pfc": 2.3,
         }
+        # ── AdEx: per-population calibrated tonic drives ──
+        # AdEx linear leak requires different tonic per cell type (no quadratic boost).
+        # Each value calibrated from rheobase: g_L*(V_T-E_L) for that cell type.
+        # RS(g_L=0.15): rheo=3.0, target 5Hz: I≈4.5 → tonic=2.8
+        # LTS(g_L=0.12,V_T=-55): rheo=1.8, target 3-5Hz: I≈2.5 → tonic=0.8
+        # PV(g_L=0.12): rheo=2.4, target 20+Hz: I≈4.5 → tonic=2.8
+        # IB/DA(g_L=0.2): rheo=4.0, target 5Hz: I≈5.5 → tonic=3.8
+        if c.use_adex:
+            adex_tonic = {
+                # Shared — calibrated per cell type rheobase
+                "vta_da_lat": 2.3, "vta_da_med": 2.3,  # IB(g_L=0.2): tonic=3, burst=31, pause=1.4
+                "vta_gaba": 2.8,                        # PV
+                "bnst": 1.2, "lc": 2.8, "dr": 3.0,
+                "rmtg": 2.0, "drn_gaba": 2.0,          # PV: low baseline, habenula-driven
+                "pptg": 3.0, "aic": 3.2,
+                "pvn_crh": 3.0, "pvn_oxt": 2.5,
+                "nac_shell_d1": 4.5, "nac_shell_d2": 4.5, "nac_core_d1": 4.5,  # MSN(g_L=0.18): rheo=5.4
+                "dhpc": 3.0, "vhpc": 2.8,
+                # FEAR
+                "la_exc": 2.0, "ba_exc": 3.2,
+                "cel_som": 2.5, "cel_pkcd": 0.0,        # LTS(g_L=0.12,V_T=-55): rheo=1.8
+                "cem": 4.0, "itc": 1.5,
+                "pb": 3.0, "cel_crf": 0.5, "cel_vip": 0.3,
+                "cea_pv": 3.0, "pl": 3.2, "il": 3.0,
+                "la_pv": 3.5, "la_vip": 2.0,
+                # RAGE
+                "mea": 1.2, "vmh": 2.8,
+                # SEEKING
+                "ofc_reward": 3.0, "vmpfc_value": 3.0,
+                "vp": 1.0, "lhb": 3.0,
+                # SADNESS
+                "sgacc": 4.5, "habenula": 3.2,
+                # DISGUST
+                "nts_disgust": 3.0, "putamen": 4.0,
+                # CARE
+                "mpoa": 3.5, "care_bnst": 1.2,
+                # PANIC/GRIEF
+                "dacc": 3.0, "grief_pag": 3.0,
+                # PLAY/LUST/SURPRISE
+                "pfa_thalamus": 3.0, "play_cortex": 3.0,
+                "lust_mpoa": 3.0, "lust_hypo": 3.0,
+                "surprise_amygdala": 3.0, "surprise_pfc": 3.0,
+            }
+            for pop_name in list(tonic_drives.keys()):
+                if pop_name in adex_tonic:
+                    tonic_drives[pop_name] = adex_tonic[pop_name]
+
         # SBI較正用override適用
         overrides = getattr(self, '_tonic_overrides', {})
         for pop_name, tonic in tonic_drives.items():
@@ -533,11 +577,6 @@ class SharedCoreNetwork:
                 actual_tonic = overrides.get(pop_name, tonic)
                 drive[:, ps:pe] += actual_tonic
 
-        # AdEx drive scaling: Izhikevich quadratic provides strong subthreshold
-        # excitability absent in AdEx linear leak. Scale drives to compensate.
-        if c.use_adex:
-            drive *= 2.0  # empirically calibrated for AdEx linear leak
-
         # PAG: input-driven only. bg_noise * 0.2 as before (no tonic drive)
         for pag_name in ["vlpag", "dlpag"]:
             if pag_name in self._idx:
@@ -545,7 +584,7 @@ class SharedCoreNetwork:
                 drive[:, ps:pe] = c.bg_noise * 0.2
 
         # 情動固有のドライブ上書き
-        adex_scale = 2.0 if c.use_adex else 1.0
+        adex_scale = 1.8 if c.use_adex else 1.0  # scale for emotion-specific overrides
         if drive_overrides:
             for pop_name, override in drive_overrides.items():
                 if pop_name in self._idx:
