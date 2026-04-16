@@ -370,6 +370,17 @@ class SharedCoreNetwork:
             prob = cdef["p"]
             w_base = cdef["w"]
 
+            # AdEx: per-connection shunting weight scaling
+            # AdEx linear leak makes shunting less effective at same weights.
+            # CeA circuit needs stronger shunting for disinhibition to work.
+            if c.use_adex and cdef.get("shunting"):
+                key = f"{src_name}__{tgt_name}"
+                # Only CeA shunting needs scaling — RMTg/DRN_GABA already calibrated via tonic
+                adex_shunting_scale = {
+                    "cel_som__cel_pkcd": 4.0,  # CeA disinhibition: must silence PKCd during CS
+                }
+                w_base *= adex_shunting_scale.get(key, 1.0)
+
             if cdef.get("stdp") and not cdef.get("inh"):
                 syn = Synapses(self._G, self._G, model="""
                     w : 1
@@ -542,7 +553,7 @@ class SharedCoreNetwork:
                 "dhpc": 3.0, "vhpc": 2.8,
                 # FEAR
                 "la_exc": 2.0, "ba_exc": 3.2,
-                "cel_som": 2.5, "cel_pkcd": 0.0,        # LTS(g_L=0.12,V_T=-55): rheo=1.8
+                "cel_som": 3.0, "cel_pkcd": 0.0,        # LTS(g_L=0.12,V_T=-55): rheo=1.8, higher for threat response
                 "cem": 4.0, "itc": 1.5,
                 "pb": 3.0, "cel_crf": 0.5, "cel_vip": 0.3,
                 "cea_pv": 3.0, "pl": 3.2, "il": 3.0,

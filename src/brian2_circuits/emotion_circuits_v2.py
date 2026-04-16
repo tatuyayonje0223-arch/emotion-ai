@@ -645,7 +645,8 @@ class EmotionBrainV2:
             # but habenula burst alone covers only 100ms of 300ms trial.
             # Sustained drive represents tonic habenula→RMTg excitation.
             rmtg_drive = np.zeros((n_steps, 10))
-            rmtg_drive[:, :] = 3.0 * loss
+            _rmtg_sus = 3.5 * loss if c.use_adex else 3.0 * loss  # AdEx: stronger for pause
+            rmtg_drive[:, :] = _rmtg_sus
             rmtg_drive[burst_s:burst_e, :] += 5.0 * loss
             overrides["rmtg"] = rmtg_drive
 
