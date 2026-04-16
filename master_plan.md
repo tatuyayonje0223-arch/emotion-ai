@@ -1,6 +1,6 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 3 — Conductance-based inhibition + CeA expansion (100% strict validation)
+## Current Phase: Phase 4 complete — Full CeA microcircuit + behavioral tests (100% strict validation)
 
 ## Active To-Dos
 
@@ -108,14 +108,27 @@
 232 verified papers. 25 parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
-## Phase 4 — Next Steps
+## Phase 5 — Next Steps
 
 | Task | Requires | Priority |
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
 | Full AdEx neuron model migration | Replace Izhikevich entirely | P2 |
-| ~~Complete CeA: VIP+/PV+ interneurons~~ | ~~Additional cell types~~ | **done** (4/16) |
-| ~~Behavioral test battery~~ | ~~Scenario definitions~~ | **done** (4/16) |
+| Hippocampal context memory | HPC→BLA/PFC context gating | P3 |
+| Learning rule validation | STDP+DA mod vs extinction data | P3 |
+
+## Completed (Phase 4)
+
+- [x] **CeA VIP+/PV+ interneurons** — 4/16
+  - CeL_VIP: 8 neurons, disinhibition gain control (McCullough 2018)
+  - CeA_PV: 8 neurons, fast feedforward inhibition (Royer 2011)
+  - 778→794 neurons, 49→51 populations
+- [x] **Behavioral test battery (20 scenarios)** — 4/16
+  - 8 test classes: Threat/Reward/Social/Loss/Competing/Baseline/Pain/Play/Surprise/Lust
+- [x] **Independent audit R1-R3 (2 rounds)** — 4/16
+  - R1: CeA_PV rheobase fix, CeL_VIP input-gating calibration
+  - R2: test hardening (or→and, baseline thresholds, coverage 6→10 emotions)
+  - R3: neuron counts, parameter change counts, demo script, Royer citation
 
 ## Completed (Phase 1)
 
