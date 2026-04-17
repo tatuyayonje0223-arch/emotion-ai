@@ -575,8 +575,8 @@ class SharedCoreNetwork:
                 "dacc": 3.0, "grief_pag": 3.0,
                 # PLAY/LUST/SURPRISE
                 "pfa_thalamus": 3.5, "play_cortex": 3.2,  # PLAY: higher for social_play
-                "lust_mpoa": 3.5, "lust_hypo": 3.2,    # LUST: higher for sexual_arousal
-                "surprise_amygdala": 3.5, "surprise_pfc": 3.2,  # SURPRISE: higher for novelty
+                "lust_mpoa": 3.5, "lust_hypo": 3.2,
+                "surprise_amygdala": 3.5, "surprise_pfc": 3.2,
             }
             for pop_name in list(tonic_drives.keys()):
                 if pop_name in adex_tonic:
