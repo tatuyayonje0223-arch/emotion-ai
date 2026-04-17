@@ -208,23 +208,19 @@ def evaluate(params: np.ndarray, *, verbose: bool = False) -> float:
 
 
 def _callback_factory(start_time: float, total_targets: int):
-    """Create a callback that logs progress during optimization."""
-    state = {"gen": 0, "best": float("inf")}
+    """Create a callback that logs progress (no re-evaluation — uses convergence)."""
+    state = {"gen": 0, "best_convergence": 1.0}
 
     def callback(xk, convergence):
         state["gen"] += 1
         elapsed = time.time() - start_time
-        score = evaluate(xk)
-        n_pass = int(-score)
-        if score < state["best"]:
-            state["best"] = score
-            marker = " *"
-        else:
-            marker = ""
+        improved = convergence < state["best_convergence"]
+        if improved:
+            state["best_convergence"] = convergence
+        marker = " *" if improved else ""
         print(
             f"  Gen {state['gen']:3d} | "
-            f"{n_pass}/{total_targets} pass | "
-            f"score={-score:.2f} | "
+            f"convergence={convergence:.4f} | "
             f"elapsed={elapsed:.0f}s{marker}"
         )
 
@@ -261,7 +257,7 @@ def main():
     # ── Initial evaluation with current defaults ──
     print("Initial evaluation (current AdEx defaults):")
     initial_score = evaluate(PARAM_DEFAULTS, verbose=args.verbose)
-    initial_pass = int(-initial_score)
+    initial_pass = round(-initial_score)
     print(f"  => {initial_pass}/{TOTAL_TARGETS} PASS (score={-initial_score:.2f})")
     print()
 
@@ -294,7 +290,7 @@ def main():
     print("=" * 70)
 
     final_score = evaluate(result.x, verbose=args.verbose)
-    final_pass = int(-final_score)
+    final_pass = round(-final_score)
 
     print(f"\n  Result: {initial_pass}/{TOTAL_TARGETS} -> {final_pass}/{TOTAL_TARGETS} PASS")
     print(f"  Improvement: +{final_pass - initial_pass} targets")
