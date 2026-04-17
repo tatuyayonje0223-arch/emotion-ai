@@ -555,8 +555,8 @@ class SharedCoreNetwork:
                 "dhpc": 3.0, "vhpc": 2.8,
                 # FEAR
                 "la_exc": 2.0, "ba_exc": 3.2,
-                "cel_som": 3.0, "cel_pkcd": -0.5,       # LTS(g_L=0.12,V_T=-55): rheo=1.8, negative to suppress noise
-                "cem": 4.0, "itc": 1.5,
+                "cel_som": 3.5, "cel_pkcd": -0.5,       # LTS: higher tonic for CS-evoked response
+                "cem": 4.5, "itc": 1.5,                 # RS: higher for disinhibition cascade
                 "pb": 3.0, "cel_crf": 0.5, "cel_vip": 0.3,
                 "cea_pv": 3.0, "pl": 3.2, "il": 3.0,
                 "la_pv": 3.5, "la_vip": 2.0,
