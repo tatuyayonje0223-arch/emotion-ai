@@ -46,7 +46,7 @@ _RAGE_WORDS = {
 
 _SEEKING_WORDS = {
     # 日本語
-    "嬉しい", "楽しい", "素晴らしい", "最高", "幸せ", "喜び", "期待",
+    "嬉しい", "素晴らしい", "最高", "幸せ", "喜び", "期待",
     "ワクワク", "わくわく", "希望", "成功", "達成", "報酬", "ご褒美",
     "やった", "好奇心", "探索", "発見", "興味", "挑戦",
     # 追加: 口語・インフォーマル（"楽しい","面白い"はPLAYに移管、"ハマ"→"ハマる"に）
@@ -246,13 +246,17 @@ def analyze_text(text: str) -> PerceptionSignal:
     else:
         confidence = min(0.9, 0.4 + total_emotional * 0.1)
 
-    # Compound emotional expressions (boost confidence)
+    # Compound emotional expressions (proximity-checked, boost confidence)
     compound_hits = 0
     for prefix, suffixes in _COMPOUND_PATTERNS:
-        if prefix in text_lower:
+        idx = text_lower.find(prefix)
+        if idx >= 0:
+            # Check suffix within 10 chars after prefix
+            window = text_lower[idx:idx + len(prefix) + 10]
             for suffix in suffixes:
-                if suffix in text_lower:
+                if suffix in window:
                     compound_hits += 1
+                    break  # one match per prefix
     if compound_hits > 0:
         confidence = min(0.95, confidence + compound_hits * 0.1)
 
