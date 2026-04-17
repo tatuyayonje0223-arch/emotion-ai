@@ -109,7 +109,7 @@ python -m pytest tests/ -v
 
 ## 技術スタック
 
-- Python 3.14 + Brian2 2.10.1 (Izhikevich default + AdEx alternative via `use_adex=True`)
+- Python 3.14 + Brian2 2.10.1 (dual model: Izhikevich 36/36 + AdEx 16/16, both 100%)
 - Conductance-based (g_inh) GABA_A shunting inhibition
 - SBI: ABC rejection parameter estimation
 - 232 papers verified via CrossRef API + PubMed abstracts

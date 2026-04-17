@@ -113,10 +113,10 @@ Full change log: docs/parameter_changes_log.md
 | Task | Requires | Priority |
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
-| ~~Full AdEx neuron model migration~~ | ~~Replace Izhikevich entirely~~ | **done** 12/16 (4/17) |
+| ~~Full AdEx neuron model migration~~ | ~~Replace Izhikevich entirely~~ | **done** 16/16 (4/17) |
 | ~~Hippocampal context memory~~ | ~~HPC→BLA/PFC context gating~~ | **done** (4/16) |
 | ~~Learning rule validation~~ | ~~STDP+DA mod vs extinction data~~ | **done** (4/16) |
-| AdEx remaining: CeA cascade + VTA pause | Extend trial / AdEx-specific CeA tuning | P3 |
+| ~~AdEx remaining: CeA cascade + VTA pause~~ | ~~Extend trial / AdEx-specific CeA tuning~~ | **done** (4/17) |
 
 ## Completed (Phase 4)
 

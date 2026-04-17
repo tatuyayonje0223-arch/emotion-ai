@@ -555,11 +555,11 @@
      - RMTg→VTA DA: 1.3x (pause improvement)
   7. RMTg sustained drive: 3.5*loss for AdEx (vs 3.0 for Izhikevich)
 
-**較正状態** (12/16 = 75%):
-  PASS: la_base(3.3), la_cs(23.3), pl(20), vlpag(10), vmh(10),
-        VTA tonic(3.0), VTA burst(31.3), nac(8.7), sgacc(16.7),
-        DR(2.2), aic(13.3), mpoa(9.5)
-  FAIL: cel_som(6.7, LTS low-threshold tonic), cel_pkcd(3.3, initial transient),
-        cem(6.9, CeA cascade in 300ms), VTA pause(1.1, tonic/pause trade-off)
+**較正状態** (16/16 = 100%):
+  ALL PASS: la_base(3.3), la_cs(23.3), cel_som(8.0), cel_pkcd(0.0), cem(10.0),
+        pl(20), vlpag(10), vmh(10), VTA tonic(3.0), VTA burst(31.1),
+        VTA pause(1.0), nac(8.8), sgacc(16.7), DR(2.2), aic(13.3), mpoa(9.5)
+  Key calibration: PKCd tonic=-0.5, CeA SOM→PKCd shunting 4x, g_inh pre-init=0.5,
+        RMTg→VTA shunting 1.2x, VTA DA b_spike=9/tau_w=100ms/g_L=0.2
 
 **結果**: Izhikevich (default) 36/36 100% unaffected
