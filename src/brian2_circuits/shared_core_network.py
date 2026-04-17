@@ -378,8 +378,8 @@ class SharedCoreNetwork:
                 # Only CeA shunting needs scaling — RMTg/DRN_GABA already calibrated via tonic
                 adex_shunting_scale = {
                     "cel_som__cel_pkcd": 4.0,  # CeA disinhibition: must silence PKCd during CS
-                    "rmtg__vta_da_lat": 1.3,   # close 0.1Hz pause gap
-                    "rmtg__vta_da_med": 1.3,
+                    "rmtg__vta_da_lat": 1.2,   # balance tonic/pause
+                    "rmtg__vta_da_med": 1.2,
                 }
                 w_base *= adex_shunting_scale.get(key, 1.0)
 
@@ -555,7 +555,7 @@ class SharedCoreNetwork:
                 "dhpc": 3.0, "vhpc": 2.8,
                 # FEAR
                 "la_exc": 2.0, "ba_exc": 3.2,
-                "cel_som": 3.0, "cel_pkcd": 0.0,        # LTS(g_L=0.12,V_T=-55): rheo=1.8, higher for threat response
+                "cel_som": 3.0, "cel_pkcd": -0.5,       # LTS(g_L=0.12,V_T=-55): rheo=1.8, negative to suppress noise
                 "cem": 4.0, "itc": 1.5,
                 "pb": 3.0, "cel_crf": 0.5, "cel_vip": 0.3,
                 "cea_pv": 3.0, "pl": 3.2, "il": 3.0,
@@ -614,11 +614,16 @@ class SharedCoreNetwork:
 
         # v/adaptation/g_inh リセット
         self._G.v = -65 + noise_rng.normal(0, 2, self._total_n)
+        self._G.g_inh = 0  # conductance reset (before population-specific overrides)
         if c.use_adex:
             self._G.w_adex = 0
+            # PKCd: pre-initialize g_inh to steady-state from SOM baseline shunting
+            # Prevents initial transient spike before g_inh accumulates (~5ms)
+            if "cel_pkcd" in self._idx:
+                ps, pe = self._idx["cel_pkcd"]
+                self._G.g_inh[ps:pe] = 0.5  # pre-loaded from SOM baseline
         else:
             self._G.u = 0.2 * self._G.v[:]
-        self._G.g_inh = 0  # conductance reset
 
         # スパイクモニターリセット
         self._mon.resize(0)
