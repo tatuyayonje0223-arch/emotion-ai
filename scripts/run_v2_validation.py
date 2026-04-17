@@ -18,9 +18,9 @@ from src.calibration.quantitative_targets_v2 import (
 )
 
 
-def run_scenario(name: str, **kwargs) -> dict[str, float]:
+def run_scenario(name: str, config=None, **kwargs) -> dict[str, float]:
     """独立したBrainインスタンスで1シナリオを実行。"""
-    brain = EmotionBrainV2()
+    brain = EmotionBrainV2(config=config)
     state = brain.process(**kwargs)
     return dict(state.all_rates)
 
@@ -28,8 +28,16 @@ def run_scenario(name: str, **kwargs) -> dict[str, float]:
 def main():
     t0 = time.time()
 
+    # AdEx mode via --adex flag
+    use_adex = "--adex" in sys.argv
+    config = None
+    if use_adex:
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        config = SharedCoreConfig(use_adex=True)
+
+    model_name = "AdEx" if use_adex else "Izhikevich"
     print("=" * 90)
-    print("  V2 Emotion Circuits -- Quantitative Validation")
+    print(f"  V2 Emotion Circuits -- Quantitative Validation [{model_name}]")
     print("  Using EmotionBrainV2.process() directly (independent instances per scenario)")
     print("=" * 90)
 
@@ -93,7 +101,7 @@ def main():
         all_rates[emo] = {}
         for cond, kwargs in conditions.items():
             print(f"    {cond} ({kwargs}) ...", end=" ", flush=True)
-            rates = run_scenario(cond, **kwargs)
+            rates = run_scenario(cond, config=config, **kwargs)
             all_rates[emo][cond] = rates
             trial += 1
             top = sorted(rates.items(), key=lambda x: x[1], reverse=True)[:5]

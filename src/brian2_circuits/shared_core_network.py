@@ -545,38 +545,38 @@ class SharedCoreNetwork:
         if c.use_adex:
             adex_tonic = {
                 # Shared — calibrated per cell type rheobase
-                "vta_da_lat": 2.3, "vta_da_med": 2.3,  # IB(g_L=0.2): tonic=3, burst=31, pause=1.4
+                "vta_da_lat": 2.5, "vta_da_med": 2.5,  # IB(g_L=0.2): above rheobase for stable tonic
                 "vta_gaba": 2.8,                        # PV
-                "bnst": 1.2, "lc": 2.8, "dr": 3.0,
+                "bnst": 2.0, "lc": 2.8, "dr": 3.0,
                 "rmtg": 2.0, "drn_gaba": 2.0,          # PV: low baseline, habenula-driven
                 "pptg": 3.0, "aic": 3.2,
                 "pvn_crh": 3.0, "pvn_oxt": 2.5,
                 "nac_shell_d1": 4.5, "nac_shell_d2": 4.5, "nac_core_d1": 4.5,  # MSN(g_L=0.18): rheo=5.4
                 "dhpc": 3.0, "vhpc": 2.8,
                 # FEAR
-                "la_exc": 2.0, "ba_exc": 3.2,
-                "cel_som": 3.5, "cel_pkcd": -0.5,       # LTS: higher tonic for CS-evoked response
-                "cem": 4.5, "itc": 1.5,                 # RS: higher for disinhibition cascade
+                "la_exc": 2.0, "ba_exc": 3.5,           # BA: higher for CeA cascade
+                "cel_som": 3.5, "cel_pkcd": -0.5,       # LTS: higher for CS-evoked
+                "cem": 4.5, "itc": 1.5,                 # RS: higher for disinhibition
                 "pb": 3.0, "cel_crf": 0.5, "cel_vip": 0.3,
-                "cea_pv": 3.0, "pl": 3.2, "il": 3.0,
+                "cea_pv": 3.0, "pl": 3.2, "il": 3.5,
                 "la_pv": 3.5, "la_vip": 2.0,
                 # RAGE
-                "mea": 1.2, "vmh": 2.8,
+                "mea": 1.2, "vmh": 2.3,                 # VMH: lower for baseline [2-5]
                 # SEEKING
                 "ofc_reward": 3.0, "vmpfc_value": 3.0,
                 "vp": 1.0, "lhb": 3.0,
                 # SADNESS
-                "sgacc": 4.5, "habenula": 3.2,
+                "sgacc": 4.5, "habenula": 2.5,
                 # DISGUST
-                "nts_disgust": 3.0, "putamen": 4.0,
+                "nts_disgust": 3.0, "putamen": 4.5,
                 # CARE
                 "mpoa": 3.5, "care_bnst": 1.2,
                 # PANIC/GRIEF
                 "dacc": 3.0, "grief_pag": 3.0,
                 # PLAY/LUST/SURPRISE
-                "pfa_thalamus": 3.0, "play_cortex": 3.0,
-                "lust_mpoa": 3.0, "lust_hypo": 3.0,
-                "surprise_amygdala": 3.0, "surprise_pfc": 3.0,
+                "pfa_thalamus": 3.5, "play_cortex": 3.2,  # PLAY: higher for social_play
+                "lust_mpoa": 3.5, "lust_hypo": 3.2,    # LUST: higher for sexual_arousal
+                "surprise_amygdala": 3.5, "surprise_pfc": 3.2,  # SURPRISE: higher for novelty
             }
             for pop_name in list(tonic_drives.keys()):
                 if pop_name in adex_tonic:
