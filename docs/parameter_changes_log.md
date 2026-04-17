@@ -544,12 +544,22 @@
      - g_inh conductance mechanism shared with Izhikevich
   2. ADEX_CELL_TYPES: 15 cell types mapped
   3. SharedCoreConfig.use_adex flag for model selection
-  4. Drive scaling: 2.0x for AdEx (compensates linear leak vs Izh quadratic)
-  5. Shunting weight scaling: 2.0x for AdEx (preserves inh/exc balance)
+  4. Per-population AdEx tonic drives (replaces uniform 2.0x scaling):
+     - Each cell type calibrated from rheobase: g_L*(V_T-E_L)
+     - RS(g_L=0.15)→tonic=2.0-4.0, LTS(0.12)→0.5-3.0, PV(0.12)→2.0-3.5
+     - IB/DA(g_L=0.2)→tonic=2.3 (exactly at rheobase, noise-driven)
+     - MSN(0.18)→tonic=4.0-4.5 (high rheobase 5.4)
+  5. drive_overrides: adex_scale=1.8 for emotion-specific drives
+  6. Per-connection AdEx shunting weights:
+     - CeA SOM→PKCd: 4.0x (disinhibition)
+     - RMTg→VTA DA: 1.3x (pause improvement)
+  7. RMTg sustained drive: 3.5*loss for AdEx (vs 3.0 for Izhikevich)
 
-**較正状態** (9/16 quick targets):
-  PASS: cel_som, cem, pl, vlpag, VTA burst, VTA pause, nac, sgacc, aic
-  FAIL: la_base(high), pkcd(shunting), VTA tonic(low), dr(suppressed),
-        vmh/mpoa(high) — iterative tuning needed
+**較正状態** (12/16 = 75%):
+  PASS: la_base(3.3), la_cs(23.3), pl(20), vlpag(10), vmh(10),
+        VTA tonic(3.0), VTA burst(31.3), nac(8.7), sgacc(16.7),
+        DR(2.2), aic(13.3), mpoa(9.5)
+  FAIL: cel_som(6.7, LTS low-threshold tonic), cel_pkcd(3.3, initial transient),
+        cem(6.9, CeA cascade in 300ms), VTA pause(1.1, tonic/pause trade-off)
 
 **結果**: Izhikevich (default) 36/36 100% unaffected

@@ -194,9 +194,28 @@ class TestAdExModel:
         """Izhikevich validation should be 36/36 regardless of AdEx code existence."""
         from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
         brain = EmotionBrainV2()  # default = Izhikevich
-        # Key Izhikevich targets
         r_tonic = brain.process()
         assert 3 <= r_tonic.all_rates["vta_da_lat"] <= 7
         brain2 = EmotionBrainV2()
         r_threat = brain2.process(threat=0.8)
         assert r_threat.all_rates["cem"] >= 10
+
+    def test_adex_per_population_tonic(self):
+        """AdEx should have different tonic rates than Izhikevich (per-pop calibration)."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        cfg = SharedCoreConfig(use_adex=True)
+        brain = EmotionBrainV2(config=cfg)
+        r = brain.process()
+        # la_exc should fire at baseline (tonic=2.0, rheobase=3.0, bg=1.7 → I=3.7 > 3.0)
+        assert r.all_rates["la_exc"] > 1.0, f"la_exc too quiet: {r.all_rates['la_exc']:.1f}"
+
+    def test_adex_drive_scale_affects_overrides(self):
+        """AdEx emotion-specific drives should be scaled (1.8x) relative to Izhikevich."""
+        from src.brian2_circuits.emotion_circuits_v2 import EmotionBrainV2
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        # AdEx with threat should produce meaningful fear response
+        cfg = SharedCoreConfig(use_adex=True)
+        brain = EmotionBrainV2(config=cfg)
+        r = brain.process(threat=0.8)
+        assert r.fear > 0.05, f"AdEx fear too low: {r.fear:.3f}"

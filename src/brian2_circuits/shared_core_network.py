@@ -378,6 +378,8 @@ class SharedCoreNetwork:
                 # Only CeA shunting needs scaling — RMTg/DRN_GABA already calibrated via tonic
                 adex_shunting_scale = {
                     "cel_som__cel_pkcd": 4.0,  # CeA disinhibition: must silence PKCd during CS
+                    "rmtg__vta_da_lat": 1.3,   # close 0.1Hz pause gap
+                    "rmtg__vta_da_med": 1.3,
                 }
                 w_base *= adex_shunting_scale.get(key, 1.0)
 
