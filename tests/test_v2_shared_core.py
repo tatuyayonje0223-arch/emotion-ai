@@ -37,7 +37,7 @@ class TestSharedCoreBasic:
                     cfg.n_nac_shell_d1 + cfg.n_nac_shell_d2 + cfg.n_nac_core_d1 +
                     cfg.n_lc + cfg.n_dr + cfg.n_aic +
                     cfg.n_rmtg + cfg.n_drn_gaba +
-                    cfg.n_pptg)
+                    cfg.n_pptg + cfg.n_dhpc + cfg.n_vhpc)
         assert core.total_neurons == expected
 
     def test_register_population(self):
