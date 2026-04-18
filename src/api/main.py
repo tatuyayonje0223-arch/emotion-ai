@@ -195,6 +195,76 @@ def brain_sleep(brain_id: str, cycles: int = 1):
     return {"brain_id": brain_id, "sleep_results": results}
 
 
+# === IntegratedBrainV2 エンドポイント（10情動 + AdEx対応） ===
+
+_brains_v2: dict[str, "IntegratedBrainV2"] = {}
+
+
+class BrainV2CreateRequest(BaseModel):
+    use_adex: bool = False
+
+
+class BrainV2ProcessRequest(BaseModel):
+    text: str
+    context: float = 0.0
+
+
+@app.post("/brain/v2/create")
+def create_brain_v2(request: BrainV2CreateRequest | None = None):
+    """IntegratedBrainV2 セッション作成。use_adex=true でAdExモデル。"""
+    from src.brian2_circuits.integrated_brain_v2 import IntegratedBrainV2
+    config = None
+    if request and request.use_adex:
+        from src.brian2_circuits.shared_core_network import SharedCoreConfig
+        config = SharedCoreConfig(use_adex=True)
+    brain = IntegratedBrainV2(config=config)
+    from uuid import uuid4
+    brain_id = f"v2-{uuid4().hex[:8]}"
+    _brains_v2[brain_id] = brain
+    model = "AdEx" if (request and request.use_adex) else "Izhikevich"
+    return {"brain_id": brain_id, "model": model, "neurons": 821, "populations": 53}
+
+
+@app.post("/brain/v2/{brain_id}/process")
+def brain_v2_process(brain_id: str, input_data: BrainV2ProcessRequest):
+    """IntegratedBrainV2 でテキスト処理。10情動状態を返す。"""
+    if brain_id not in _brains_v2:
+        raise HTTPException(404, f"Brain '{brain_id}' not found")
+    result = _brains_v2[brain_id].process(input_data.text, context=input_data.context)
+    return {
+        "brain_id": brain_id,
+        "step": result.step,
+        "blocked": result.blocked,
+        "emotion_state": result.emotion_state,
+        "readout": {
+            "valence": result.readout.valence,
+            "arousal": result.readout.arousal,
+            "threat_load": result.readout.threat_load,
+        },
+        "neuromodulation": result.neuromodulation,
+        "theta_coherence": result.theta_coherence,
+        "spiking_neurons": result.spiking_neurons,
+    }
+
+
+@app.post("/brain/v2/{brain_id}/sleep")
+def brain_v2_sleep(brain_id: str, cycles: int = 1):
+    """IntegratedBrainV2 の睡眠リプレイ。"""
+    if brain_id not in _brains_v2:
+        raise HTTPException(404, f"Brain '{brain_id}' not found")
+    results = _brains_v2[brain_id].sleep(n_cycles=cycles)
+    return {"brain_id": brain_id, "sleep_results": results}
+
+
+@app.delete("/brain/v2/{brain_id}")
+def delete_brain_v2(brain_id: str):
+    """IntegratedBrainV2 セッション削除。"""
+    if brain_id not in _brains_v2:
+        raise HTTPException(404, f"Brain '{brain_id}' not found")
+    del _brains_v2[brain_id]
+    return {"status": "deleted"}
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.0"}
+    return {"status": "ok", "version": "0.4.0", "models": ["izhikevich", "adex"]}
