@@ -96,12 +96,17 @@ pip install brian2 pydantic fastapi uvicorn pyyaml numpy scipy
 
 # V2 10情動デモ
 PYTHONPATH=. python scripts/emotion_brain_v2_demo.py
-
-# テキスト入力
 PYTHONPATH=. python scripts/emotion_brain_v2_demo.py --text "I'm terrified"
 
-# 定量バリデーション (strict ±30%)
+# 対話チャット (MockProvider: API不要)
+PYTHONPATH=. python scripts/emotion_chat.py --mock
+
+# 定量バリデーション (Izhikevich / AdEx)
 PYTHONPATH=. python scripts/run_v2_validation.py
+PYTHONPATH=. python scripts/run_v2_validation.py --adex
+
+# AdEx自動最適化
+PYTHONPATH=. python scripts/optimize_adex.py --max-iter 50 --pop-size 15
 
 # テスト
 python -m pytest tests/ -v
