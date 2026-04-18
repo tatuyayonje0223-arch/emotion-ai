@@ -75,6 +75,43 @@ class TestPerceptionV3:
         assert r.features["seeking_hits"] == 0
 
 
+class TestPerceptionBenchmark:
+    """10情動×日英ベンチマーク（v3認識率100%検証）。"""
+
+    CASES = [
+        ("怖い！助けて！逃げろ！", "fear_hits"),
+        ("I am terrified and scared", "fear_hits"),
+        ("むかつく！許せない！ブチ切れ", "rage_hits"),
+        ("I am furious and angry", "rage_hits"),
+        ("嬉しい！やった！成功した！", "seeking_hits"),
+        ("I am so happy and excited", "seeking_hits"),
+        ("悲しい...辛い...切ない", "sadness_hits"),
+        ("I feel so sad and lonely", "sadness_hits"),
+        ("気持ち悪い！吐き気がする", "disgust_hits"),
+        ("That is disgusting and gross", "disgust_hits"),
+        ("大好き！ありがとう！癒される", "care_hits"),
+        ("I love you, you are so kind", "care_hits"),
+        ("寂しい...会いたい...帰ってきて", "panic_grief_hits"),
+        ("I miss you, please come back", "panic_grief_hits"),
+        ("楽しい！面白い！笑える！ウケる", "play_hits"),
+        ("That was hilarious and fun", "play_hits"),
+        ("セクシー...魅力的...ドキドキ", "lust_hits"),
+        ("So attractive and seductive", "lust_hits"),
+        ("びっくり！ありえない！まさか！", "surprise_hits"),
+        ("I am shocked and amazed, wow", "surprise_hits"),
+    ]
+
+    def test_all_20_cases_detected(self):
+        """All 20 benchmark cases should have >= 2 hits."""
+        failed = []
+        for text, key in self.CASES:
+            r = analyze_text(text)
+            hits = r.features.get(key, 0)
+            if hits < 2:
+                failed.append(f"{key}: {hits} hits for '{text[:30]}'")
+        assert not failed, f"Failed: {failed}"
+
+
 class TestDataDrivenWeights:
     """data_driven重み取得のテスト。"""
 
