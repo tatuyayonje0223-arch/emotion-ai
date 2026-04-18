@@ -104,7 +104,7 @@ _CARE_WORDS = {
     "protect", "cherish", "adore", "affection", "bonding", "family",
     "baby", "child", "mother", "warm", "gentle", "hug", "grateful", "thanks",
     # 追加: インフォーマル英語
-    "darling", "precious", "sweetheart", "beloved",
+    "darling", "precious", "sweetheart", "beloved", "kind",
 }
 
 _PANIC_GRIEF_WORDS = {
