@@ -53,8 +53,8 @@ IntegratedBrainV2 (テキスト → 10情動 → readout → ポリシー)
 |---------|-------|-------------|
 | FEAR | **8/8 (100%)** | la_exc 4.2/21.2Hz, CeA shunting PKCd=0Hz, CeM 10Hz, PL 19.7Hz |
 | RAGE | **6/6 (100%)** | MeA 5.7/19.5Hz, VMH 2.9/10.9/24.8Hz, dlPAG 20Hz |
-| SEEKING | **4/4 (100%)** | VTA DA tonic 6.0, burst 19.8, **pause 0.3Hz**, NAc 10.5Hz |
-| SADNESS | **3/3 (100%)** | sgACC 16.7Hz, habenula 20Hz, **DR suppressed 2.4Hz** |
+| SEEKING | **4/4 (100%)** | VTA DA tonic 6.0, burst 19.8, **pause 0.1Hz**, NAc 10.5Hz |
+| SADNESS | **3/3 (100%)** | sgACC 16.7Hz, habenula 20Hz, **DR suppressed 3.1Hz** |
 | DISGUST | **3/3 (100%)** | aIC 15.3, NTS 16.3, putamen 9.5Hz |
 | CARE | **3/3 (100%)** | MPOA 10Hz, PVN OXT 7.7Hz, VTA 8.4Hz |
 | PANIC/GRIEF | **3/3 (100%)** | dACC 13.3, BNST 9.8, PVN CRH 10Hz |
@@ -73,7 +73,7 @@ Previous structural limitations (VTA DA pause at 6.7Hz, DR at 6.7Hz) resolved by
 
 232 verified papers across 10 emotions + brain connectome.
 DOI verification: 94% valid (CrossRef API). Content match: 70% (PubMed abstracts).
-26 parameter changes with paper citations logged.
+27 parameter changes with paper citations logged.
 
 | Emotion | Papers | Top Paper |
 |---------|--------|-----------|
@@ -114,7 +114,7 @@ python -m pytest tests/ -v
 
 ## 技術スタック
 
-- Python 3.14 + Brian2 2.10.1 (dual model: Izhikevich 36/36 + AdEx 16/16, both 100%)
+- Python 3.14 + Brian2 2.10.1 (dual model: Izhikevich 36/36 100% + AdEx 28/36 77.8%)
 - Conductance-based (g_inh) GABA_A shunting inhibition
 - SBI: ABC rejection parameter estimation
 - 232 papers verified via CrossRef API + PubMed abstracts

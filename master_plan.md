@@ -71,8 +71,8 @@
 |---------|-------|-------------|
 | FEAR | **8/8 (100%)** | la_exc 4.2/21.2, cel_som 9.2, PKCd 0.0, cem 10.0, pl 19.7, vlpag 10.0 |
 | RAGE | **6/6 (100%)** | MeA 5.7/19.5, vmh 2.9/10.9/24.8, dlpag 20.0 |
-| SEEKING | **4/4 (100%)** | VTA tonic 6.0, burst 19.8, **pause 0.0**, nac_d1 10.5 |
-| SADNESS | **3/3 (100%)** | sgacc 16.7, habenula 20.0, **DR suppressed 3.8** |
+| SEEKING | **4/4 (100%)** | VTA tonic 6.0, burst 19.8, **pause 0.1**, nac_d1 10.5 |
+| SADNESS | **3/3 (100%)** | sgacc 16.7, habenula 20.0, **DR suppressed 3.1** |
 | DISGUST | 3/3 | **100%** — aic 15.3, nts 16.3, putamen 9.5 |
 | CARE | 3/3 | **100%** — mpoa 10.0, pvn_oxt 7.7, vta 8.4 |
 | PANIC/GRIEF | 3/3 | **100%** — dacc 13.3, bnst 9.8, pvn_crh 10.0 |
@@ -90,8 +90,8 @@
 
 | Layer | Components | Neurons |
 |-------|-----------|---------|
-| Shared Core | PAG, BNST, PVN, VTA, NAc, LC, DR, aIC, **RMTg**, **DRN_GABA**, **PPTg** | ~265 |
-| FEAR | LA, BA, CeL(SOM/PKCd/**CRF/VIP**), CeM, ITC, **PB**, **CeA_PV**, **dHPC**, **vHPC**, PL, IL, LA_PV, LA_VIP | ~246 |
+| Shared Core | PAG, BNST, PVN, VTA, NAc, LC, DR, aIC, RMTg, DRN_GABA, PPTg, **dHPC**, **vHPC** | ~312 |
+| FEAR | LA, BA, CeL(SOM/PKCd/CRF/VIP), CeM, ITC, PB, CeA_PV, PL, IL, LA_PV, LA_VIP | ~219 |
 | RAGE | MeA, VMH | 45 |
 | SEEKING | OFC, vmPFC, VP, LHb | 50 |
 | SADNESS | sgACC, Habenula | 35 |
@@ -105,7 +105,7 @@
 
 ## Literature Foundation
 
-232 verified papers. 26 parameter changes with paper citations.
+232 verified papers. 27 parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
 ## Phase 6 — Next Steps
@@ -114,7 +114,7 @@ Full change log: docs/parameter_changes_log.md
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
 | AdEx SBI最適化 (28→36/36) | `scripts/optimize_adex.py` (~33h) | P2 |
-| FastAPI V2移行 | API→IntegratedBrainV2 | P3 |
+| ~~FastAPI V2移行~~ | ~~API→IntegratedBrainV2~~ | **done** (4/18) |
 
 ## Completed (Phase 5)
 
