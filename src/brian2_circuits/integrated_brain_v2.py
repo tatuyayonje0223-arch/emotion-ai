@@ -54,10 +54,10 @@ class IntegratedBrainV2:
     → 神経修飾更新 → 記憶エンコード → readout → 応答ポリシー
     """
 
-    def __init__(self, seed: int = 42):
+    def __init__(self, seed: int = 42, config=None):
         import random as _random
         self._rng = _random.Random(seed)
-        self._emotion_brain = EmotionBrainV2()
+        self._emotion_brain = EmotionBrainV2(config=config)
 
         # 神経修飾 (V1と同じモジュール)
         self._ecb = EndocannabinoidState()

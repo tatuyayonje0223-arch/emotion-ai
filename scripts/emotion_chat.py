@@ -49,15 +49,12 @@ def main():
     provider = MockProvider() if args.mock else get_best_provider()
     model_name = "AdEx" if args.adex else "Izhikevich"
 
-    # Import config for AdEx mode
+    config = None
     if args.adex:
         from src.brian2_circuits.shared_core_network import SharedCoreConfig
-        # EmotionLLMBridgeV2 uses IntegratedBrainV2 which creates EmotionBrainV2 internally
-        # We need to pass config through — currently IntegratedBrainV2 doesn't accept config
-        # Fall back to default (Izhikevich) for now if IntegratedBrainV2 doesn't support it
-        print("  Note: --adex requires IntegratedBrainV2 config support (using Izhikevich)")
+        config = SharedCoreConfig(use_adex=True)
 
-    bridge = EmotionLLMBridgeV2(provider=provider)
+    bridge = EmotionLLMBridgeV2(provider=provider, config=config)
 
     print("=" * 60)
     print(f"  EmotionBrainV2 + LLM Chat [{model_name}]")

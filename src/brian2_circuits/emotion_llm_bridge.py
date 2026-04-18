@@ -184,10 +184,10 @@ def _fallback_response(result: IntegratedResult) -> str:
 class EmotionLLMBridgeV2:
     """IntegratedBrainV2 + LLM の統合。10情動が反映された応答生成。"""
 
-    def __init__(self, provider: LLMProvider | None = None):
+    def __init__(self, provider: LLMProvider | None = None, config=None):
         if not _HAS_V2:
             raise ImportError("IntegratedBrainV2 not available")
-        self._brain = IntegratedBrainV2()
+        self._brain = IntegratedBrainV2(config=config)
         self._provider = provider or get_best_provider()
         self._conversation: list[dict[str, str]] = []
 
