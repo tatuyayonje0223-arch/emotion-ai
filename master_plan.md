@@ -108,15 +108,24 @@
 232 verified papers. 26 parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
-## Phase 5 — Next Steps
+## Phase 6 — Next Steps
 
 | Task | Requires | Priority |
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
-| ~~Full AdEx neuron model migration~~ | ~~Izhikevich alternative~~ | **done** quick16/16 + full28/36 (4/17) |
-| ~~Hippocampal context memory~~ | ~~HPC→BLA/PFC context gating~~ | **done** (4/16) |
-| ~~Learning rule validation~~ | ~~STDP+DA mod vs extinction data~~ | **done** (4/16) |
-| ~~AdEx remaining: CeA cascade + VTA pause~~ | ~~Extend trial / AdEx-specific CeA tuning~~ | **done** (4/17) |
+| AdEx SBI最適化 (28→36/36) | `scripts/optimize_adex.py` (~33h) | P2 |
+| FastAPI V2移行 | API→IntegratedBrainV2 | P3 |
+
+## Completed (Phase 5)
+
+- [x] **Full AdEx neuron model** — quick 16/16 + full 28/36 (4/15-17)
+- [x] **HPC context memory (dHPC/vHPC)** — 4/16
+- [x] **STDP learning rule validation** — 4/16
+- [x] **Perception bridge v3** — keyword dedup + compound proximity (4/17-18)
+- [x] **SBI optimizer script** — scipy differential_evolution (4/17)
+- [x] **Config propagation** — IntegratedBrainV2/LLMBridgeV2 accept SharedCoreConfig (4/18)
+- [x] **Chat CLI V2** — 10情動表示 + --adex + /context (4/18)
+- [x] **Independent audit** — 6ラウンド、CRITICAL/HIGH全修正 (4/15-18)
 
 ## Completed (Phase 4)
 
