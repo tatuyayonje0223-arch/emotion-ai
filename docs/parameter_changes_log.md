@@ -566,7 +566,75 @@
 
 ---
 
-## Audit 2026-04-19: AdEx 28→36 Revert + Baseline Validation Gap Discovered
+## Audit v2 2026-04-19 (deeper): Pre-existing overfit + Monte Carlo instability
+
+**追加監査**: 前回v1 audit (R1-R3) は commit ab61d1d のみ対象だった。v2 audit (R4-R7) で**プロジェクト全体**を再評価した結果、Izh 36/36 自体が同じ pattern に依拠していることが判明。
+
+### Pre-existing「数値合わせ」patterns (Izh 36/36 内在)
+
+Change 27 + Changes 1-26 に flagged した ab61d1d と同じパターン:
+- `PKCd tonic = -0.5` — 負値tonic (non-physiological silence hack)
+- `VTA DA b_spike=9, tau_w=100ms, g_L=0.2` — コメント明示「balanced: tonic ~3Hz, burst ~32Hz, pause ~1Hz」= 値を target から逆算
+- `vlpag/dlpag b_spike=8` — population別override
+- `CeA SOM→PKCd shunting 4.0x`, `RMTg→VTA DA 1.3x`, etc. — AdEx専用synapse multiplier
+- `g_inh pre-init = 0.5` for PKCd — initial state hack
+- `adex_scale = 1.8` — 全scenario drive補正のmagic number
+- `ADEX_CELL_TYPES tau_m_ms = 1.0` — 生物学的cortical RS (10-20ms) と乖離
+- Change 12 LTS `b=0.22, d=4` — "between RS and standard LTS" empirical interpolation
+- Change 23 perception bridge keyword expansion — test set fitting疑い
+
+### Monte Carlo validation (5-trial)
+
+`scripts/evaluate_multitrial.py` 新設。同brainで trial_num を変えて5回試行、target PASS k/n を測定:
+
+| モデル | Stable PASS | Unstable (boundary) | Stable FAIL |
+|--------|------------|---------------------|-------------|
+| **Izhikevich** | **35/36** | 1/36 (sadness_suppressed/dr: 3/5 pass, mean 3.69 σ 0.74) | 0/36 |
+| **AdEx** | **25/36** | 4/36 (cel_som/cem/vta_tonic/vta_pause 境界線) | 7/36 |
+
+**結論**:
+- Izh "36/36 STRICT" claim は実際**35 stable + 1 seed-dependent** → 正直には **35/36**
+- AdEx 失敗 8件のうち 7件は安定FAIL (真の構造限界)、1件 (lust_vta) は scenario drive干渉由来
+- AdEx 25-29/36 が seed によって揺れる真の "現状" 範囲
+
+### Methodological issues
+
+1. **Simulation duration 300ms** (not 1s)
+   - 1 spike / 10 neurons = 0.33 Hz 量子化
+   - `SharedCoreConfig.duration_ms = 300.0` 定義
+   - CS window 200ms (67% of trial) は非生理学的 (CS通常1-3s / trial 10-60s)
+
+2. **Single-trial validation** (trial_num=0固定)
+   - `optimize_adex.py` / 既存validation は seed単一
+   - Monte Carlo averaging 未実装 → 本auditで新設
+
+3. **Euler method, dt=0.5ms** は Izhikevich 2003推奨 (dt ≤ 0.1ms) に違反
+   - Spike timing に数値誤差、STDP等timing-dependent processes に影響
+
+### Baseline rate violation (両モデル)
+
+`scripts/validate_baseline_rates.py` 計測 (no-input resting state):
+- **AdEx 6/20, Izh 6/20 baseline PASS**
+- MSN (putamen/nac_shell_d1/d2): 3.3-10 Hz vs Humphries 2005 <1 Hz
+- LC: 6.7-8.9 Hz vs Sara & Bouret 2012 1-3 Hz
+- DR / IL / aIC / BNST / PVN_CRH / MPOA: 2-3倍超過
+- 根本原因: `bg_noise = 1.7` がグローバル、高rheobase MSN には過剰
+
+### Phase 7 提案 (Option E: 漸進的改善計画)
+
+Phase 6 の baseline calibration を以下に細分化:
+
+| Task | 狙い | 難度 |
+|------|------|------|
+| Pop-specific bg_noise | MSN に低noise, LTS に中noise | 低 |
+| Monte Carlo validation を test suite に組込 | seed安定性を CI で検証 | 中 |
+| Duration 300ms → 1000ms | 量子化改善 (3.3x resolution) + trial時間現実化 | 中 (計算コスト3.3x) |
+| adex_scale = 1.8 の撤去 | AdEx固有scaling を各population個別補正に分散 | 高 |
+| 27 Change の paper-value chain 再検証 | 各parameter の derivation を明記 or empirical と label | 高 |
+| dt 0.5ms → 0.1ms | Euler安定性改善 | 低 (計算コスト5x) |
+
+---
+
 
 **背景**: 2026-04-19 に AdEx 28/36 → 36/36 を手動較正で達成（commit ab61d1d）。独立監査で深刻な問題が発覚し **commit a12ca32 で revert**。
 

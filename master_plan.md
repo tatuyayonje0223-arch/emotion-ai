@@ -1,6 +1,18 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 5 complete — scenario validation Izh 36/36 + AdEx 28/36 (accepted structural limit)
+## Current Phase: Phase 5 complete — refined honest scoring after v2 audit
+
+### 正直な現状 (2026-04-19 v2 audit後)
+
+| Validation dimension | Izhikevich | AdEx |
+|---------------------|-----------|------|
+| **Scenario (single-trial, trial_num=0)** | 36/36 | 28/36 |
+| **Scenario (MC 5-trial stable PASS)** | **35/36** | **25/36** |
+| **Scenario (boundary unstable)** | 1/36 (dr) | 4/36 |
+| **Scenario (stable FAIL)** | 0/36 | 7/36 |
+| **Baseline physiology (no input)** | 6/20 | 6/20 |
+
+"36/36 STRICT validation"は **single-trial claim であり、MC averaging 下では Izh 35/36**。
 
 ## Active To-Dos
 
@@ -8,6 +20,8 @@
 |---|------|-------|--------|-----|
 | 1 | GPU環境構築(NVIDIA + GeNN) → スケールアップ | owner | pending | — |
 | 2 | Baseline rate calibration (両モデル6/20 → 目標~18/20) | auto | pending | — |
+| 3 | Pop-specific bg_noise（MSN低、LTS中）でbaseline修復 | auto | pending | — |
+| 4 | Monte Carlo validation を test suite 統合 | auto | pending | — |
 
 ## Completed (Phase 3)
 
@@ -109,14 +123,24 @@
 232 verified papers. 27 parameter changes with paper citations.
 Full change log: docs/parameter_changes_log.md
 
-## Phase 6 — Next Steps
+## Phase 6/7 — Next Steps
 
+### Phase 6 (現行)
 | Task | Requires | Priority |
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
-| **Baseline rate calibration** (6/20 → ~18/20) | bg_noise pop-specific OR MSN suppression | P1 |
 | ~~AdEx 28→36/36 force-calibration~~ | ~~accept structural limit, documented~~ | **abandoned** (4/19 audit) |
 | ~~FastAPI V2移行~~ | ~~API→IntegratedBrainV2~~ | **done** (4/18) |
+
+### Phase 7 (v2 audit後 新設、Option E: 漸進改善)
+| Task | 狙い | 難度 | 状態 |
+|------|------|------|------|
+| **Pop-specific bg_noise** | MSN低noise化でbaseline 6/20→~12/20 | 低 | P1 |
+| **Monte Carlo validation をCI組込** | seed安定性テスト | 中 | P1 |
+| Duration 300ms → 1000ms | 量子化改善 (3.3x)、計算コスト3.3x | 中 | P2 |
+| adex_scale=1.8 を population別補正に分散 | AdEx global hackの除去 | 高 | P2 |
+| 27 Change の paper-value chain 再検証 | citation 実質性の明記 | 高 | P3 |
+| dt 0.5ms → 0.1ms | Euler安定性、計算コスト5x | 低 | P3 |
 
 ## Known Structural Limits (documented 2026-04-19 after audit revert)
 
