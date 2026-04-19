@@ -157,19 +157,33 @@ Phase 7 P1実験結果 (4/19):
 - Net: +3 baseline PASS, -3 scenario PASS
 - 結論: simplified 1-pop モデルは両立不可能。Phase 8の構造的拡張が必須
 
-### Phase 9 (新設、Behavioral validation framework)
+### Phase 9 (新設、Behavioral validation framework) — 初回 null result (4/19)
+
 v3 audit で rate-matching validation の limitations を確定。behavioral prediction へ pivot:
 設計doc: `docs/behavioral_validation_framework.md`
 
-| Phase | Task | Timeline |
-|-------|------|----------|
-| 9.1 | GoEmotions dataset 準備 + 27→10 emotion mapping | 1 week |
-| 9.2 | Baseline 実装 (random/keyword/LLM/lesioned) | 1-2 weeks |
-| 9.3 | Metric 実装 (accuracy/F1/McNemar test) | 2-3 days |
-| 9.4 | Evaluation run (dev split only) | 1 week |
-| 9.5 | Writeup + README更新 | 1 week |
+| Phase | Task | Status |
+|-------|------|--------|
+| 9.1 | GoEmotions 27→10 mapping + embedded sample | **done** (4/19) |
+| 9.2 | Baseline 実装 (random/keyword/model_rates) | **done** (4/19) |
+| 9.3 | Metric 実装 (accuracy/F1/McNemar) | **done** (4/19) |
+| 9.4 | Pilot eval on embedded 38 instances | **done** (4/19) |
+| 9.4-full | Full GoEmotions 58k eval | pending (needs `pip install datasets`) |
+| 9.5 | Writeup + README update | done for pilot (4/19) |
 
-**Exit criteria**: model > keyword baseline with significance (success) OR honestly report null result
+**Pilot 結果 (embedded n=38)**:
+- Random: 15.8% accuracy
+- Keyword (text_analyzer_v3): **55.3%**
+- Model_rates (IntegratedBrainV2): **36.8%**
+- McNemar p=0.070 (small n), keyword beats model by 18.4%
+- **Pre-registered hypothesis rejected**: neural simulation does NOT add predictive value
+
+**戦略影響**:
+- Path 3c (B2B interpretable emotion AI) の value proposition 要再考
+  "interpretable" は残るが "accurate" は keyword/LLM に劣る
+- Path 3d (education/demo) / 3e (portfolio) が主軸
+
+詳細: `docs/phase9_results_initial.md`
 
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
