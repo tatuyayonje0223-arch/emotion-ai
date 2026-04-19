@@ -279,6 +279,44 @@ keyword hits without simulation. If that control matches model performance,
 we know the "advantage" was just the lookup table. This control is the honest
 test before we can make any simulation-contribution claim.
 
+## Part 8.7: Phase 9.9 Control — the simulation actively hurts
+
+The pre-registered control ran. Result: **simulation doesn't just fail to help —
+it actively destroys signal**.
+
+| Baseline | V Pearson | V MAE | **A Pearson** | **A MAE** | Joint R² |
+|----------|----------:|------:|--------------:|----------:|---------:|
+| hybrid_va (no sim) | +0.303 | 0.531 | **+0.272** | **0.219** | **-0.035** |
+| model_va (with sim) | +0.319 | 0.513 | -0.019 | 0.450 | -0.445 |
+
+Hybrid beats model by **14× on arousal correlation** and **51% better MAE**.
+On valence the two are essentially tied.
+
+### Why the simulation hurts
+
+Model's readout gates each emotion by its input signal: `if threat > 0.1: fear_act = ...
+else: fear_act = 0`. Typical GoEmotions text triggers 0-2 gates, so the other 8+ emotion
+activations are 0. V/A = weighted sum / total activation → dominated by the one
+triggered emotion → noisy binary-like signal.
+
+Hybrid uses raw keyword hit counts across all 10 emotions → continuous signal across
+the weight table → smoother V/A.
+
+**The neural simulation coarsens the information that keyword counts already carry.**
+
+### What this means
+
+Combined with Phase 9.7 ("model unique correct = 0 on classification"):
+
+- ❌ No unique classification value
+- ❌ No unique dimensional value — hybrid weight table alone dominates
+- ✅ Circuit specificity (FEAR/RAGE/SADNESS lesion evidence, Phase 9.6)
+- ✅ Visualization / educational value (independent of accuracy)
+
+Path 3c (B2B interpretable AI) is dead as any kind of quantitative estimator.
+Only viable framing: "mechanistic diagnostic model for FEAR/RAGE/SADNESS +
+educational explainability layer atop LLM outputs".
+
 ## Part 9: Where next?
 
 Phase 6-7-8-9 は継続するが、positioning を shift:

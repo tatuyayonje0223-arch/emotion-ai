@@ -224,6 +224,22 @@ emotion→V/A weight table 由来の可能性 → Phase 9.9 で control experime
 
 詳細: `docs/phase9_dimensional_va.md`
 
+### Phase 9.9 Hybrid control — decisive null (2026-04-20)
+Phase 9.8 の "model wins V/A" が weight-table 由来か simulation 由来かの control test。
+Hybrid (keyword hits + V/A weights, simulation 無し) を baseline 追加:
+
+| Metric | Hybrid | Model | Gap |
+|--------|-------:|------:|----:|
+| Arousal Pearson | **+0.272** | -0.019 | hybrid **14×** |
+| Arousal MAE | **0.219** | 0.450 | hybrid **-51%** |
+| Valence Pearson | +0.303 | +0.319 | ~tie |
+| Joint R² | **-0.035** | -0.445 | hybrid 12× |
+
+**Simulation は arousal signal を破壊** → Path 3c classifier/dimensional 用途
+**完全に dead**。残存価値は Phase 9.6 lesion specificity のみ。
+
+詳細: `docs/phase9_hybrid_control.md`
+
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
 

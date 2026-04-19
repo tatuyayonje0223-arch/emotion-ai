@@ -119,9 +119,73 @@ def bivariate_r2(x_v, x_a, y_v, y_a) -> float:
     return float(1 - sse / sst) if sst > 0 else 0.0
 
 
+# ═══════════════════════════════════════════════════════════
+# Control baseline: hybrid (keyword hits + model's V/A weight table, no simulation)
+# ═══════════════════════════════════════════════════════════
+
+# Mirrors the weights in src/brian2_circuits/emotion_circuits_v2.py lines 907, 916.
+# DO NOT modify independently — these must stay in sync with the model readout.
+_VALENCE_WEIGHTS: dict[str, float] = {
+    "FEAR": -0.9, "RAGE": -0.8, "SEEKING": 0.7, "SADNESS": -0.5,
+    "DISGUST": -0.6, "CARE": 0.8, "PANIC_GRIEF": -0.7,
+    "PLAY": 0.9, "LUST": 0.6, "SURPRISE": 0.0,
+}
+_AROUSAL_WEIGHTS: dict[str, float] = {
+    "FEAR": 0.9, "RAGE": 0.9, "SEEKING": 0.6, "SADNESS": 0.2,
+    "DISGUST": 0.5, "CARE": 0.3, "PANIC_GRIEF": 0.6,
+    "PLAY": 0.8, "LUST": 0.7, "SURPRISE": 0.9,
+}
+
+_HIT_KEY_TO_EA: dict[str, str] = {
+    "fear_hits": "FEAR",
+    "rage_hits": "RAGE",
+    "seeking_hits": "SEEKING",
+    "sadness_hits": "SADNESS",
+    "disgust_hits": "DISGUST",
+    "care_hits": "CARE",
+    "panic_grief_hits": "PANIC_GRIEF",
+    "play_hits": "PLAY",
+    "lust_hits": "LUST",
+    "surprise_hits": "SURPRISE",
+}
+
+
+def hybrid_va_baseline(text: str) -> VAPrediction:
+    """Control experiment: keyword emotion hits → same V/A weight table as model.
+
+    Bypasses the neural simulation entirely. If hybrid_va ≈ model_va on the
+    same dataset, the simulation contributes NO unique dimensional value —
+    the advantage attributed to "model" in Phase 9.8 came from the hand-coded
+    weight table, not from circuit dynamics.
+    """
+    from src.perception.text_analyzer import analyze_text
+    sig = analyze_text(text)
+    feats = sig.features or {}
+
+    # Build emotion activation dict from keyword hit counts.
+    # Normalize by total hits to match model's `/ total_act` division.
+    emotion_act: dict[str, float] = {}
+    for hit_key, ea_label in _HIT_KEY_TO_EA.items():
+        emotion_act[ea_label] = float(feats.get(hit_key, 0))
+
+    total_act = sum(emotion_act.values())
+    if total_act < 1e-6:
+        # No emotional keywords — fall back to neutral
+        return VAPrediction(valence=0.0, arousal=0.5)
+
+    valence = sum(act * _VALENCE_WEIGHTS[name] for name, act in emotion_act.items()) / total_act
+    arousal = sum(act * _AROUSAL_WEIGHTS[name] for name, act in emotion_act.items()) / total_act
+
+    # Clip to [-1, 1] / [0, 1] as model does
+    valence = max(-1.0, min(1.0, valence))
+    arousal = max(0.0, min(1.0, arousal))
+    return VAPrediction(valence=valence, arousal=arousal)
+
+
 VA_BASELINES = {
     "random_va":  make_random_va_baseline(seed=42),
     "keyword_va": keyword_va_baseline,
+    "hybrid_va":  hybrid_va_baseline,  # control: keyword + weights, no simulation
     "model_va":   model_va_baseline,
 }
 
