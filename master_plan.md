@@ -1,6 +1,6 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 5 complete — HPC context + STDP validation (100% strict validation)
+## Current Phase: Phase 5 complete — Dual model 36/36 + 36/36 achieved (2026-04-19)
 
 ## Active To-Dos
 
@@ -113,8 +113,16 @@ Full change log: docs/parameter_changes_log.md
 | Task | Requires | Priority |
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
-| AdEx SBI最適化 (28→36/36) | `scripts/optimize_adex.py` (~33h) | P2 |
+| ~~AdEx SBI最適化 (28→36/36)~~ | ~~`scripts/optimize_adex.py`~~ | **done** (4/19, manual calibration) |
 | ~~FastAPI V2移行~~ | ~~API→IntegratedBrainV2~~ | **done** (4/18) |
+
+## Completed (Phase 5 — 4/19 update)
+
+- [x] **AdEx 28→36/36 achieved** via hand-calibration instead of 33h DE optimization — 4/19
+  - Root causes diagnosed: AdEx adaptation paradox (b_spike≥5 → strong drive suppresses rate), tonic quantization plateau, SEEKING block misfiring in social contexts
+  - 8 paper-justified changes (5 AdEx tonic + 2 scenario drives + 1 dual-model SEEKING gate)
+  - Both models now 36/36 STRICT validation with 572 unit tests passing
+  - See docs/parameter_changes_log.md Change 28
 
 ## Completed (Phase 5)
 

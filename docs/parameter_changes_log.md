@@ -563,3 +563,37 @@
         RMTg→VTA shunting 1.2x, VTA DA b_spike=9/tau_w=100ms/g_L=0.2
 
 **結果**: Izhikevich (default) 36/36 100% unaffected
+
+---
+
+## Change 28: AdEx 28→36/36 — Adaptation-aware tonic calibration
+
+**日付**: 2026-04-19
+**問題**: AdEx dual model 28/36 (77.8%). 残り8件失敗:
+  - il/bnst/dr/vta_pause: 境界線(-0.3〜+0.2 Hz)
+  - lc/putamen: 中距離(1.3〜3.7 Hz)
+  - habenula/lust_vta: 過剰発火(+2.9〜+3.3 Hz)
+
+**診断**:
+  1. **量子化プラトー現象**: LTS(bnst)/NE(lc)のtonic +0.4変更では発火数が1spike分も増えず、+2.0以上で抜ける
+  2. **AdEx adaptation逆説**: b_spike≥5のpopulation(lc=6, putamen=5)では強いdriveがw_adex急増を誘発→後続発火抑制。drive増加が逆にrate低下させる
+  3. **SEEKING誤発火**: `if reward > 0.1` がlustのreward=0.4で発火、vtaにphasic burst 30*0.4=12を供給→17.9Hz過剰
+
+**修正**:
+  1. **AdEx tonic調整（shared_core_network.py adex_tonic dict）**:
+     - bnst: 2.0→4.0 (Davis 2010, BNST sustained anxiety 7-13Hz)
+     - il: 3.5→4.5 (Quirk 2002, extinction recall 7-13Hz, RS+adaptation補正)
+     - dr: 3.0→4.0 (de Jong 2022, suppression scenario 2-4Hz)
+     - lc: 2.8→5.5 (Sara & Bouret 2012, NE burst 8-16Hz, adaptation補正)
+     - putamen: 4.5→7.5 (Calder 2000, MSN adaptation補正)
+  2. **シナリオdrive調整（emotion_circuits_v2.py process()）** — AdEx限定:
+     - RMTg sustained loss drive: 3.5→5.0 (deeper VTA pause via g_inh)
+     - habenula burst: 20→15 * loss (Yang 2018, target 10-20Hz準拠)
+  3. **SEEKING vta burst social-context scaling（両モデル共通）**:
+     - `_vta_burst = 12.0 if social > 0.5 else 30.0` — lust/play の社会文脈では位相性バースト縮小
+
+**結果**:
+  - AdEx: 28/36 → **36/36 (100%)**
+  - Izhikevich: 36/36 (維持)
+  - Unit tests: 572 passed / 7 skipped / 0 failed
+
