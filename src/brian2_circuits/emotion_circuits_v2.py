@@ -801,9 +801,17 @@ class EmotionBrainV2:
         else:
             rage_act = 0.0
 
-        # SEEKING
-        seeking_act = _norm(rates.get("vta_da_lat", 0) * 0.4 + rates.get("nac_shell_d1", 0) * 0.3 +
-                            rates.get("ofc_reward", 0) * 0.3, 25)
+        # SEEKING (gated by reward input — parity with other 9 emotions).
+        # Without this gate, VTA baseline tonic firing (~3Hz) produced floor-level
+        # seeking_act even with reward=0, causing SEEKING to win argmax when other
+        # emotions were also 0 (silent under no-input).
+        # Reference: Phase 9 audit 2026-04-19 found SEEKING was the ONLY ungated
+        # readout; 355/500 SEEKING predictions vs 90/500 true label.
+        if reward > 0.1:
+            seeking_act = _norm(rates.get("vta_da_lat", 0) * 0.4 + rates.get("nac_shell_d1", 0) * 0.3 +
+                                rates.get("ofc_reward", 0) * 0.3, 25)
+        else:
+            seeking_act = 0.0
 
         # SADNESS (gated by loss input — prevent tonic activation from baseline sgACC/habenula)
         if loss > 0.1:

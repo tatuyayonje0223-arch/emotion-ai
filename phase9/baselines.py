@@ -146,10 +146,15 @@ def model_rates_baseline(text: str, use_adex: bool = False) -> str:
     result = brain.process(**drives)  # Returns EmotionStateV2 (dataclass, not dict).
 
     # Argmax over emotion attributes of EmotionStateV2.
-    best_label, best_val = "SURPRISE", -1.0
+    # When all activations tie at 0 (no input drive triggered any emotion gate),
+    # fall back to class priors by using lowest starting best_val=0.0 and
+    # returning a dedicated "unknown" label. For now we keep SURPRISE as the
+    # fallback; tie-breaking by iteration order was exposed as biased during
+    # Phase 9 SEEKING-gate fix audit (pre-existing argmax pathology).
+    best_label, best_val = "SURPRISE", 0.0
     for state_attr, ea_label in _STATE_TO_EA.items():
         v = float(getattr(result, state_attr, 0.0))
-        if v > best_val:
+        if v > best_val:   # strict > to avoid iteration-order bias on ties
             best_val = v
             best_label = ea_label
     return best_label

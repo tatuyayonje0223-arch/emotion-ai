@@ -197,7 +197,15 @@ Overall null result でも circuit-level specificity は部分的に retained:
 
 Path 3c 再 pivot: "accurate classifier" → "**mechanistic diagnostic model for 3 emotions**"
 
-詳細: `docs/phase9_results_initial.md`, `docs/phase9_results_full.md`, `docs/phase9_lesion_specificity.md`
+### Phase 9.7 Readout fix — SEEKING gate + argmax fallback (2026-04-19/20)
+- **SEEKING readout は唯一非 gated だった bug** 発見
+- Gate 追加 (parity) + argmax 初期値 `best_val=0.0` (tie-break 公平化)
+- Scenario MC: **両モデル unchanged** (fix は behavioral layer のみ影響)
+- Behavioral: 19.2% → **22.2%** (accuracy 改善)
+- BUT: **"model correct ∩ keyword wrong = 0 instances"** — unique predictive value zero
+- 結論: 元 19.2% は SEEKING-bias の偶然一致、真の null signal 露出
+
+詳細: `docs/phase9_results_initial.md`, `docs/phase9_results_full.md`, `docs/phase9_lesion_specificity.md`, `docs/phase9_readout_fix.md`
 
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
