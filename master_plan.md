@@ -207,6 +207,23 @@ Path 3c 再 pivot: "accurate classifier" → "**mechanistic diagnostic model for
 
 詳細: `docs/phase9_results_initial.md`, `docs/phase9_results_full.md`, `docs/phase9_lesion_specificity.md`, `docs/phase9_readout_fix.md`
 
+### Phase 9.8 Dimensional V/A regression (2026-04-20)
+Classification null の後、連続 V/A での model 性能を検証 (n=500):
+
+| Metric | Model | Keyword | Δ |
+|--------|------:|--------:|---:|
+| Valence Pearson | +0.319 | +0.311 | +0.008 (非有意) |
+| Valence MAE | 0.513 | 0.591 | **-13%** |
+| Arousal Pearson | -0.019 | -0.080 | +0.060 |
+| Arousal MAE | 0.450 | 0.503 | **-10%** |
+| Joint R² | **-0.445** | -0.695 | model least bad |
+
+**初の partial positive**: model が MAE で 10-13% 改善。ただし全 baseline で
+R² 負 (mean predictor に劣る)、Pearson Δ は非有意。advantage は hand-coded
+emotion→V/A weight table 由来の可能性 → Phase 9.9 で control experiment 必要
+
+詳細: `docs/phase9_dimensional_va.md`
+
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
 

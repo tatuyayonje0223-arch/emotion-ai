@@ -234,6 +234,51 @@ Use cases:
 - Explainability layer over LLM emotion APIs: when LLM says FEAR, confirm by
   checking if the FEAR circuit responds to `threat` input in our model
 
+## Part 8.6: Dimensional V/A regression — first partial positive
+
+After 4 consecutive null results (9.4 pilot / 9.4 full / 9.7 gate-fix / 9.7 argmax),
+one last angle: **continuous valence × arousal instead of 10-way classification**.
+
+Rationale: Russell's circumplex model argues emotion is better represented
+continuously. If VTA DA → positive valence, LC NE → arousal, BNST → negative
+valence-with-chronic-arousal, etc., then the simulation might capture V/A better
+than keyword matching even if classification fails.
+
+### Result on n=500 GoEmotions validation
+
+| Metric | Model | Keyword | Δ |
+|--------|------:|--------:|---:|
+| Valence Pearson | +0.319 | +0.311 | +0.008 (tiny) |
+| Valence MAE | **0.513** | 0.591 | **-13%** |
+| Arousal Pearson | -0.019 | -0.080 | +0.060 |
+| Arousal MAE | **0.450** | 0.503 | **-10%** |
+| Joint R² | **-0.445** | -0.695 | model least bad |
+
+**Model wins all 4 metrics**. First clean advantage in Phase 9.
+
+### Big caveats
+
+- **Joint R² is negative for all three baselines**, meaning even the "best"
+  is worse than "always predict the mean". Model is least bad, not good.
+- **Valence Pearson Δ=+0.008** at n=500 is not statistically significant
+  (Fisher z SE ≈ 0.064, need ≥0.13 for p<0.05).
+- Arousal Pearson ≈ 0 — model essentially doesn't capture arousal variance.
+- **The emotion→V/A weight table in the readout is hand-coded**. A fair
+  control would be: apply the same weights to keyword hits (bypassing the
+  simulation). If that matches model V/A, the simulation added nothing.
+
+### Honest framing
+
+The partial improvement (10-13% MAE) is real but small. It may be entirely
+explained by the hand-coded readout layer (`valence_weights` and
+`arousal_weights` dicts) that aggregates 10 activations into V/A. The neural
+simulation itself may contribute zero beyond those weights.
+
+A Phase 9.9 control experiment is pre-registered: apply the same weights to
+keyword hits without simulation. If that control matches model performance,
+we know the "advantage" was just the lookup table. This control is the honest
+test before we can make any simulation-contribution claim.
+
 ## Part 9: Where next?
 
 Phase 6-7-8-9 は継続するが、positioning を shift:
