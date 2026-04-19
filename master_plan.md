@@ -135,12 +135,27 @@ Full change log: docs/parameter_changes_log.md
 ### Phase 7 (v2 audit後 新設、Option E: 漸進改善)
 | Task | 狙い | 難度 | 状態 |
 |------|------|------|------|
-| **Pop-specific bg_noise** | MSN低noise化でbaseline 6/20→~12/20 | 低 | P1 |
+| ~~Pop-specific bg_noise (単独)~~ | MSN低noise化でbaseline修復 | 低 | **attempted+reverted (4/19)**: MSN baseline fix alone regresses scenario (nac_d1/putamen fire不足) — 単純化モデルにUP/DOWN state dynamicsが不在。Phase 8で再設計必須 |
 | **Monte Carlo validation をCI組込** | seed安定性テスト | 中 | P1 |
 | Duration 300ms → 1000ms | 量子化改善 (3.3x)、計算コスト3.3x | 中 | P2 |
 | adex_scale=1.8 を population別補正に分散 | AdEx global hackの除去 | 高 | P2 |
 | 27 Change の paper-value chain 再検証 | citation 実質性の明記 | 高 | P3 |
 | dt 0.5ms → 0.1ms | Euler安定性、計算コスト5x | 低 | P3 |
+
+### Phase 8 (新設、MSN UP/DOWN state dynamics)
+Phase 7 P1の試みで判明: K_ir→bg_noise低下だけでは simplified 1-pop-per-region model で scenario firing を保てない。以下が必要:
+
+| Task | 狙い | 難度 |
+|------|------|------|
+| MSN UP/DOWN state mechanism | K_ir + NMDA-mediated state transition実装 | 高 (model enhancement) |
+| Thalamocortical bistable drive | UP state時の task-related depolarization生成 | 高 |
+| Wilson 2004ベース較正 | paper-derivable UP-state 20mV ~= X drive units (g_L/tau_m依存) | 中 |
+
+Phase 7 P1実験結果 (4/19):
+- bg_noise MSN 1.7→0.2: baseline 6/20→8-9/20 ✓
+- scenario MC: Izh 35→32 stable PASS, AdEx 25→23 stable PASS — **net regression**
+- Net: +3 baseline PASS, -3 scenario PASS
+- 結論: simplified 1-pop モデルは両立不可能。Phase 8の構造的拡張が必須
 
 ## Known Structural Limits (documented 2026-04-19 after audit revert)
 
