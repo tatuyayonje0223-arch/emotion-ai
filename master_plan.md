@@ -240,6 +240,25 @@ Hybrid (keyword hits + V/A weights, simulation 無し) を baseline 追加:
 
 詳細: `docs/phase9_hybrid_control.md`
 
+### Phase 9.10 Population-level lesion — circuit 直接 silence (2026-04-20)
+Phase 9.6 input lesion の caveat「input でなく neuron firing 直接 silence」を実施。
+`tonic_overrides = {pop: -10.0}` で readout 全 contributor を hyperpolarize:
+
+| Emotion | Input lesion (9.6) | Pop lesion (9.10) |
+|---------|:------------------:|:-----------------:|
+| FEAR | ✅ | ❌ 多経路冗長 (LeDoux 2000 と整合) |
+| RAGE | ✅ | ✅ |
+| **SEEKING** | ❌ readout bias | ✅ **new** |
+| SADNESS | ✅ | ✅ |
+| 他 5 emotions | untestable (baseline 0%) | untestable |
+
+**4/10 emotion で circuit-level specificity 確立** (RAGE/SEEKING/SADNESS 両 lesion 手法、FEAR input のみ)。
+FEAR の多経路冗長性は 生物学的 fear circuit (evolutionary robust) と qualitative 整合。
+
+Path 3c 最終位置: **mechanistic diagnostic for 3-4 specific emotions**
+
+詳細: `docs/phase9_pop_lesion.md`
+
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
 
