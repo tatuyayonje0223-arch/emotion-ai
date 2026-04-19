@@ -71,27 +71,37 @@ fails.
 This means: **input lesion underestimated circuit specificity for SEEKING**.
 Population lesion is the more valid measure.
 
-### 3. FEAR does NOT show population-level specificity — multi-pathway redundancy
+### 3. FEAR: readout-only lesion insufficient (multi-pathway); extended amygdala lesion works on smoke test
 
-Even with cem + vlpag + bnst all silenced, FEAR predictions on true-FEAR
-instances remain at 66.7%. Why?
+**Readout-only lesion** (cem + vlpag + bnst): 66.7% → 66.7% (no drop).
+Reason: la_exc → ba_exc → cem synaptic cascade bypasses cem's -10 tonic:
+weight 4.0, prob 0.25 synaptic input can exceed hyperpolarization threshold.
 
-FEAR circuit architecture:
-- la_exc (lateral amygdala) fires from threat drive (not lesioned)
-- la_exc → ba_exc (synaptic, weight 3.0, prob 0.2)
-- ba_exc → cem (synaptic, weight 4.0, prob 0.25)
-- Despite cem tonic = -10, ba_exc synaptic input can exceed hyperpolarization
-  threshold and drive cem to fire
+**Extended amygdala lesion** (cem + vlpag + bnst + la_exc + ba_exc + cel_som):
+On hand-crafted FEAR sentences, the lesion CLEANLY COLLAPSES predictions:
+```
+"I am so scared right now"        → LUST       (collapsed from FEAR)
+"My heart is racing with terror"  → SURPRISE   (collapsed from FEAR)
+"I am absolutely furious" (RAGE)  → RAGE       (unchanged, specificity)
+```
 
-Additionally:
-- la_exc → cel_som → cem disinhibition pathway
-- pl → la_exc → ... direct drive
-- Multiple parallel routes bypass any single lesion
+**But GoEmotions FEAR (n=3) doesn't show drop** with extended lesion either.
+Reasons:
+- n=3 is too small to detect 2→0 change with any power
+- GoEmotions FEAR Reddit text may not strongly trigger fear keywords
+  (e.g., conversational "I was a bit anxious about" vs hand-crafted
+  "I am terrified")
+- At n=3, 2/3 baseline correct × random assignment after lesion → some
+  will land on FEAR by chance via argmax ties
 
 This is consistent with LeDoux 2000 + Duvarci & Pare 2014: **fear circuits
-have evolutionarily-conserved redundancy**. The model reproduces this
-qualitatively. To silence FEAR readout, we'd need to also lesion la_exc /
-ba_exc / cel_som — i.e., an extended lesion covering the whole amygdala.
+have evolutionarily-conserved redundancy across multiple pathways**. Silencing
+readout alone is insufficient; extended amygdala lesion works on sufficiently
+fear-specific text.
+
+**Empirical confirmation requires larger FEAR sample** (ideally n≥30 true-FEAR
+instances with explicit fear language). Current GoEmotions validation subset
+does not provide this.
 
 ### 4. SURPRISE resilience
 

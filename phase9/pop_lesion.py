@@ -49,7 +49,11 @@ from phase9.emotion_mapping import EMOTIONAI_LABELS
 # Lesion ALL readout contributors for each emotion so the readout formula
 # collapses to ~0 (even small residual wins argmax when everything else is 0).
 POP_LESION_TARGETS: dict[str, list[str]] = {
-    "FEAR":        ["cem", "vlpag", "bnst"],                    # 0.6+0.2+0.2
+    # Extended FEAR lesion: includes upstream amygdala nuclei to overcome
+    # multi-pathway redundancy. Phase 9.10 v1 showed readout-only lesion
+    # (cem/vlpag/bnst) couldn't silence FEAR due to la_exc→ba_exc→cem cascade.
+    "FEAR":        ["cem", "vlpag", "bnst",
+                    "la_exc", "ba_exc", "cel_som"],             # extended amygdala
     "RAGE":        ["vmh", "dlpag", "mea"],                     # 0.5+0.3+0.2
     "SEEKING":     ["vta_da_lat", "nac_shell_d1", "ofc_reward"],# 0.4+0.3+0.3
     "SADNESS":     ["sgacc", "habenula", "aic", "pvn_crh"],     # 0.4+0.3+0.15+0.15
