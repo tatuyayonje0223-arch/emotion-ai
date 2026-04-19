@@ -609,13 +609,11 @@ class EmotionBrainV2:
                 overrides["dlpag"] = dlpag_drive
 
         # SEEKING drive: reward → VTA DA
-        # Burst amplitude reduced in social-dominated scenarios where reward co-occurs with bonding
         if reward > 0.1:
             vta_drive = np.zeros((n_steps, 30))
             burst_start = int(100 / c.dt_ms)
             burst_end = int(200 / c.dt_ms)
-            _vta_burst = 12.0 if social > 0.5 else 30.0  # reduce phasic burst in social contexts (lust/play)
-            vta_drive[burst_start:burst_end, :] = _vta_burst * reward
+            vta_drive[burst_start:burst_end, :] = 30.0 * reward  # strict 17-33Hz; increased from 28 to compensate reduced VTA intrinsic tonic
             overrides["vta_da_lat"] = vta_drive
 
             ofc_drive = np.zeros((n_steps, 15))
@@ -639,8 +637,7 @@ class EmotionBrainV2:
             hab_drive[:, :] = 2.0 * loss                    # moderate tonic
             burst_s = int(80 / c.dt_ms)
             burst_e = int(180 / c.dt_ms)                    # 100ms burst (Yang 2018)
-            _hab_burst = 15.0 * loss if c.use_adex else 20.0 * loss  # AdEx: reduce for 10-20Hz target (Yang 2018)
-            hab_drive[burst_s:burst_e, :] += _hab_burst    # strong burst → RMTg/DRN_GABA
+            hab_drive[burst_s:burst_e, :] += 20.0 * loss    # strong burst → RMTg/DRN_GABA
             overrides["habenula"] = hab_drive
 
             # RMTg sustained drive during loss (habenula synaptic + direct)
@@ -648,7 +645,7 @@ class EmotionBrainV2:
             # but habenula burst alone covers only 100ms of 300ms trial.
             # Sustained drive represents tonic habenula→RMTg excitation.
             rmtg_drive = np.zeros((n_steps, 10))
-            _rmtg_sus = 5.0 * loss if c.use_adex else 3.0 * loss  # AdEx: stronger inhibition for deeper VTA pause
+            _rmtg_sus = 3.5 * loss if c.use_adex else 3.0 * loss  # AdEx: stronger for pause
             rmtg_drive[:, :] = _rmtg_sus
             rmtg_drive[burst_s:burst_e, :] += 5.0 * loss
             overrides["rmtg"] = rmtg_drive
