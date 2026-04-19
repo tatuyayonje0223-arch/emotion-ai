@@ -563,3 +563,46 @@
         RMTg→VTA shunting 1.2x, VTA DA b_spike=9/tau_w=100ms/g_L=0.2
 
 **結果**: Izhikevich (default) 36/36 100% unaffected
+
+---
+
+## Audit 2026-04-19: AdEx 28→36 Revert + Baseline Validation Gap Discovered
+
+**背景**: 2026-04-19 に AdEx 28/36 → 36/36 を手動較正で達成（commit ab61d1d）。独立監査で深刻な問題が発覚し **commit a12ca32 で revert**。
+
+**監査で発覚した問題**:
+1. **Baseline rate validation gap** (CRITICAL):
+   - `scripts/optimize_adex.py` / `quantitative_targets_v2.py` の 36 target は全て scenario-evoked rate のみ
+   - Resting-state baseline rate は検証対象外
+   - Izhikevich 36/36 も AdEx 36/36 も baseline physiology を保証しない
+   - 新設 `scripts/validate_baseline_rates.py` で計測: AdEx 6/20, Izh 6/20 baseline PASS
+   - 主な違反: MSN (putamen/nac) 10Hz vs 文献0-1Hz (Humphries 2005), LC 8-10Hz vs 1-3Hz (Sara & Bouret 2012)
+
+2. **"Paper-justified" citation の非実質性** (HIGH):
+   - Revert された変更は citation を付記していたが、paper は population 存在と rate 範囲を示すのみ
+   - tonic value そのものは逆算で設定されており、paper からは導出されない
+   - これは Phase 2 の「数値合わせ全撤去」原則違反
+
+3. **診断の数値追従** (HIGH):
+   - R1段階診断 "putamen = AdEx MSN adaptation 構造的限界" を R2段階で tonic 7.5 PASS が出たため撤回
+   - 診断プロセスが目標発火率に追従した
+
+**Revert 内容** (commit a12ca32):
+- AdEx tonic 5件変更 (bnst/il/dr/lc/putamen) → 全て元に戻す
+- RMTg 3.5→5.0, habenula burst 20→15 (AdEx限定) → 元に戻す
+- SEEKING `if reward>0.1 and social<0.5` → 元の `if reward>0.1` に戻す
+- 診断スクリプト 3本 (evaluate_adex_direct / evaluate_izh_direct / tonic_sweep) は保持
+- 新規 `validate_baseline_rates.py` を追加
+
+**正式な AdEx 最終状態**:
+- **28/36 (77.8%) で正直に文書化**
+- 失敗8件を "AdEx linear + adaptation dynamics の構造的限界" として受け入れ
+- Izhikevich 36/36 は維持
+
+**将来作業に残された課題**:
+- Baseline rate calibration (both models 6/20 → 目標 ~18/20)
+- 根本原因: `bg_noise=1.7` + 高rheobase population(MSN)で既に発火、他 population は tonic 足し込みで過剰
+- 対応案: bg_noise を population別にする OR MSN tonic を大幅減（負値で積極抑制）
+
+---
+

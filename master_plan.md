@@ -1,12 +1,13 @@
 # EmotionAI Master Plan
 
-## Current Phase: Phase 5 complete — HPC context + STDP validation (100% strict validation)
+## Current Phase: Phase 5 complete — scenario validation Izh 36/36 + AdEx 28/36 (accepted structural limit)
 
 ## Active To-Dos
 
 | # | Task | Owner | Status | Due |
 |---|------|-------|--------|-----|
 | 1 | GPU環境構築(NVIDIA + GeNN) → スケールアップ | owner | pending | — |
+| 2 | Baseline rate calibration (両モデル6/20 → 目標~18/20) | auto | pending | — |
 
 ## Completed (Phase 3)
 
@@ -113,8 +114,27 @@ Full change log: docs/parameter_changes_log.md
 | Task | Requires | Priority |
 |------|----------|----------|
 | GPU 10K+ scaling | NVIDIA GPU + GeNN | P1 (owner) |
-| AdEx SBI最適化 (28→36/36) | `scripts/optimize_adex.py` (~33h) | P2 |
+| **Baseline rate calibration** (6/20 → ~18/20) | bg_noise pop-specific OR MSN suppression | P1 |
+| ~~AdEx 28→36/36 force-calibration~~ | ~~accept structural limit, documented~~ | **abandoned** (4/19 audit) |
 | ~~FastAPI V2移行~~ | ~~API→IntegratedBrainV2~~ | **done** (4/18) |
+
+## Known Structural Limits (documented 2026-04-19 after audit revert)
+
+### AdEx 失敗 8/36 — accepted as structural, not tuned
+AdEx linear leak + exponential threshold + w_adex adaptation では以下が達成不可:
+- **lc (novelty_burst)** 8-16 Hz: b_spike=6 が強い burst driveを相殺し、trial-avg rate 6.7Hz
+- **putamen (disgust_recognition)** 7-13 Hz: MSN g_L=0.18 + b_spike=5 で adaptation dominant
+- **habenula (reward_omission)** 10-20 Hz: burst 20*loss で過剰発火 (上限超過)
+- **lust→vta** 7-15 Hz: 他scenarioで tuned された drive 構造が lust で vta 過駆動
+- **bnst/il/dr/vta_pause**: 各々 0.2-0.3 Hz の境界線近接、但しbaseline physiologyを優先
+- 根本原因: Izhikevich quadratic nonlinearity とは **定性的に異なる dynamics**
+- 対応方針: AdEx 28/36 を最終状態として accept、dual-model の挙動差異として記録
+
+### Baseline Rate Validation Gap (critical discovery)
+- 36 target は scenario-evoked のみ。resting-state baseline を検証しない
+- `scripts/validate_baseline_rates.py` で 20 target 計測: **AdEx 6/20 / Izh 6/20**
+- Scenario 36/36 PASS は baseline physiology を保証しない
+- MSN (putamen/nac) 10Hz baseline vs 文献 <1Hz が最大の violator
 
 ## Completed (Phase 5)
 
