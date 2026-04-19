@@ -189,7 +189,15 @@ v3 audit で rate-matching validation の limitations を確定。behavioral pre
   "interpretable" は残るが "accurate" は keyword/LLM に劣る
 - Path 3d (education/demo) / 3e (portfolio) が主軸
 
-詳細: `docs/phase9_results_initial.md`
+### Phase 9.6 Lesion specificity (2026-04-19)
+Overall null result でも circuit-level specificity は部分的に retained:
+- FEAR/RAGE/SADNESS: 自 circuit input 削除で accuracy → 0% (specificity ✅)
+- SEEKING: lesion でも predict 継続 (readout bias)
+- 5 emotions (CARE/LUST/PLAY/PANIC/SURPRISE): baseline 0%、測定不可
+
+Path 3c 再 pivot: "accurate classifier" → "**mechanistic diagnostic model for 3 emotions**"
+
+詳細: `docs/phase9_results_initial.md`, `docs/phase9_results_full.md`, `docs/phase9_lesion_specificity.md`
 
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:

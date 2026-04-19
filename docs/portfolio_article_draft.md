@@ -197,6 +197,43 @@ classifiers** on real-world text.
 This is the empirical confirmation of what v2 audit predicted: **rate-matching validation
 does not translate to task predictive power**.
 
+## Part 8.5: Lesion specificity — partial salvage
+
+Null result alone doesn't tell the full story. Classical neuroscience lesion logic:
+**if circuit X is causally necessary for emotion X, lesioning X should silence X prediction
+specifically**.
+
+Ran lesioned baselines on n=50 subset: for each of 10 emotions, zero the primary
+drive inputs (e.g., `threat` and `pain` for FEAR), measure per-class accuracy drop:
+
+| True label | Baseline | Own-lesion acc | Specificity |
+|-----------|---------:|---------------:|-------------|
+| FEAR (n=3) | 66.7% | **0.0%** | ✅ |
+| RAGE (n=11) | 27.3% | **0.0%** | ✅ |
+| SEEKING (n=8) | 87.5% | 87.5% | ❌ readout bias |
+| SADNESS (n=7) | 28.6% | **0.0%** | ✅ |
+| CARE/LUST/PLAY/PANIC/SURPRISE | 0% | 0% | untestable (floored) |
+
+**3 of 10 emotions show clean circuit specificity** (FEAR/RAGE/SADNESS). Their drive
+inputs are causally necessary for the model's classification — remove the input,
+classification silenced.
+
+SEEKING doesn't show specificity because the readout function
+`seeking_act = VTA_DA × 0.4 + NAc × 0.3` fires at floor level due to VTA tonic activity,
+making SEEKING the default winner when other circuits are weak.
+
+### Reframing value proposition
+
+Before lesion test: Path 3c (B2B interpretable emotion AI) seemed dead.
+After lesion test: Path 3c can reposition as **"mechanistic diagnostic model for
+FEAR/RAGE/SADNESS pathways"** — not a classifier for arbitrary emotions, but a
+circuit-tracing tool for those 3 where neuroscience specificity holds.
+
+Use cases:
+- Neuroscience education: "see how removing amygdala input silences fear recognition"
+- Explainability layer over LLM emotion APIs: when LLM says FEAR, confirm by
+  checking if the FEAR circuit responds to `threat` input in our model
+
 ## Part 9: Where next?
 
 Phase 6-7-8-9 は継続するが、positioning を shift:
