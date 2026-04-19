@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException, Header
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from src.api.session import ConversationSession, SessionManager
@@ -18,6 +19,15 @@ app = FastAPI(
     title="Emotion-Capable AI API",
     description="感情を明示的内部状態として持つ研究用AIシステムのAPI（セッションスコープ）",
     version="0.2.0",
+)
+
+# CORS for demo/index.html (educational demo served from file:// or localhost:808x).
+# Production deployment should restrict allow_origins to specific hosts.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 _manager = SessionManager()

@@ -157,6 +157,30 @@ Phase 7 P1実験結果 (4/19):
 - Net: +3 baseline PASS, -3 scenario PASS
 - 結論: simplified 1-pop モデルは両立不可能。Phase 8の構造的拡張が必須
 
+### Phase 9 (新設、Behavioral validation framework)
+v3 audit で rate-matching validation の limitations を確定。behavioral prediction へ pivot:
+設計doc: `docs/behavioral_validation_framework.md`
+
+| Phase | Task | Timeline |
+|-------|------|----------|
+| 9.1 | GoEmotions dataset 準備 + 27→10 emotion mapping | 1 week |
+| 9.2 | Baseline 実装 (random/keyword/LLM/lesioned) | 1-2 weeks |
+| 9.3 | Metric 実装 (accuracy/F1/McNemar test) | 2-3 days |
+| 9.4 | Evaluation run (dev split only) | 1 week |
+| 9.5 | Writeup + README更新 | 1 week |
+
+**Exit criteria**: model > keyword baseline with significance (success) OR honestly report null result
+
+### Parallel: positioning 統合 (3c/3d/3e path)
+v3 audit 後の 4/19 セッションで追加:
+
+| Path | 成果物 | Status |
+|------|-------|--------|
+| 3e Portfolio | `docs/portfolio_article_draft.md` | draft 完成 |
+| 3d Education demo | `demo/index.html` (FastAPI + vanilla JS web UI) | 実装完了 |
+| 3c B2B interpretable | Phase 9 behavioral validation が前提 | 設計 phase |
+| P0 public claim cleanup | README rewrite with honest scoring | 完了 |
+
 ## Known Structural Limits (documented 2026-04-19 after audit revert)
 
 ### AdEx 失敗 8/36 — accepted as structural, not tuned

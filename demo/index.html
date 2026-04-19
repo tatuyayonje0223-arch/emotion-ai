@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>EmotionAI Demo — 神経回路と情動の可視化</title>
+<style>
+  body { font-family: 'Meiryo', 'Segoe UI', sans-serif; max-width: 1100px; margin: 2em auto;
+         padding: 0 1em; color: #222; background: #fafafa; }
+  h1 { color: #1a5490; border-bottom: 2px solid #1a5490; padding-bottom: 0.3em; }
+  h2 { color: #333; margin-top: 1.5em; }
+  .note { background: #fff8dc; border-left: 4px solid #f0c040; padding: 0.6em 1em;
+          margin: 1em 0; font-size: 0.9em; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+              gap: 0.8em; margin-bottom: 1em; }
+  .control { background: #fff; padding: 0.6em; border-radius: 6px;
+             border: 1px solid #ddd; }
+  .control label { display: block; font-size: 0.85em; color: #555; margin-bottom: 0.3em; }
+  .control input[type="range"] { width: 100%; }
+  .control .val { font-family: monospace; font-weight: bold; color: #1a5490; }
+  button { background: #1a5490; color: #fff; border: 0; padding: 0.6em 1.5em;
+           border-radius: 4px; cursor: pointer; font-size: 1em; }
+  button:hover { background: #2a6ab0; }
+  button:disabled { background: #aaa; cursor: wait; }
+  .result { background: #fff; padding: 1em; border-radius: 6px; margin-top: 1em;
+            border: 1px solid #ddd; }
+  .emotion-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4em; }
+  .emotion-row { display: grid; grid-template-columns: 120px 1fr 60px;
+                 align-items: center; padding: 0.3em; background: #f5f5f5;
+                 border-radius: 3px; }
+  .emotion-row .name { font-weight: bold; color: #1a5490; font-size: 0.9em; }
+  .bar-container { background: #e0e0e0; height: 18px; border-radius: 3px;
+                   overflow: hidden; }
+  .bar { height: 100%; background: linear-gradient(90deg, #4caf50, #1a5490);
+         transition: width 0.3s; }
+  .emotion-row .value { text-align: right; font-family: monospace;
+                        font-size: 0.9em; }
+  .rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+           gap: 0.3em; margin-top: 0.5em; }
+  .rate-cell { background: #f5f5f5; padding: 0.4em; border-radius: 3px;
+               font-size: 0.82em; font-family: monospace; }
+  .rate-name { color: #666; }
+  .rate-value { float: right; font-weight: bold; }
+  .hot { color: #d62828; }
+  .cold { color: #666; }
+  .high { color: #1a5490; }
+  details { margin-top: 1em; }
+  .disclaimer { font-size: 0.82em; color: #666; padding: 0.8em;
+                background: #f0f0f0; border-radius: 4px; margin-top: 2em; }
+</style>
+</head>
+<body>
+
+<h1>EmotionAI Demo</h1>
+<p>ヒト10情動の神経回路モデル (~821 spiking neurons) を操作し、
+入力シナリオに対する脳領域活動の変化を可視化します。</p>
+
+<div class="note">
+<strong>⚠️ 研究用モデルです:</strong> 実脳の忠実な再現ではなく、定性的模倣。
+Validation スコア: Izhikevich 35/36 MC-stable, AdEx 25/36。Baseline physiology 6/20 (既知の制限)。
+<a href="https://github.com/tatuyayonje0223-arch/emotion-ai">詳細 on GitHub</a>
+</div>
+
+<h2>入力シナリオ (0-1 で調整)</h2>
+<div class="controls">
+  <div class="control"><label>Threat 脅威 <span class="val" id="v_threat">0.0</span></label>
+    <input type="range" id="threat" min="0" max="1" step="0.1" value="0" oninput="updLabel('threat')"></div>
+  <div class="control"><label>Reward 報酬 <span class="val" id="v_reward">0.0</span></label>
+    <input type="range" id="reward" min="0" max="1" step="0.1" value="0" oninput="updLabel('reward')"></div>
+  <div class="control"><label>Social 社会性 <span class="val" id="v_social">0.0</span></label>
+    <input type="range" id="social" min="0" max="1" step="0.1" value="0" oninput="updLabel('social')"></div>
+  <div class="control"><label>Novelty 新奇 <span class="val" id="v_novelty">0.0</span></label>
+    <input type="range" id="novelty" min="0" max="1" step="0.1" value="0" oninput="updLabel('novelty')"></div>
+  <div class="control"><label>Pain 痛み <span class="val" id="v_pain">0.0</span></label>
+    <input type="range" id="pain" min="0" max="1" step="0.1" value="0" oninput="updLabel('pain')"></div>
+  <div class="control"><label>Loss 喪失 <span class="val" id="v_loss">0.0</span></label>
+    <input type="range" id="loss" min="0" max="1" step="0.1" value="0" oninput="updLabel('loss')"></div>
+  <div class="control"><label>Frustration 怒り <span class="val" id="v_frustration">0.0</span></label>
+    <input type="range" id="frustration" min="0" max="1" step="0.1" value="0" oninput="updLabel('frustration')"></div>
+  <div class="control"><label>Contamination 汚 <span class="val" id="v_contamination">0.0</span></label>
+    <input type="range" id="contamination" min="0" max="1" step="0.1" value="0" oninput="updLabel('contamination')"></div>
+  <div class="control"><label>Attachment 愛着要求 <span class="val" id="v_attachment_need">0.0</span></label>
+    <input type="range" id="attachment_need" min="0" max="1" step="0.1" value="0" oninput="updLabel('attachment_need')"></div>
+</div>
+
+<p>
+<button id="simBtn" onclick="simulate()">シミュレーション実行</button>
+<button onclick="preset('fear')">😨 Fear preset</button>
+<button onclick="preset('reward')">🎁 Reward preset</button>
+<button onclick="preset('social')">👥 Social preset</button>
+<button onclick="preset('novelty')">✨ Novelty preset</button>
+<button onclick="preset('reset')">↺ Reset</button>
+</p>
+
+<div id="result" style="display:none;">
+<h2>10情動 活性度 (emotion readout)</h2>
+<div id="emotions" class="emotion-grid"></div>
+
+<h2>主要 populations 発火率 (Hz)</h2>
+<p style="font-size:0.88em; color:#666;">赤: 高活性(>15Hz) 青: 中(5-15) 灰: 低(<5)</p>
+<div id="rates" class="rates"></div>
+
+<details>
+<summary style="cursor:pointer; color:#1a5490;">全 population 発火率 (53 populations)</summary>
+<div id="allRates" class="rates" style="margin-top:0.5em;"></div>
+</details>
+</div>
+
+<div class="disclaimer">
+<strong>Disclaimer (科学的整合性):</strong><br>
+このデモは 821 neuron の簡略化モデル (biological 10^11 neuron の4-5桁縮小) です。
+Validation は firing rate matching ベースで、behavioral prediction 能力は未検証。
+27件のパラメータ変更のうち一部は empirical calibration (target rate から逆算) です。
+詳細は <a href="https://github.com/tatuyayonje0223-arch/emotion-ai/blob/master/docs/parameter_changes_log.md">parameter_changes_log.md</a>。
+</div>
+
+<script>
+const API_BASE = 'http://localhost:8000';
+let brainId = null;
+
+function updLabel(id) {
+  document.getElementById('v_'+id).textContent =
+    parseFloat(document.getElementById(id).value).toFixed(1);
+}
+
+function preset(name) {
+  const presets = {
+    fear: {threat: 0.8, pain: 0.0},
+    reward: {reward: 0.8},
+    social: {social: 0.8, attachment_need: 0.6},
+    novelty: {novelty: 0.9},
+    reset: {}
+  };
+  ['threat','reward','social','novelty','pain','loss','frustration',
+   'contamination','attachment_need'].forEach(id => {
+    document.getElementById(id).value = presets[name][id] || 0;
+    updLabel(id);
+  });
+}
+
+async function ensureBrain() {
+  if (brainId) return brainId;
+  const resp = await fetch(API_BASE + '/brain/v2/create', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({use_adex: false})
+  });
+  if (!resp.ok) throw new Error('Brain creation failed: ' + await resp.text());
+  const data = await resp.json();
+  brainId = data.brain_id;
+  return brainId;
+}
+
+async function simulate() {
+  const btn = document.getElementById('simBtn');
+  btn.disabled = true;
+  btn.textContent = '実行中...';
+
+  try {
+    const id = await ensureBrain();
+    const inputs = {};
+    ['threat','reward','social','novelty','pain','loss','frustration',
+     'contamination','attachment_need'].forEach(k => {
+      inputs[k] = parseFloat(document.getElementById(k).value);
+    });
+
+    const resp = await fetch(API_BASE + '/brain/v2/' + id + '/process', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(inputs)
+    });
+    if (!resp.ok) throw new Error('Process failed: ' + await resp.text());
+    const data = await resp.json();
+
+    displayResults(data);
+  } catch (err) {
+    alert('エラー: ' + err.message + '\n\n先に API server を起動してください:\nPYTHONPATH=. uvicorn src.api.main:app');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'シミュレーション実行';
+  }
+}
+
+function displayResults(data) {
+  document.getElementById('result').style.display = 'block';
+
+  // 10情動 activation
+  const emotions = data.state || {};
+  const emotionOrder = ['fear', 'rage', 'seeking', 'sadness', 'disgust',
+                         'care', 'panic_grief', 'play', 'lust', 'surprise'];
+  const container = document.getElementById('emotions');
+  container.innerHTML = emotionOrder.map(e => {
+    const val = emotions[e] || 0;
+    const pct = Math.min(100, val * 100);
+    return `<div class="emotion-row">
+      <span class="name">${e}</span>
+      <div class="bar-container"><div class="bar" style="width:${pct}%"></div></div>
+      <span class="value">${val.toFixed(3)}</span></div>`;
+  }).join('');
+
+  // Firing rates
+  const rates = data.rates || {};
+  const keyPops = ['la_exc','cem','pl','il','vlpag','vta_da_lat','nac_shell_d1',
+                   'sgacc','habenula','dr','aic','putamen','mpoa','pvn_oxt',
+                   'dacc','bnst','lc','mea','vmh'];
+  const rateDiv = document.getElementById('rates');
+  rateDiv.innerHTML = keyPops.filter(p => p in rates).map(p => {
+    const r = rates[p];
+    const cls = r > 15 ? 'hot' : (r > 5 ? 'high' : 'cold');
+    return `<div class="rate-cell">
+      <span class="rate-name">${p}</span>
+      <span class="rate-value ${cls}">${r.toFixed(1)}</span></div>`;
+  }).join('');
+
+  // All rates
+  const allDiv = document.getElementById('allRates');
+  allDiv.innerHTML = Object.entries(rates).sort().map(([p, r]) => {
+    const cls = r > 15 ? 'hot' : (r > 5 ? 'high' : 'cold');
+    return `<div class="rate-cell">
+      <span class="rate-name">${p}</span>
+      <span class="rate-value ${cls}">${r.toFixed(1)}</span></div>`;
+  }).join('');
+}
+</script>
+
+</body>
+</html>
