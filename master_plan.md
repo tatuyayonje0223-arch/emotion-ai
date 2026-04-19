@@ -259,6 +259,28 @@ Path 3c 最終位置: **mechanistic diagnostic for 3-4 specific emotions**
 
 詳細: `docs/phase9_pop_lesion.md`
 
+### Phase 9.11 Reference ceiling — LLM + trained ML (2026-04-20)
+
+| Baseline | n | Accuracy | Macro-F1 |
+|----------|--:|---------:|---------:|
+| Random | 200 | 10.5% | 0.075 |
+| **Gemini 2.5-flash (LLM ceiling)** | 100 | **24.0%** | 0.195 |
+| **Keyword argmax** | 200 | **23.0%** | 0.163 |
+| Model_rates | 200 | 17.5% | 0.133 |
+| LR trained (5000 examples) | 200 | 12.0% | 0.128 |
+
+**発見**:
+- LLM ceiling 24% ≈ keyword 23% → **task 自体が inherently hard**
+- LR trained が keyword argmax に敗北 → 10 keyword hit features では effective
+  decision boundary 学習不可能
+- Model (17.5%) は LR と keyword の中間 → simulation は LR より signal 多いが
+  keyword 超えず
+
+**Revised narrative**: null finding 維持だが "catastrophically bad" でなく
+"inherently hard task" の文脈で model は reasonable middle position
+
+詳細: `docs/phase9_ceiling.md`
+
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
 
