@@ -168,7 +168,7 @@ v3 audit で rate-matching validation の limitations を確定。behavioral pre
 | 9.2 | Baseline 実装 (random/keyword/model_rates) | **done** (4/19) |
 | 9.3 | Metric 実装 (accuracy/F1/McNemar) | **done** (4/19) |
 | 9.4 | Pilot eval on embedded 38 instances | **done** (4/19) |
-| 9.4-full | Full GoEmotions 58k eval | pending (needs `pip install datasets`) |
+| 9.4-full | Full GoEmotions n=500 validation subsample | **done** (4/19) — model 19.2% vs keyword 28.0%, McNemar **p=0.0003** |
 | 9.5 | Writeup + README update | done for pilot (4/19) |
 
 **Pilot 結果 (embedded n=38)**:
@@ -176,7 +176,13 @@ v3 audit で rate-matching validation の limitations を確定。behavioral pre
 - Keyword (text_analyzer_v3): **55.3%**
 - Model_rates (IntegratedBrainV2): **36.8%**
 - McNemar p=0.070 (small n), keyword beats model by 18.4%
-- **Pre-registered hypothesis rejected**: neural simulation does NOT add predictive value
+
+**Full 結果 (GoEmotions validation n=500)** — pilot を統計的に confirm:
+- Random: 8.4%, Keyword: **28.0%**, Model_rates: **19.2%**
+- McNemar **p=0.0003** (chi2=13.40) — null result 有意
+- Model 47 correct / keyword wrong, Model 91 wrong / keyword correct
+- Systematic SEEKING over-prediction: 355/500 predictions SEEKING vs 90/500 true
+- **Pre-registered hypothesis rejected with high statistical significance**
 
 **戦略影響**:
 - Path 3c (B2B interpretable emotion AI) の value proposition 要再考
