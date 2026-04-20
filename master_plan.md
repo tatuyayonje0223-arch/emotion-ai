@@ -281,6 +281,29 @@ Path 3c 最終位置: **mechanistic diagnostic for 3-4 specific emotions**
 
 詳細: `docs/phase9_ceiling.md`
 
+### Phase 9.12 Coarse-grained Ekman 6-way (2026-04-20) — positive finding
+
+10-way null が 6-way で消失。Ekman classical 6 emotions に collapse:
+
+| Baseline | Accuracy | Macro-F1 |
+|----------|---------:|---------:|
+| Random | 24.8% | 0.137 |
+| **Keyword** | **36.4%** | 0.355 |
+| **Model_rates** | **36.4%** | 0.349 |
+
+**Δ = 0.000** (tied)。10-way gap (-5.5%) は SEEKING/CARE/PLAY/LUST が全て
+"joy" に collapse することで cancel out。
+
+Phase 9 final finding triad:
+1. Fine-grained 10-way: **null** (model < keyword, p<0.0001)
+2. **Coarse-grained 6-way Ekman: tied** (model = keyword)
+3. Circuit specificity: 4/10 emotions (lesion 根拠)
+
+Viable positioning: "interpretable coarse emotion classifier" — 6 basic
+emotions を keyword 相当精度 + circuit-level interpretability value
+
+詳細: `docs/phase9_coarse_grained.md`
+
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
 
