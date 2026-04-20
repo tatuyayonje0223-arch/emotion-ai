@@ -304,6 +304,20 @@ emotions を keyword 相当精度 + circuit-level interpretability value
 
 詳細: `docs/phase9_coarse_grained.md`
 
+### Phase 9.13 Top-k accuracy (2026-04-20)
+
+| k | Keyword | Model | Δ |
+|---|--------:|------:|----:|
+| top-1 | 16.6% | 10.8% | -5.8% |
+| top-2 | 32.2% | 30.0% | -2.2% |
+| top-3 | 44.0% | 41.2% | -2.8% |
+| top-5 | 52.8% | 55.2% | -2.4% |
+
+Gap narrows as k 増加 → **ranking quality 近似、argmax commitment のみ弱い**
+(注: top-1 numbers が Phase 9.4 より低いのは tie-break fallback 差)
+
+詳細: `docs/phase9_topk.md`
+
 ### Parallel: positioning 統合 (3c/3d/3e path)
 v3 audit 後の 4/19 セッションで追加:
 
