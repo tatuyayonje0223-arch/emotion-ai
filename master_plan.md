@@ -1,5 +1,19 @@
 # EmotionAI Master Plan
 
+## Current Phase: Phase 9 complete — v4 audit demoted most positive claims
+
+### v4 Audit (2026-04-20) critical corrections
+- **Majority baseline 10-way**: 27.6% (always-CARE) > keyword 28.0% ≈ model 19.2%
+  - **Model is 8.4% below trivial prior**
+- **Majority baseline 6-way Ekman**: 53.2% (always-joy); keyword/model both 36.4% = **-16.8%**
+  - Phase 9.12 "tie" is tie at catastrophic failure
+- **Lesion specificity**: Fisher exact all 7 tests p ≥ 0.1 → **no statistical support**
+  - "4/10 emotions with specificity" → descriptive-only, directional
+- Preserved: hybrid V/A control (Phase 9.9) null; bug discoveries (Phase 9.7)
+- **v4 verification — binary valence (Phase 9.15)**: keyword 66.8% / model 66.6% / majority 63.5% (**両方 +3% above majority**)。最も coarse な task で初の above-majority。model/keyword tied。
+
+Details: `docs/audit_v4.md`
+
 ## Current Phase: Phase 5 complete — refined honest scoring after v2 audit
 
 ### 正直な現状 (2026-04-19 v2 audit後)
